@@ -1,0 +1,129 @@
+id,image,icon,name,class,manufacturer,weapon,element,burst,squad
+Ade,images/Ade.jpg,images/AdeIcon.jpg,Ade,Supporter,Tetra,Assault Rifle,Wind,2,Maid for You
+Admi,images/Admi.jpg,images/AdmiIcon.jpg,Admi,Supporter,Missilis,Sniper Rifle,Wind,2,Triangle
+Alice,images/Alice.jpg,images/AliceIcon.jpg,Alice,Attacker,Tetra,Sniper Rifle,Fire,3,Unlimited
+Anchor,,,Anchor,Defender,Elysion,Rocket Launcher,Wind,1,Aegis
+Anis,images/Anis.jpg,images/AnisIcon.jpg,Anis,Defender,Tetra,Rocket Launcher,Iron,2,Counters
+Arcana,images/Arcana.jpg,images/ArcanaIcon.jpg,Arcana,Supporter,Elysion,Rocket Launcher,Electric,2,Best Seller
+Aria,,,Aria,Attacker,Tetra,Machine Gun,Water,2,Prima Donna
+Ark Ranger Black,,,Ark Ranger Black,Attacker,Tetra,Assault Rifle,Wind,3,Ark Rangers
+Avistar,,,Avistar,Supporter,Elysion,Machine Gun,Electric,1,Overseer
+Bay,images/Bay.jpg,images/BayIcon.jpg,Bay,Defender,Tetra,Rocket Launcher,Fire,2,Rewind
+Belorta,,,Belorta,Attacker,Tetra,Rocket Launcher,Electric,2,The Carronades
+Biscuit,,,Biscuit,Supporter,Tetra,Rocket Launcher,Electric,2,Happy Zoo
+Blanc,,,Blanc,Defender,Tetra,Assault Rifle,Wind,2,777
+Bready,,,Bready,Attacker,Tetra,Sniper Rifle,Water,3,Cooking Oil
+Brid,images/Brid.jpg,images/BridIcon.jpg,Brid,Attacker,Elysion,Assault Rifle,Water,3,Infinity Rail
+Centi,images/Centi.jpg,images/CentiIcon.jpg,Centi,Defender,Missilis,Rocket Launcher,Iron,2,Mighty Tools
+Chime,,,Chime,Supporter,Pilgrim,Submachine Gun,Iron,2,White Knight
+Cinderella,,,Cinderella,Defender,Pilgrim,Rocket Launcher,Electric,3,Old Tales
+Clay,images/Clay.jpg,images/ClayIcon.jpg,Clay,Supporter,Tetra,Submachine Gun,Electric,2,Rewind
+Cocoa,,,Cocoa,Supporter,Tetra,Sniper Rifle,Fire,1,Maid For You
+Crow,images/Crow.jpg,images/CrowIcon.jpg,Crow,Defender,Missilis,Submachine Gun,Fire,3,Exotic
+Crown,,,Crown,Defender,Pilgrim,Machine Gun,Iron,2,White Knight
+Crust,,,Crust,Supporter,Tetra,Rocket Launcher,Water,2,Cooking Oil
+D,,,D,Attacker,Elysion,Submachine Gun,Wind,3,Perilous Siege
+Delta,,,Delta,Defender,Elysion,Sniper Rifle,Wind,2,The Scouts
+Diesel,images/Diesel.jpg,images/DieselIcon.jpg,Diesel,Defender,Elysion,Machine Gun,Wind,2,Infinity Rail
+Dolla,images/Dolla.jpg,images/DollaIcon.jpg,Dolla,Supporter,Tetra,Sniper Rifle,Wind,2,Talentum
+Dorothy,images/Dorothy.jpg,images/DorothyIcon.jpg,Dorothy,Supporter,Pilgrim,Assault Rifle,Water,1,Inherit
+Drake,images/Drake.jpg,images/DrakeIcon.jpg,Drake,Attacker,Missilis,Shotgun,Fire,3,Matis
+E.H.,,,E.H.,Attacker,Elysion,Submachine Gun,Wind,3,Exotic
+Ein,,,Ein,Attacker,Missilis,Sniper Rifle,Electric,3,School Circle
+Elegg,images/Elegg.jpg,images/EleggIcon.jpg,Elegg,Supporter,Missilis,Machine Gun,Electric,2,Electric Shock
+Emma,,,Emma,Supporter,Elysion,Machine Gun,Fire,1,Absolute
+Epinel,,,Epinel,Attacker,Missilis,Submachine Gun,Wind,3,Nepenthe
+Ether,,,Ether,Defender,Missilis,Shotgun,Electric,1,M.M.R.
+Eunhwa,,,Eunhwa,Attacker,Elysion,Sniper Rifle,Fire,2,Absolute
+Exia,,,Exia,Supporter,Tetra,Sniper Rifle,Electric,1,Protocol
+Flora,,,Flora,Supporter,Missilis,Machine Gun,Electric,2,Botanic Garden
+Folkwang,,,Folkwang,Defender,Tetra,Assault Rifle,Water,2,Nepeenthe
+Frima,images/Frima.jpg,images/FrimaIcon.jpg,Frima,Supporter,Tetra,Sniper Rifle,Iron,1,Cafe Sweety
+Grave,,,Grave,Supporter,Pilgrim,Assault Rifle,Fire,2,Old Tales
+Guillotine,,,Guillotine,Attacker,Elysion,Machine Gun,Electric,3,Extrinsic
+Guilty,images/Guilty.jpg,images/GuiltyIcon.jpg,Guilty,Attacker,Missilis,Shotgun,Wind,2,Real Kindness
+Harran,,,Harran,Attacker,Pilgrim,Sniper Rifle,Electric,3,Inherit
+Helm,,,Helm,Attacker,Elysion,Sniper Rifle,Water,3,Aegis
+iDoll Flower,,,iDoll Flower,Defender,Tetra,Rocket Launcher,Wind,1,Replace
+iDoll Ocean,,,iDoll Ocean,Supporter,Tetra,Submachine Gun,Water,1,Replace
+iDoll Sun,,,iDoll Sun,Supporter,Tetra,Assault Rifle,Iron,3,Replace
+Isabel,,,Isabel,Attacker,Pilgrim,Shotgun,Electric,3,Inherit
+Jackal,images/Jackal.jpg,images/JackalIcon.jpg,Jackal,Defender,Missilis,Rocket Launcher,Iron,1,Exotic
+Julia,,,Julia,Attacker,Missilis,Assault Rifle,Iron,3,Master Hand
+K,,,K,Attacker,Elysion,Submachine Gun,Electric,3,Perilous Siege
+Kilo,,,Kilo,Defender,Missilis,Machine Gun,Fire,3,Heavy Gram
+Label,,,Label,Defender,Elysion,Assault Rifle,Iron,1,Best Seller
+Laplace,images/Laplace.jpg,images/LaplaceIcon.jpg,Laplace,Attacker,Missilis,Rocket Launcher,Iron,3,Matis
+Leona,,,Leona,Supporter,Tetra,Shotgun,Water,2,Happy Zoo
+Liberalio,,,Liberalio,Attacker,Pilgrim,Sniper Rifle,Wind,3,Heretic
+Liter,images/Liter.jpg,images/LiterIcon.jpg,Liter,Supporter,Missilis,Submachine Gun,Iron,1,Mighty Tools
+Little Mermaid,,,Little Mermaid,Supporter,Pilgrim,Submachine Gun,Wind,1,Old Tales
+Ludmilla,,,Ludmilla,Defender,Tetra,Submachine Gun,Water,1,Unlimited
+Maiden,,,Maiden,Attacker,Elysion,Shotgun,Electric,3,Extrinsic
+Mana,,,Mana,Attacker,Missilis,Assault Rifle,Wind,3,M.M.R.
+Marciana,,,Marciana,Supporter,Elysion,Shotgun,Iron,2,Academia
+Mary,,,Mary,Supporter,Tetra,Shotgun,Water,1,Seraphim
+Mast,,,Mast,Supporter,Elysion,Submachine Gun,Electric,2,Aegis
+Maxwell,images/Maxwell.jpg,images/MaxwellIcon.jpg,Maxwell,Attacker,Missilis,Sniper Rifle,Iron,3,Matis
+Mica,,,Mica,Supporter,Tetra,Rocket Launcher,Wind,1,The Carronades
+Mihara,,,Mihara,Attacker,Missilis,Assault Rifle,Water,3,Wardress
+Milk,images/Milk.jpg,images/MilkIcon.jpg,Milk,Attacker,Tetra,Sniper Rifle,Water,1,Cafe Sweety
+Mint,,,Mint,Supporter,Pilgrim,Rocket Launcher,Iron,2,T.T. STAR
+Miranda,,,Miranda,Supporter,Elysion,Submachine Gun,Fire,1,A.C.P.U.
+Modernia,,,Modernia,Attacker,Pilgrim,Machine Gun,Fire,3,Heretic
+Moran,,,Moran,Defender,Tetra,Assault Rifle,Electric,1,Underworld Queen
+Mori,,,Mori,Defender,Missilis,Assault Rifle,Wind,2,Incubator
+N102,,,N102,Supporter,Missilis,Rocket Launcher,Water,1,Recall & Release
+Naga,,,Naga,Supporter,Missilis,Shotgun,Electric,2,Dazzling Pearl
+Nayuta,,,Nayuta,Supporter,Pilgrim,Submachine Gun,Wind,2,Pioneer
+Neon,images/Neon.jpg,images/NeonIcon.jpg,Neon,Supporter,Elysion,Shotgun,Fire,1,Counters
+Nero,,,Nero,Defender,Tetra,Submachine Gun,Fire,2,Happy Zoo
+Neve,,,Neve,Attacker,Tetra,Shotgun,Water,3,Unlimited
+Nihilister,,,Nihilister,Attacker,Pilgrim,Sniper Rifle,Fire,2,Heretic
+Noah,,,Noah,Defender,Pilgrim,Rocket Launcher,Wind,2,Inherit
+Noir,,,Noir,Attacker,Tetra,Shotgun,Wind,3,777
+Noise,,,Noise,Supporter,Tetra,Rocket Launcher,Electric,1,Prima Donna
+Novel,,,Novel,Defender,Tetra,Submachine Gun,Iron,2,Protocol
+Pepper,,,Pepper,Supporter,Missilis,Shotgun,Wind,1,Seraphim
+Phantom,,,Phantom,Attacker,Elysion,Assault Rifle,Water,3,Best Seller
+Poli,,,Poli,Defender,Elysion,Shotgun,Water,2,A.C.P.U.
+Prika,,,Prika,Supporter,Tetra,Sniper Rifle,Water,2,T.T. STAR
+Privaty,,,Privaty,Attacker,Elysion,Assault Rifle,Water,3,Triangle
+Product 08,,,Product 08,Supporter,Missilis,Sniper Rifle,Electric,1,Replace
+Product 12,,,Product 12,Attacker,Missilis,Machine Gun,Fire,3,Replace
+Product 23,,,Product 23,Supporter,Missilis,Shotgun,Wind,2,Replace
+Quency,images/Quency.jpg,images/QuencyIcon.jpg,Quency,Supporter,Missilis,Submachine Gun,Electric,2,Real Kindness
+Quiry,,,Quiry,Supporter,Elysion,Rocket Launcher,Wind,3,A.C.P.U.
+Rapi,images/Rapi.jpg,images/RapiIcon.jpg,Rapi,Attacker,Elysion,Assault Rifle,Fire,3,Counters
+Rapunzel,,,Rapunzel,Supporter,Pilgrim,Rocket Launcher,Iron,1,Pioneer
+Red Hood,,,Red Hood,Attacker,Pilgrim,Sniper Rifle,Iron,p,Goddess
+Rei,,,Rei,Defender,Tetra,Submachine Gun,Water,1,School Circle
+Rosanna,,,Rosanna,Attacker,Tetra,Machine Gun,Electric,1,Underworld Queen
+Rouge,,,Rouge,Supporter,Tetra,Sniper Rifle,Electric,1,777
+Rumani,,,Rumani,Defender,Tetra,Rocket Launcher,Fire,1,Nepenthe
+Rupee,,,Rupee,Attacker,Tetra,Assault Rifle,Iron,2,Talentum
+Sakura,,,Sakura,Supporter,Tetra,Sniper Rifle,Fire,1,Underworld Queen
+Scarlet,images/Scarlet.jpg,images/ScarletIcon.jpg,Scarlet,Attacker,Pilgrim,Assault Rifle,Electric,3,Pioneer
+Signal,,,Signal,Attacker,Elysion,Submachine Gun,Fire,2,The Scouts
+Sin,images/Sin.jpg,images/SinIcon.jpg,Sin,Defender,Missilis,Assault Rifle,Electric,2,Real Kindness
+Snow White,images/Snow White.jpg,images/Snow WhiteIcon.jpg,Snow White,Attacker,Pilgrim,Assault Rifle,Iron,3,Pioneer
+Soda,,,Soda,Supporter,Tetra,Machine Gun,Fire,1,Maid For You
+Soldier EG,,,Soldier EG,Attacker,Elysion,Assault Rifle,Electric,3,Replace
+Soldier FA,,,Soldier FA,Defender,Elysion,Shotgun,Iron,2,Replace
+Soldier OW,,,Soldier OW,Supporter,Elysion,Submachine Gun,Fire,1,Replace
+Soline,images/Soline.jpg,images/SolineIcon.jpg,Soline,Attacker,Elysion,Submachine Gun,Iron,3,Infinity Rail
+Soline,,,Soline,,,,,,
+Sora,,,Sora,Supporter,Elysion,Rocket Launcher,Wind,1,Over the Horizen
+Sugar,images/Sugar.jpg,images/SugarIcon.jpg,Sugar,Attacker,Tetra,Shotgun,Iron,3,Cafe Sweety
+Tia,,,Tia,Defender,Missilis,Rocket Launcher,Iron,1,Dazzling Pearl
+Tove,,,Tove,Supporter,Missilis,Assault Rifle,Water,1,Unlimited
+Trina,,,Trina,Supporter,Missilis,Rocket Launcher,Electric,2,Botanic Garden
+Trony,,,Trony,Attacker,Missilis,Sniper Rifle,Fire,3,Electric Shock
+Velvet,,,Velvet,Supporter,Tetra,Sniper Rifle,Wind,2,Maid For You
+Vesti,,,Vesti,Attacker,Elysion,Rocket Launcher,Water,3,Absolute
+Viper,,,Viper,Attacker,Tetra,Shotgun,Water,2,Exotic
+Volume,images/Volume.jpg,images/VolumeIcon.jpg,Volume,Supporter,Tetra,Submachine Gun,Wind,1,Prima Donna
+Yan,,,Yan,Supporter,Tetra,Rocket Launcher,Fire,1,Talentum
+Yulha,,,Yulha,Attacker,Tetra,Sniper Rifle,Fire,3,Triangle
+Yuni,,,Yuni,Defender,Missilis,Rocket Launcher,Fire,2,Wardress
+Zwei,,,Zwei,Supporter,Elysion,Shotgun,Electric,1,School Circle

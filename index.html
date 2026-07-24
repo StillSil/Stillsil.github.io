@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nikke Logic Grid • Goddess of Victory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PAPAPARSE CSV LIBRARY -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        .grid-cell {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border: 4px solid #374151; background-color: #1f2937;
+            cursor: pointer; transition: all 0.2s; position: relative; border-radius: 16px;
+            overflow: hidden;
+        }
+        .grid-cell.size-3x3 { width: 200px; height: 200px; }
+        .grid-cell.size-4x4 { width: 160px; height: 160px; }
+        .grid-cell.size-5x5 { width: 120px; height: 120px; border-radius: 12px; border-width: 3px; }
+
+        .grid-cell:hover { border-color: #c4b5fd; transform: scale(1.04); }
+        .grid-cell.filled { background-color: #5b21b6; border-color: #ddd6fe; }
+        .grid-cell.error { border-color: #ef4444 !important; background-color: #450a0a !important; animation: pulse 1.5s infinite; }
+        .nikke-name { font-size: 0.75rem; margin-top: 2px; font-weight: 700; color: #e0e7ff; text-align: center; line-height: 1; }
+
+        .trait-btn.active {
+            background-color: #5b21b6 !important;
+            border-color: #c4b5fd !important;
+            box-shadow: 0 0 10px rgba(196, 181, 253, 0.5);
+        }
+
+        @keyframes pulse {
+            0%, 100% { border-color: #ef4444; }
+            50% { border-color: #f87171; }
+        }
+    </style>
+</head>
+<body class="bg-zinc-950 text-white h-screen overflow-hidden flex flex-col">
+
+    <!-- TOP SECTION: MAIN 3-COLUMN WORKSPACE -->
+    <div class="flex flex-1 min-h-0 overflow-hidden">
+        
+        <!-- PANEL 1: LEFT PANEL -->
+        <div class="w-80 bg-zinc-900 border-r border-zinc-800 p-4 flex flex-col h-full overflow-y-auto flex-shrink-0">
+            <h1 class="text-2xl font-bold text-purple-400 mb-0.5">NIKKE LOGIC</h1>
+            <p class="text-zinc-400 mb-3 text-xs">Goddess of Victory Puzzle</p>
+
+            <!-- TIMER & BEST TIME CARD -->
+            <div class="bg-zinc-800/90 border border-purple-500/30 rounded-2xl p-2.5 mb-3 flex items-center justify-between shadow-lg flex-shrink-0">
+                <div class="flex flex-col">
+                    <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">⏱️ Time</span>
+                    <span id="timer-display" class="text-xl font-black text-amber-400 font-mono">00:00</span>
+                </div>
+                <div class="h-6 w-px bg-zinc-700"></div>
+                <div class="flex flex-col text-right">
+                    <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">🏆 Best</span>
+                    <span id="best-time-display" class="text-base font-bold text-emerald-400 font-mono">--:--</span>
+                </div>
+            </div>
+
+        <!-- Character Info (MANUALLY ADJUSTABLE IMAGE HEIGHT) -->
+        <div id="info-card" class="bg-zinc-800 rounded-2xl p-3 flex flex-col overflow-y-auto">
+            
+            <!-- Manually adjust height here (e.g. h-[280px], h-[320px], h-[240px]) -->
+            <div id="info-avatar-container" class="w-full h-[500px] mb-2.5 rounded-xl overflow-hidden border-2 border-purple-400 bg-zinc-900 flex items-center justify-center flex-shrink-0">
+                <img id="info-image" src="" alt="" class="w-full h-full object-cover hidden">
+                <div id="info-fallback" class="text-3xl font-bold text-purple-300"></div>
+            </div>
+
+            <!-- Info details pinned below the image container -->
+            <div class="flex-shrink-0 w-full flex flex-col items-bottom justify-start">
+                <div id="info-name" class="text-lg font-bold text-bottom mb-0.5 leading-tight"></div>
+                
+                <div class="space-y-0.5 mt-1 text-[11px] w-full">
+                    <div class="flex justify-between"><span class="text-zinc-400">Class:</span> <span id="info-class" class="font-medium text-purple-300"></span></div>
+                    <div class="flex justify-between"><span class="text-zinc-400">Manufacturer:</span> <span id="info-manu" class="font-medium"></span></div>
+                    <div class="flex justify-between"><span class="text-zinc-400">Weapon:</span> <span id="info-weapon" class="font-medium"></span></div>
+                    <div class="flex justify-between"><span class="text-zinc-400">Element:</span> <span id="info-element" class="font-medium"></span></div>
+                    <div class="flex justify-between"><span class="text-zinc-400">Burst:</span> <span id="info-burst" class="font-medium"></span></div>
+                    <div class="flex justify-between"><span class="text-zinc-400">Squad:</span> <span id="info-squad" class="font-medium"></span></div>
+                </div>
+
+                <div id="info-clue" class="mt-2 pt-1.5 border-t border-zinc-700 text-amber-200 text-[11px] leading-tight w-full"></div>
+            </div>
+        </div>
+
+            <!-- REFERENCE CARDS -->
+            <div class="mt-3 space-y-2 flex-shrink-0">
+                <div class="bg-zinc-800 rounded-xl p-2">
+                    <h3 class="text-purple-300 font-bold text-[11px] mb-1 flex items-center gap-1">
+                        <span>🔥</span> ELEMENT CYCLE
+                    </h3>
+                    <div class="flex flex-wrap gap-1 text-[9px]">
+                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-orange-400">🔥 Fire</span> → <span class="text-emerald-400">🌬️ Wind</span></span>
+                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-emerald-400">🌬️ Wind</span> → <span class="text-slate-400">🪨 Iron</span></span>
+                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-slate-400">🪨 Iron</span> → <span class="text-blue-400">⚡ Electric</span></span>
+                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-blue-400">⚡ Electric</span> → <span class="text-cyan-400">💧 Water</span></span>
+                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-cyan-400">💧 Water</span> → <span class="text-orange-400">🔥 Fire</span></span>
+                    </div>
+                </div>
+
+                <div class="bg-zinc-800 rounded-xl p-2">
+                    <h3 class="text-purple-300 font-bold text-[11px] mb-1 flex items-center gap-1">
+                        <span>🎯</span> WEAPON RANGES
+                    </h3>
+                    <div class="grid grid-cols-2 gap-1 text-[9px]">
+                        <div class="bg-zinc-900 p-1 rounded border border-zinc-700/50">
+                            <div class="text-purple-300 font-bold">Range 1 (Close)</div>
+                            <div class="text-zinc-400">Shotgun, SMG</div>
+                        </div>
+                        <div class="bg-zinc-900 p-1 rounded border border-zinc-700/50">
+                            <div class="text-purple-300 font-bold">Range 2 (Mid)</div>
+                            <div class="text-zinc-400">Assault Rifle, MG</div>
+                        </div>
+                        <div class="bg-zinc-900 p-1 rounded border border-zinc-700/50">
+                            <div class="text-purple-300 font-bold">Range 3 (Far)</div>
+                            <div class="text-zinc-400">Sniper Rifle</div>
+                        </div>
+                        <div class="bg-zinc-900 p-1 rounded border border-zinc-700/50">
+                            <div class="text-purple-300 font-bold">Exempt</div>
+                            <div class="text-zinc-400">Rocket Launcher</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL 2: CENTER PANEL -->
+        <div class="flex-1 flex flex-col h-full items-center justify-between p-4 overflow-hidden relative">
+            
+            <!-- CONTROLS HEADER WITH DROPDOWNS -->
+            <div class="flex items-center gap-3 bg-zinc-900 px-4 py-2 rounded-2xl border border-zinc-800 shadow-md flex-shrink-0">
+                <div class="flex items-center gap-2 text-xs">
+                    <label for="select-diff" class="text-zinc-400 font-bold text-[11px]">Difficulty:</label>
+                    <select id="select-diff" onchange="handleDropdownChange()" class="bg-zinc-800 text-purple-300 font-bold px-2.5 py-1 rounded-xl border border-zinc-700 focus:outline-none focus:border-purple-400 text-xs">
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+
+                <div class="h-4 w-px bg-zinc-800"></div>
+
+                <div class="flex items-center gap-2 text-xs">
+                    <label for="select-size" class="text-zinc-400 font-bold text-[11px]">Grid Size:</label>
+                    <select id="select-size" onchange="handleDropdownChange()" class="bg-zinc-800 text-purple-300 font-bold px-2.5 py-1 rounded-xl border border-zinc-700 focus:outline-none focus:border-purple-400 text-xs">
+                        <option value="3">3x3</option>
+                        <option value="4">4x4</option>
+                        <option value="5">5x5</option>
+                    </select>
+                </div>
+
+                <div class="h-4 w-px bg-zinc-800"></div>
+
+                <div class="flex gap-2">
+                    <button onclick="generateNewPuzzle()" 
+                            class="px-3.5 py-1 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-semibold flex items-center gap-1 text-xs transition-all shadow-md">
+                        🎲 NEW PUZZLE
+                    </button>
+                    <button onclick="checkSolution()" 
+                            class="px-4 py-1 bg-purple-600 hover:bg-purple-500 rounded-xl font-bold text-xs transition-all shadow-md">
+                        VERIFY
+                    </button>
+                </div>
+            </div>
+
+            <!-- PUZZLE GRID AREA -->
+            <div class="flex-1 flex items-center justify-center my-2 min-h-0 overflow-hidden">
+                <div id="grid" class="grid gap-2"></div>
+            </div>
+
+            <!-- STATUS DISPLAY AT BOTTOM OF CENTER -->
+            <div id="status" class="text-xs font-medium text-center min-h-[1.5rem] max-w-xl mx-auto flex items-center justify-center flex-shrink-0"></div>
+        </div>
+
+        <!-- PANEL 3: RIGHT PANEL -->
+        <div class="w-[420px] bg-zinc-900 border-l border-zinc-800 p-4 flex flex-col h-full overflow-hidden flex-shrink-0">
+            <div class="flex justify-between items-center mb-2 flex-shrink-0">
+                <h2 class="font-bold text-purple-300 text-sm">AVAILABLE NIKKES</h2>
+                <span id="nikke-count-badge" class="text-[10px] font-bold bg-purple-950 text-purple-300 border border-purple-700/60 px-2 py-0.5 rounded-full"></span>
+            </div>
+
+            <!-- SELECTED NIKKE QOL PILL -->
+            <div id="selected-nikke-bar" class="mb-2 bg-zinc-950/80 border border-purple-500/40 rounded-xl px-2.5 py-1 flex items-center justify-between text-xs min-h-[30px] flex-shrink-0">
+                <span id="selected-nikke-text" class="text-zinc-400 italic">No Nikke selected</span>
+                <button id="clear-selected-btn" onclick="deselectNikke()" class="text-red-400 hover:text-red-300 font-bold hidden">✕ Clear</button>
+            </div>
+            
+            <!-- SEARCH & FILTERS -->
+            <div class="space-y-1.5 mb-2 bg-zinc-950/60 p-2.5 rounded-2xl border border-zinc-800 flex-shrink-0">
+                <input type="text" id="filter-search" oninput="createPalette()" placeholder="🔍 Search name, squad, or class..." 
+                       class="w-full bg-zinc-800 text-xs px-2.5 py-1 rounded-xl border border-zinc-700 focus:outline-none focus:border-purple-400 placeholder-zinc-500">
+                
+                <div class="grid grid-cols-3 gap-1 text-[10px]">
+                    <select id="filter-class" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1.5 py-1 rounded-lg border border-zinc-700 focus:outline-none focus:border-purple-400">
+                        <option value="">All Classes</option>
+                        <option value="Attacker">⚔️ Attacker</option>
+                        <option value="Defender">🛡️ Defender</option>
+                        <option value="Supporter">💚 Supporter</option>
+                    </select>
+
+                    <select id="filter-manu" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1.5 py-1 rounded-lg border border-zinc-700 focus:outline-none focus:border-purple-400">
+                        <option value="">All Manu.</option>
+                        <option value="Elysion">Elysion</option>
+                        <option value="Missilis">Missilis</option>
+                        <option value="Tetra">Tetra</option>
+                        <option value="Pilgrim">Pilgrim</option>
+                    </select>
+
+                    <select id="filter-element" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1.5 py-1 rounded-lg border border-zinc-700 focus:outline-none focus:border-purple-400">
+                        <option value="">All Elements</option>
+                        <option value="Fire">🔥 Fire</option>
+                        <option value="Wind">🌬️ Wind</option>
+                        <option value="Iron">🪨 Iron</option>
+                        <option value="Electric">⚡ Electric</option>
+                        <option value="Water">💧 Water</option>
+                    </select>
+
+                    <select id="filter-weapon" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1.5 py-1 rounded-lg border border-zinc-700 focus:outline-none focus:border-purple-400">
+                        <option value="">All Weapons</option>
+                        <option value="Assault Rifle">Assault Rifle</option>
+                        <option value="Rocket Launcher">Rocket Launcher</option>
+                        <option value="Shotgun">Shotgun</option>
+                        <option value="Sniper Rifle">Sniper Rifle</option>
+                        <option value="Submachine Gun">Submachine Gun</option>
+                        <option value="Machine Gun">Machine Gun</option>
+                    </select>
+
+                    <select id="filter-burst" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1.5 py-1 rounded-lg border border-zinc-700 focus:outline-none focus:border-purple-400 col-span-2">
+                        <option value="">All Burst Levels</option>
+                        <option value="1">Burst 1</option>
+                        <option value="2">Burst 2</option>
+                        <option value="3">Burst 3</option>
+                        <option value="p">Burst P</option>
+                    </select>
+                </div>
+
+                <button onclick="resetFilters()" class="w-full text-[10px] text-purple-400 hover:text-purple-300 font-semibold pt-0.5">
+                    ↺ Clear Filters
+                </button>
+            </div>
+
+            <!-- PALETTE CONTAINER -->
+            <div id="palette" class="grid grid-cols-5 gap-1.5 overflow-y-auto flex-1 auto-rows-max content-start pr-1"></div>
+        </div>
+    </div>
+
+    <!-- PANEL 4: BOTTOM PANEL (PINNED ICON DOCK) -->
+    <div class="w-full bg-zinc-900 border-t border-zinc-800 px-4 py-2 shadow-2xl flex items-center justify-center gap-5 text-[10px] flex-shrink-0 z-50">
+        <!-- Elements Group -->
+        <div class="flex flex-col items-center">
+            <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Elements</span>
+            <div class="flex gap-1">
+                <button id="btn-element-Fire" onclick="selectTraitIcon('element', 'Fire', 'Fire', 'images/Fire.jpg')" title="Fire" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                    <img src="images/Fire.jpg" alt="Fire" class="w-full h-full object-contain">
+                </button>
+                <button id="btn-element-Wind" onclick="selectTraitIcon('element', 'Wind', 'Wind', 'images/Wind.jpg')" title="Wind" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                    <img src="images/Wind.jpg" alt="Wind" class="w-full h-full object-contain">
+                </button>
+                <button id="btn-element-Iron" onclick="selectTraitIcon('element', 'Iron', 'Iron', 'images/Iron.jpg')" title="Iron" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                    <img src="images/Iron.jpg" alt="Iron" class="w-full h-full object-contain">
+                </button>
+                <button id="btn-element-Electric" onclick="selectTraitIcon('element', 'Electric', 'Electric', 'images/Electric.jpg')" title="Electric" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                    <img src="images/Electric.jpg" alt="Electric" class="w-full h-full object-contain">
+                </button>
+                <button id="btn-element-Water" onclick="selectTraitIcon('element', 'Water', 'Water', 'images/Water.jpg')" title="Water" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                    <img src="images/Water.jpg" alt="Water" class="w-full h-full object-contain">
+                </button>
+            </div>
+        </div>
+
+        <div class="h-6 w-px bg-zinc-800"></div>
+
+        <!-- Weapons Group -->
+        <div class="flex flex-col items-center">
+            <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Weapons</span>
+            <div class="flex gap-1">
+                <button id="btn-weapon-Assault Rifle" onclick="selectTraitIcon('weapon', 'Assault Rifle', 'AR', 'images/AR.jpg')" title="Assault Rifle" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                    <img src="images/AR.jpg" alt="AR" class="w-full h-full object-contain">
+                </button>
+                <button id="btn-weapon-Rocket Launcher" onclick="selectTraitIcon('weapon', 'Rocket Launcher', 'RL', 'images/RL.jpg')" title="Rocket Launcher" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                    <img src="images/RL.jpg" alt="RL" class="w-full h-full object-contain">
+                </button>
+                <button id="btn-weapon-Shotgun" onclick="selectTraitIcon('weapon', 'Shotgun', 'SG', 'images/SG.jpg')" title="Shotgun" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                    <img src="images/SG.jpg" alt="SG" class="w-full h-full object-contain">
+                </button>
+                <button id="btn-weapon-Sniper Rifle" onclick="selectTraitIcon('weapon', 'Sniper Rifle', 'SR', 'images/SR.jpg')" title="Sniper Rifle" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                    <img src="images/SR.jpg" alt="SR" class="w-full h-full object-contain">
+                </button>
+                <button id="btn-weapon-Submachine Gun" onclick="selectTraitIcon('weapon', 'Submachine Gun', 'SMG', 'images/SMG.jpg')" title="Submachine Gun" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                    <img src="images/SMG.jpg" alt="SMG" class="w-full h-full object-contain">
+                </button>
+                <button id="btn-weapon-Machine Gun" onclick="selectTraitIcon('weapon', 'Machine Gun', 'MG', 'images/MG.jpg')" title="Machine Gun" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                    <img src="images/MG.jpg" alt="MG" class="w-full h-full object-contain">
+                </button>
+            </div>
+        </div>
+
+        <div class="h-6 w-px bg-zinc-800"></div>
+
+        <!-- Manufacturers Group -->
+        <div class="flex flex-col items-center">
+            <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Manufacturers</span>
+            <div class="flex gap-1">
+                <button id="btn-manufacturer-Elysion" onclick="selectTraitIcon('manufacturer', 'Elysion', 'Elysion', 'images/Elysion.jpg')" title="Elysion" class="trait-btn bg-zinc-800 border border-zinc-700/60 px-1.5 py-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 min-w-[42px]">
+                    <img src="images/Elysion.jpg" alt="Elysion" class="h-full w-auto max-w-[55px] object-contain">
+                </button>
+                <button id="btn-manufacturer-Missilis" onclick="selectTraitIcon('manufacturer', 'Missilis', 'Missilis', 'images/Missilis.jpg')" title="Missilis" class="trait-btn bg-zinc-800 border border-zinc-700/60 px-1.5 py-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 min-w-[42px]">
+                    <img src="images/Missilis.jpg" alt="Missilis" class="h-full w-auto max-w-[55px] object-contain">
+                </button>
+                <button id="btn-manufacturer-Tetra" onclick="selectTraitIcon('manufacturer', 'Tetra', 'Tetra', 'images/Tetra.jpg')" title="Tetra" class="trait-btn bg-zinc-800 border border-zinc-700/60 px-1.5 py-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 min-w-[42px]">
+                    <img src="images/Tetra.jpg" alt="Tetra" class="h-full w-auto max-w-[55px] object-contain">
+                </button>
+                <button id="btn-manufacturer-Pilgrim" onclick="selectTraitIcon('manufacturer', 'Pilgrim', 'Pilgrim', 'images/Pilgrim.jpg')" title="Pilgrim" class="trait-btn bg-zinc-800 border border-zinc-700/60 px-1.5 py-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 min-w-[42px]">
+                    <img src="images/Pilgrim.jpg" alt="Pilgrim" class="h-full w-auto max-w-[55px] object-contain">
+                </button>
+            </div>
+        </div>
+
+        <div class="h-6 w-px bg-zinc-800"></div>
+
+        <!-- Class Group -->
+        <div class="flex flex-col items-center">
+            <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Class</span>
+            <div class="flex gap-1">
+                <button id="btn-class-Attacker" onclick="selectTraitIcon('class', 'Attacker', 'Attacker', 'images/Attacker.jpg')" title="Attacker" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                    <img src="images/Attacker.jpg" alt="Attacker" class="w-full h-full object-contain">
+                </button>
+                <button id="btn-class-Defender" onclick="selectTraitIcon('class', 'Defender', 'Defender', 'images/Defender.jpg')" title="Defender" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                    <img src="images/Defender.jpg" alt="Defender" class="w-full h-full object-contain">
+                </button>
+                <button id="btn-class-Supporter" onclick="selectTraitIcon('class', 'Supporter', 'Supporter', 'images/Supporter.jpg')" title="Supporter" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                    <img src="images/Supporter.jpg" alt="Supporter" class="w-full h-full object-contain">
+                </button>
+            </div>
+        </div>
+
+        <div class="h-6 w-px bg-zinc-800"></div>
+
+        <!-- Burst Level Group -->
+        <div class="flex flex-col items-center">
+            <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Burst</span>
+            <div class="flex gap-1">
+                <button id="btn-burst-1" onclick="selectTraitIcon('burst', '1', 'B1', 'images/1.jpg')" title="Burst 1" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                    <img src="images/1.jpg" alt="B1" class="w-full h-full object-contain">
+                </button>
+                <button id="btn-burst-2" onclick="selectTraitIcon('burst', '2', 'B2', 'images/2.jpg')" title="Burst 2" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                    <img src="images/2.jpg" alt="B2" class="w-full h-full object-contain">
+                </button>
+                <button id="btn-burst-3" onclick="selectTraitIcon('burst', '3', 'B3', 'images/3.jpg')" title="Burst 3" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                    <img src="images/3.jpg" alt="B3" class="w-full h-full object-contain">
+                </button>
+                <button id="btn-burst-p" onclick="selectTraitIcon('burst', 'p', 'BP', 'images/P.jpg')" title="Burst P" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                    <img src="images/P.jpg" alt="BP" class="w-full h-full object-contain">
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allNikkesData = [];
+
+        // Element Advantage Cycle Map (Key beats Value)
+        const ELEMENT_ADVANTAGE = {
+            'Fire': 'Wind',
+            'Wind': 'Iron',
+            'Iron': 'Electric',
+            'Electric': 'Water',
+            'Water': 'Fire'
+        };
+
+        function getWeaponRange(weapon) {
+            if (weapon === 'Shotgun' || weapon === 'Submachine Gun') return 1;
+            if (weapon === 'Assault Rifle' || weapon === 'Machine Gun') return 2;
+            if (weapon === 'Sniper Rifle') return 3;
+            return null;
+        }
+
+        async function loadNikkesFromCSV() {
+            try {
+                const response = await fetch('nikkeinfo.csv');
+                const csvText = await response.text();
+
+                Papa.parse(csvText, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        allNikkesData = results.data
+                            .filter(row => row.id && row.name && row.class)
+                            .map(row => {
+                                const name = row.name.trim();
+                                return {
+                                    id: row.id.trim(),
+                                    name: name,
+                                    class: row.class ? row.class.trim() : 'Unknown',
+                                    manufacturer: row.manufacturer ? row.manufacturer.trim() : 'Unknown',
+                                    weapon: row.weapon ? row.weapon.trim() : 'Unknown',
+                                    element: row.element ? row.element.trim() : 'Unknown',
+                                    burst: row.burst ? row.burst.trim() : '1',
+                                    squad: row.squad ? row.squad.trim() : 'Unknown',
+                                    image: `images/${name}.jpg`,
+                                    icon: `images/${name}Icon.jpg`
+                                };
+                            });
+
+                        generateNewPuzzle();
+                    }
+                });
+            } catch (err) {
+                console.error("Failed to load CSV:", err);
+                setStatus("⚠️ Failed to load character data from CSV file.", "text-red-400 font-bold");
+            }
+        }
+
+        let currentDifficulty = 'easy3';
+        let gridRows = 3;
+        let gridCols = 3;
+        let activePool = []; 
+        let shuffledPalette = []; 
+        let solution = [];
+        let currentGrid = [];
+        let selectedNikke = null;
+        let selectedTraitMark = null; // Store trait icon selection
+        let cellCluesMap = {};
+        let cellClueRules = {};
+
+        // TIMER & BEST TIME LOGIC
+        let timerInterval = null;
+        let elapsedSeconds = 0;
+        let isTimerRunning = false;
+
+        function formatTime(totalSeconds) {
+            const mins = Math.floor(totalSeconds / 60);
+            const secs = totalSeconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function startTimer() {
+            stopTimer();
+            elapsedSeconds = 0;
+            isTimerRunning = true;
+            updateTimerDisplay();
+            
+            timerInterval = setInterval(() => {
+                if (isTimerRunning) {
+                    elapsedSeconds++;
+                    updateTimerDisplay();
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            isTimerRunning = false;
+        }
+
+        function addPenaltyTime(penaltySecs = 60) {
+            elapsedSeconds += penaltySecs;
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            const timerEl = document.getElementById('timer-display');
+            if (timerEl) timerEl.textContent = formatTime(elapsedSeconds);
+        }
+
+        function updateBestTimeDisplay() {
+            const bestEl = document.getElementById('best-time-display');
+            const savedBest = localStorage.getItem(`best_time_${currentDifficulty}`);
+            if (savedBest && bestEl) {
+                bestEl.textContent = formatTime(parseInt(savedBest, 10));
+            } else if (bestEl) {
+                bestEl.textContent = '--:--';
+            }
+        }
+
+        function saveBestTimeIfRecord() {
+            const key = `best_time_${currentDifficulty}`;
+            const existingBest = localStorage.getItem(key);
+            if (!existingBest || elapsedSeconds < parseInt(existingBest, 10)) {
+                localStorage.setItem(key, elapsedSeconds);
+                updateBestTimeDisplay();
+                return true; // Is new record
+            }
+            return false;
+        }
+
+        function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+        function getNeighbors(row, col) {
+            const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+            const neighbors = [];
+            dirs.forEach(([dr, dc]) => {
+                const nr = row + dr, nc = col + dc;
+                if (nr >= 0 && nr < gridRows && nc >= 0 && nc < gridCols) neighbors.push({row: nr, col: nc});
+            });
+            return neighbors;
+        }
+
+        function getDirectionalNeighbor(r, c, dir) {
+            if (dir === 'ABOVE' && r > 0) return { r: r - 1, c: c };
+            if (dir === 'BELOW' && r < gridRows - 1) return { r: r + 1, c: c };
+            if (dir === 'LEFT' && c > 0) return { r: r, c: c - 1 };
+            if (dir === 'RIGHT' && c < gridCols - 1) return { r: r, c: c + 1 };
+            return null;
+        }
+
+        function getCellsAtDistance(row, col, targetDist) {
+            const result = [];
+            for (let r = 0; r < gridRows; r++) {
+                for (let c = 0; c < gridCols; c++) {
+                    const dist = Math.abs(r - row) + Math.abs(c - col);
+                    if (dist === targetDist) {
+                        result.push({ row: r, col: c });
+                    }
+                }
+            }
+            return result;
+        }
+
+        function handleDropdownChange() {
+            const diffVal = document.getElementById('select-diff').value;
+            const sizeVal = document.getElementById('select-size').value;
+            currentDifficulty = `${diffVal}${sizeVal}`;
+            generateNewPuzzle();
+        }
+
+        function deselectNikke() {
+            selectedNikke = null;
+            selectedTraitMark = null;
+            updateTraitDockUI();
+            updateSelectedNikkeBar();
+            createPalette();
+        }
+
+        function selectTraitIcon(type, value, label, src) {
+            selectedNikke = null;
+
+            // Toggle deselection if clicking the currently active marker icon
+            if (selectedTraitMark && selectedTraitMark.type === type && selectedTraitMark.value === value) {
+                selectedTraitMark = null;
+            } else {
+                selectedTraitMark = { type, value, label, src };
+            }
+
+            updateTraitDockUI();
+            updateSelectedNikkeBar();
+            createPalette();
+        }
+
+        function updateTraitDockUI() {
+            document.querySelectorAll('.trait-btn').forEach(btn => btn.classList.remove('active'));
+            if (selectedTraitMark) {
+                const activeBtn = document.getElementById(`btn-${selectedTraitMark.type}-${selectedTraitMark.value}`);
+                if (activeBtn) activeBtn.classList.add('active');
+            }
+        }
+
+        function updateSelectedNikkeBar() {
+            const textEl = document.getElementById('selected-nikke-text');
+            const btnEl = document.getElementById('clear-selected-btn');
+
+            if (selectedNikke) {
+                textEl.innerHTML = `Selected: <span class="font-bold text-purple-300 not-italic">${selectedNikke.name}</span> <span class="text-zinc-500">(${selectedNikke.class})</span>`;
+                textEl.classList.remove('italic');
+                btnEl.classList.remove('hidden');
+            } else if (selectedTraitMark) {
+                textEl.innerHTML = `Selected Marker: <span class="font-bold text-amber-300 not-italic">${selectedTraitMark.label}</span>`;
+                textEl.classList.remove('italic');
+                btnEl.classList.remove('hidden');
+            } else {
+                textEl.textContent = 'No Nikke or Marker selected';
+                textEl.classList.add('italic');
+                btnEl.classList.add('hidden');
+            }
+        }
+
+        function generateNewPuzzle() {
+            if (allNikkesData.length === 0) return;
+
+            selectedNikke = null;
+            selectedTraitMark = null;
+            updateTraitDockUI();
+            updateSelectedNikkeBar();
+            resetFilters();
+            updateBestTimeDisplay();
+
+            let poolSize = 9;
+            let hints = 3;
+
+            if (currentDifficulty.startsWith('easy')) {
+                if (currentDifficulty === 'easy3') { gridRows = 3; gridCols = 3; poolSize = 10; hints = 3; }
+                else if (currentDifficulty === 'easy4') { gridRows = 4; gridCols = 4; poolSize = 17; hints = 4; }
+                else if (currentDifficulty === 'easy5') { gridRows = 5; gridCols = 5; poolSize = 26; hints = 5; }
+            } else if (currentDifficulty.startsWith('medium')) {
+                if (currentDifficulty === 'medium3') { gridRows = 3; gridCols = 3; poolSize = 15; hints = 3; }
+                else if (currentDifficulty === 'medium4') { gridRows = 4; gridCols = 4; poolSize = 25; hints = 4; }
+                else if (currentDifficulty === 'medium5') { gridRows = 5; gridCols = 5; poolSize = allNikkesData.length; hints = 5; }
+            } else if (currentDifficulty.startsWith('hard')) {
+                if (currentDifficulty === 'hard3') { gridRows = 3; gridCols = 3; poolSize = 25; hints = 3; }
+                else if (currentDifficulty === 'hard4') { gridRows = 4; gridCols = 4; poolSize = 50; hints = 4; }
+                else if (currentDifficulty === 'hard5') { gridRows = 5; gridCols = 5; poolSize = allNikkesData.length; hints = 5; }
+            }
+
+            const actualPoolSize = Math.min(poolSize, allNikkesData.length);
+            activePool = shuffle(allNikkesData).slice(0, actualPoolSize);
+            shuffledPalette = shuffle(activePool);
+
+            solution = Array(gridRows).fill().map(() => Array(gridCols).fill(null));
+            let poolIndex = 0;
+            for (let r = 0; r < gridRows; r++) {
+                for (let c = 0; c < gridCols; c++) {
+                    solution[r][c] = activePool[poolIndex++ % activePool.length].id;
+                }
+            }
+
+            currentGrid = Array(gridRows).fill().map(() => Array(gridCols).fill(null));
+
+            const positions = [];
+            for (let r = 0; r < gridRows; r++) {
+                for (let c = 0; c < gridCols; c++) {
+                    positions.push({ row: r, col: c });
+                }
+            }
+            const shuffledPositions = shuffle(positions);
+            for (let i = 0; i < Math.min(hints, positions.length); i++) {
+                const pos = shuffledPositions[i];
+                currentGrid[pos.row][pos.col] = solution[pos.row][pos.col];
+            }
+
+            generateClues(solution);
+
+            createGrid();
+            createPalette();
+            renderGrid();
+            showInfo(shuffledPalette[0]);
+            startTimer();
+
+            document.getElementById('status').innerHTML = `<span class="text-emerald-400 font-semibold">🎲 New ${currentDifficulty.toUpperCase()} Puzzle generated!</span>`;
+            setTimeout(() => document.getElementById('status').textContent = '', 3000);
+        }
+
+        function generateClues(sol) {
+            cellCluesMap = {};
+            cellClueRules = {};
+            const nikkeMap = Object.fromEntries(allNikkesData.map(n => [n.id, n]));
+
+            const allGridNikkes = [];
+            for (let r = 0; r < gridRows; r++) {
+                for (let c = 0; c < gridCols; c++) {
+                    allGridNikkes.push(nikkeMap[sol[r][c]]);
+                }
+            }
+
+            const questionWeights = {
+                'NIKKE_ON_GRID': 7,
+                'ONLY_SQUAD': 5,
+                'ONLY_MANUFACTURER': 5,
+                'ELEMENT_STRONGER': 10,
+                'SEE_DISTANCE': 8,
+                'DIRECTIONAL': 10,
+                'SELF_CLASS': 7,
+                'ADJACENT_ELEMENT': 10
+            };
+
+            function getWeightedRandomChoice(candidates) {
+                const totalWeight = candidates.reduce((sum, item) => sum + item.weight, 0);
+                if (totalWeight <= 0) return candidates[Math.floor(Math.random() * candidates.length)];
+
+                let randomVal = Math.random() * totalWeight;
+                for (const item of candidates) {
+                    if (randomVal < item.weight) return item;
+                    randomVal -= item.weight;
+                }
+                return candidates[0];
+            }
+
+            for (let r = 0; r < gridRows; r++) {
+                for (let c = 0; c < gridCols; c++) {
+                    const cellNikke = nikkeMap[sol[r][c]];
+                    const cellKey = `${r},${c}`;
+                    const candidates = [];
+
+                    // 1. Specific Nikke on Grid
+                    const presentNikke = allGridNikkes[Math.floor(Math.random() * allGridNikkes.length)];
+                    candidates.push({
+                        type: 'NIKKE_ON_GRID',
+                        weight: questionWeights['NIKKE_ON_GRID'],
+                        text: `Cell R${r+1}C${c+1}: ${presentNikke.name} is on the grid.`,
+                        checkFn: (currN, neighs, gridState) => {
+                            return gridState.some(row => row.some(val => typeof val === 'string' && nikkeMap[val]?.name === presentNikke.name));
+                        },
+                        expected: true
+                    });
+
+                    // 2. Only Squad
+                    const squadCount = allGridNikkes.filter(n => n.squad === cellNikke.squad).length;
+                    if (squadCount === 1) {
+                        candidates.push({
+                            type: 'ONLY_SQUAD',
+                            weight: questionWeights['ONLY_SQUAD'],
+                            text: `Cell R${r+1}C${c+1}: I am the only Nikke from my squad on the field.`,
+                            checkFn: (currN, neighs, gridState) => {
+                                let count = 0;
+                                gridState.forEach(row => row.forEach(val => {
+                                    if (typeof val === 'string' && nikkeMap[val]?.squad === currN.squad) count++;
+                                }));
+                                return count === 1;
+                            },
+                            expected: true
+                        });
+                    }
+
+                    // 3. Only Manufacturer
+                    const manuCount = allGridNikkes.filter(n => n.manufacturer === cellNikke.manufacturer).length;
+                    if (manuCount === 1) {
+                        candidates.push({
+                            type: 'ONLY_MANUFACTURER',
+                            weight: questionWeights['ONLY_MANUFACTURER'],
+                            text: `Cell R${r+1}C${c+1}: I am the only Nikke from my manufacturer on the field.`,
+                            checkFn: (currN, neighs, gridState) => {
+                                let count = 0;
+                                gridState.forEach(row => row.forEach(val => {
+                                    if (typeof val === 'string' && nikkeMap[val]?.manufacturer === currN.manufacturer) count++;
+                                }));
+                                return count === 1;
+                            },
+                            expected: true
+                        });
+                    }
+
+                    // 4. Element Advantage
+                    const directions = shuffle(['ABOVE', 'BELOW', 'LEFT', 'RIGHT']);
+                    for (const d of directions) {
+                        const pos = getDirectionalNeighbor(r, c, d);
+                        if (pos) {
+                            const neighborNikke = nikkeMap[sol[pos.r][pos.c]];
+                            if (ELEMENT_ADVANTAGE[cellNikke.element] === neighborNikke.element) {
+                                candidates.push({
+                                    type: 'ELEMENT_STRONGER',
+                                    weight: questionWeights['ELEMENT_STRONGER'],
+                                    text: `Cell R${r+1}C${c+1}: My element is stronger than the Nikke ${d}.`,
+                                    checkFn: (currN, neighs, gridState) => {
+                                        const val = gridState[pos.r][pos.c];
+                                        if (typeof val !== 'string') return false;
+                                        const targetN = nikkeMap[val];
+                                        return targetN ? ELEMENT_ADVANTAGE[currN.element] === targetN.element : false;
+                                    },
+                                    expected: true
+                                });
+                                break;
+                            }
+                        }
+                    }
+
+                    // 5. I can see a [Class/Element/Weapon] [Range] cells away
+                    const weaponDist = getWeaponRange(cellNikke.weapon);
+                    if (weaponDist !== null) {
+                        const targetDistCells = getCellsAtDistance(r, c, weaponDist);
+                        
+                        if (targetDistCells.length > 0) {
+                            const targetCell = targetDistCells[Math.floor(Math.random() * targetDistCells.length)];
+                            const targetNikke = nikkeMap[sol[targetCell.row][targetCell.col]];
+                            
+                            const traitChoices = [
+                                { attr: 'class', val: targetNikke.class, label: targetNikke.class },
+                                { attr: 'element', val: targetNikke.element, label: `${targetNikke.element} Element` },
+                                { attr: 'weapon', val: targetNikke.weapon, label: `${targetNikke.weapon} user` }
+                            ];
+                            const pickedTrait = traitChoices[Math.floor(Math.random() * traitChoices.length)];
+
+                            candidates.push({
+                                type: 'SEE_DISTANCE',
+                                weight: questionWeights['SEE_DISTANCE'],
+                                text: `Cell R${r+1}C${c+1}: I can see a ${pickedTrait.label} ${weaponDist} cell(s) away.`,
+                                checkFn: (currN, neighs, gridState) => {
+                                    const cellsAtD = getCellsAtDistance(r, c, weaponDist);
+                                    return cellsAtD.some(pos => {
+                                        const val = gridState[pos.row][pos.col];
+                                        if (typeof val !== 'string') return false;
+                                        return nikkeMap[val] && nikkeMap[val][pickedTrait.attr] === pickedTrait.val;
+                                    });
+                                },
+                                expected: true
+                            });
+                        }
+                    }
+
+                    // 6. Directional Neighbor Class
+                    for (const d of directions) {
+                        const pos = getDirectionalNeighbor(r, c, d);
+                        if (pos) {
+                            const targetNikke = nikkeMap[sol[pos.r][pos.c]];
+                            candidates.push({
+                                type: 'DIRECTIONAL',
+                                weight: questionWeights['DIRECTIONAL'],
+                                text: `Cell R${r+1}C${c+1}: The Nikke directly ${d} is a ${targetNikke.class}.`,
+                                checkFn: (currN, neighs, gridState) => {
+                                    const val = gridState[pos.r][pos.c];
+                                    return typeof val === 'string' && nikkeMap[val] ? nikkeMap[val].class === targetNikke.class : false;
+                                },
+                                expected: true
+                            });
+                            break;
+                        }
+                    }
+
+                    // 7. Adjacent Element
+                    const neighbors = getNeighbors(r, c).map(nb => nikkeMap[sol[nb.row][nb.col]]);
+                    if (neighbors.length > 0) {
+                        const targetNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
+                        candidates.push({
+                            type: 'ADJACENT_ELEMENT',
+                            weight: questionWeights['ADJACENT_ELEMENT'],
+                            text: `Cell R${r+1}C${c+1}: Adjacent to a ${targetNeighbor.element} Element Nikke.`,
+                            checkFn: (_, neighs) => neighs.some(val => typeof val === 'string' && nikkeMap[val] && nikkeMap[val].element === targetNeighbor.element),
+                            expected: true
+                        });
+                    }
+
+                    // 8. Self Class Fallback
+                    candidates.push({
+                        type: 'SELF_CLASS',
+                        weight: questionWeights['SELF_CLASS'],
+                        text: `Cell R${r+1}C${c+1}: I am a ${cellNikke.class} Nikke.`,
+                        checkFn: (currN) => currN.class === cellNikke.class,
+                        expected: true
+                    });
+
+                    const chosenClue = getWeightedRandomChoice(candidates);
+                    questionWeights[chosenClue.type] = Math.max(1, questionWeights[chosenClue.type] - 3);
+
+                    cellCluesMap[cellKey] = chosenClue.text;
+                    cellClueRules[cellKey] = {
+                        checkFn: chosenClue.checkFn,
+                        expected: chosenClue.expected,
+                        text: chosenClue.text
+                    };
+                }
+            }
+        }
+
+        function createGrid() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            grid.className = `grid gap-2 grid-cols-${gridCols}`;
+
+            const sizeClass = gridCols === 5 ? 'size-5x5' : gridCols === 4 ? 'size-4x4' : 'size-3x3';
+
+            for (let r = 0; r < gridRows; r++) {
+                for (let c = 0; c < gridCols; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = `grid-cell ${sizeClass}`;
+                    cell.dataset.row = r; cell.dataset.col = c;
+                    cell.addEventListener('click', () => {
+                        clearErrorHighlights();
+
+                        if (selectedNikke) {
+                            currentGrid[r][c] = (currentGrid[r][c] === selectedNikke.id) ? null : selectedNikke.id;
+                            renderGrid();
+                        } else if (selectedTraitMark) {
+                            let currentVal = currentGrid[r][c];
+
+                            // Replace existing Nikke string placement with object markers
+                            if (typeof currentVal === 'string' || !currentVal) {
+                                currentVal = {};
+                            }
+
+                            // Toggle off if clicking the same icon already placed in this category
+                            if (currentVal[selectedTraitMark.type]?.value === selectedTraitMark.value) {
+                                delete currentVal[selectedTraitMark.type];
+                                currentGrid[r][c] = Object.keys(currentVal).length > 0 ? currentVal : null;
+                            } else {
+                                // Add/update marker category
+                                currentVal[selectedTraitMark.type] = { ...selectedTraitMark };
+                                currentGrid[r][c] = currentVal;
+                            }
+                            renderGrid();
+                        }
+                        
+                        const placedVal = currentGrid[r][c];
+                        if (typeof placedVal === 'string') {
+                            const placedNikke = allNikkesData.find(n => n.id === placedVal);
+                            if (placedNikke) showInfo(placedNikke);
+                        }
+
+                        const clueText = cellCluesMap[`${r},${c}`];
+                        if (clueText) {
+                            setStatus(`🔍 ${clueText}`, 'text-amber-300 font-semibold');
+                        }
+                    });
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        function renderGrid() {
+            document.querySelectorAll('.grid-cell').forEach(cell => {
+                const r = +cell.dataset.row, c = +cell.dataset.col;
+                const cellData = currentGrid[r][c];
+                
+                if (typeof cellData === 'string') {
+                    // Full Nikke Placed (sized to 75% of cell)
+                    const n = allNikkesData.find(x => x.id === cellData);
+                    cell.innerHTML = `
+                        <div class="w-[75%] h-[75%] rounded-xl overflow-hidden border border-purple-300 bg-zinc-900 flex items-center justify-center">
+                            <img src="${n.icon}" alt="${n.name}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <span class="text-xs font-bold text-purple-300 hidden">${n.name.substring(0,2).toUpperCase()}</span>
+                        </div>
+                        <div class="nikke-name">${n.name}</div>
+                    `;
+                    cell.classList.add('filled');
+                } else if (cellData && typeof cellData === 'object' && Object.keys(cellData).length > 0) {
+                    // Pure Image Markers Grid Placement (No text labels)
+                    const markerItems = Object.values(cellData);
+                    const count = markerItems.length;
+
+                    // Responsive sizing per icon depending on how many traits are on this tile
+                    let iconContainerStyle = 'w-12 h-12 p-1.5';
+                    if (count > 2) {
+                        iconContainerStyle = 'w-8 h-8 p-1';
+                    } else if (count === 2) {
+                        iconContainerStyle = 'w-10 h-10 p-1';
+                    }
+
+                    const markerImgsHtml = markerItems.map(item => `
+                        <div class="${iconContainerStyle} rounded-lg bg-zinc-900 border border-zinc-700/80 flex items-center justify-center shadow-md" title="${item.label}">
+                            <img src="${item.src}" alt="${item.label}" class="w-full h-full object-contain pointer-events-none">
+                        </div>
+                    `).join('');
+
+                    cell.innerHTML = `
+                        <div class="grid grid-cols-2 gap-1.5 p-2 items-center justify-items-center max-w-full max-h-full">
+                            ${markerImgsHtml}
+                        </div>
+                    `;
+                    cell.classList.add('filled');
+                } else {
+                    cell.innerHTML = '';
+                    cell.classList.remove('filled');
+                }
+            });
+        }
+
+        function resetFilters() {
+            document.getElementById('filter-search').value = '';
+            document.getElementById('filter-class').value = '';
+            document.getElementById('filter-manu').value = '';
+            document.getElementById('filter-element').value = '';
+            document.getElementById('filter-weapon').value = '';
+            document.getElementById('filter-burst').value = '';
+            createPalette();
+        }
+
+        function createPalette() {
+            const p = document.getElementById('palette');
+            p.innerHTML = '';
+
+            const searchVal = document.getElementById('filter-search').value.toLowerCase().trim();
+            const classVal = document.getElementById('filter-class').value;
+            const manuVal = document.getElementById('filter-manu').value;
+            const elementVal = document.getElementById('filter-element').value;
+            const weaponVal = document.getElementById('filter-weapon').value;
+            const burstVal = document.getElementById('filter-burst').value;
+
+            const filteredList = shuffledPalette.filter(n => {
+                const matchesSearch = !searchVal || 
+                    n.name.toLowerCase().includes(searchVal) || 
+                    n.squad.toLowerCase().includes(searchVal) ||
+                    n.class.toLowerCase().includes(searchVal);
+
+                const matchesClass = !classVal || n.class === classVal;
+                const matchesManu = !manuVal || n.manufacturer === manuVal;
+                const matchesElement = !elementVal || n.element === elementVal;
+                const matchesWeapon = !weaponVal || n.weapon === weaponVal;
+                const matchesBurst = !burstVal || n.burst.toString() === burstVal;
+
+                return matchesSearch && matchesClass && matchesManu && matchesElement && matchesWeapon && matchesBurst;
+            });
+
+            const badge = document.getElementById('nikke-count-badge');
+            if (badge) {
+                badge.textContent = `${filteredList.length} / ${shuffledPalette.length}`;
+            }
+
+            if (filteredList.length === 0) {
+                p.innerHTML = `<div class="col-span-5 text-center text-xs text-zinc-500 py-6">No matching Nikkes found</div>`;
+                return;
+            }
+
+            filteredList.forEach(n => {
+                const btn = document.createElement('button');
+                btn.className = `p-1 aspect-square rounded-xl flex flex-col items-center justify-center transition-all hover:scale-105 ${selectedNikke?.id === n.id ? 'bg-purple-900 border-2 border-purple-400' : 'hover:bg-zinc-800 bg-zinc-900/50'}`;
+                btn.innerHTML = `
+                    <div class="w-7 h-7 rounded-lg overflow-hidden mb-0.5 border border-zinc-700 bg-zinc-800 flex items-center justify-center flex-shrink-0">
+                        <img src="${n.icon}" alt="${n.name}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <span class="text-[10px] font-bold text-zinc-400 hidden">${n.name.substring(0,2).toUpperCase()}</span>
+                    </div>
+                    <div class="text-[8px] font-bold text-center leading-tight truncate w-full">${n.name}</div>
+                `;
+                btn.onclick = () => {
+                    selectedTraitMark = null;
+                    updateTraitDockUI();
+                    if (selectedNikke?.id === n.id) {
+                        selectedNikke = null;
+                    } else {
+                        selectedNikke = n;
+                        showInfo(n);
+                    }
+                    updateSelectedNikkeBar();
+                    createPalette();
+                };
+                btn.onmouseenter = () => {
+                    if (!selectedNikke) showInfo(n);
+                };
+                p.appendChild(btn);
+            });
+        }
+
+        function showInfo(n) {
+            if (!n) return;
+            const img = document.getElementById('info-image');
+            const fallback = document.getElementById('info-fallback');
+            
+            img.src = n.image;
+            img.classList.remove('hidden');
+            fallback.classList.add('hidden');
+            img.onerror = () => {
+                img.classList.add('hidden');
+                fallback.classList.remove('hidden');
+                fallback.textContent = n.name.substring(0, 2).toUpperCase();
+            };
+
+            document.getElementById('info-name').textContent = n.name;
+            document.getElementById('info-class').textContent = n.class;
+            document.getElementById('info-manu').textContent = n.manufacturer;
+            document.getElementById('info-weapon').textContent = n.weapon;
+            document.getElementById('info-element').textContent = n.element;
+            document.getElementById('info-burst').textContent = `Burst ${n.burst}`;
+            document.getElementById('info-squad').textContent = n.squad;
+        }
+
+        function clearErrorHighlights() {
+            document.querySelectorAll('.grid-cell').forEach(cell => cell.classList.remove('error'));
+        }
+
+        function validateGridWithClues() {
+            const nikkeMap = Object.fromEntries(allNikkesData.map(n => [n.id, n]));
+            const failedClues = [];
+            clearErrorHighlights();
+
+            for (let r = 0; r < gridRows; r++) {
+                for (let c = 0; c < gridCols; c++) {
+                    const id = currentGrid[r][c];
+                    if (typeof id !== 'string') continue;
+
+                    const nikke = nikkeMap[id];
+                    const neighbors = getNeighbors(r, c).map(nb => currentGrid[nb.row][nb.col]);
+
+                    const rule = cellClueRules[`${r},${c}`];
+                    if (!rule) continue;
+
+                    const result = rule.checkFn(nikke, neighbors, currentGrid);
+
+                    if (result !== rule.expected) {
+                        failedClues.push({ row: r, col: c, text: rule.text });
+                        
+                        const cellElem = document.querySelector(`.grid-cell[data-row="${r}"][data-col="${c}"]`);
+                        if (cellElem) cellElem.classList.add('error');
+                    }
+                }
+            }
+            return failedClues;
+        }
+
+        function checkSolution() {
+            clearErrorHighlights();
+
+            const filledWithNikkes = currentGrid.every(r => r.every(c => typeof c === 'string'));
+            if (!filledWithNikkes) return setStatus('⚠️ Fill every cell with a Nikke first (Markers don\'t count as solutions)!', 'text-amber-400 font-semibold');
+
+            const placedNikkes = currentGrid.flat();
+            const counts = {};
+            let hasDuplicates = false;
+
+            placedNikkes.forEach(id => {
+                if (typeof id === 'string') counts[id] = (counts[id] || 0) + 1;
+            });
+
+            for (let r = 0; r < gridRows; r++) {
+                for (let c = 0; c < gridCols; c++) {
+                    const id = currentGrid[r][c];
+                    if (typeof id === 'string' && counts[id] > 1) {
+                        hasDuplicates = true;
+                        const cellElem = document.querySelector(`.grid-cell[data-row="${r}"][data-col="${c}"]`);
+                        if (cellElem) cellElem.classList.add('error');
+                    }
+                }
+            }
+
+            if (hasDuplicates) {
+                addPenaltyTime(60);
+                return setStatus('❌ Duplicate Nikke placed! (+1:00 Penalty added)', 'text-red-400 font-bold');
+            }
+
+            const failedClues = validateGridWithClues();
+
+            if (failedClues.length === 0) {
+                stopTimer();
+                const isNewRecord = saveBestTimeIfRecord();
+                const timeString = formatTime(elapsedSeconds);
+
+                if (isNewRecord) {
+                    return setStatus(`🎉 SOLVED in ${timeString}! 🏆 NEW BEST TIME RECORD!`, 'text-emerald-400 font-bold text-xl');
+                } else {
+                    return setStatus(`🎉 PUZZLE SOLVED in ${timeString}!`, 'text-emerald-400 font-bold text-xl');
+                }
+            }
+
+            // ADD PENALTY FOR INCORRECT VALIDATION
+            addPenaltyTime(60);
+
+            const errorListHtml = `
+                <div class="text-red-400 font-bold mb-1">❌ Incorrect! ${failedClues.length} clue(s) not fulfilled (+1:00 Penalty added):</div>
+                <div class="bg-red-950/50 border border-red-800/80 rounded-2xl p-2 text-xs text-red-200 text-left space-y-1 max-h-24 overflow-y-auto">
+                    ${failedClues.map(f => `<div>• <span class="font-bold text-red-300">Cell R${f.row+1}C${f.col+1}:</span> ${f.text.replace(`Cell R${f.row+1}C${f.col+1}: `, '')}</div>`).join('')}
+                </div>
+            `;
+            setStatus(errorListHtml, '');
+        }
+
+        function setStatus(text, cls) {
+            const el = document.getElementById('status');
+            el.innerHTML = cls ? `<span class="${cls}">${text}</span>` : text;
+        }
+
+        window.onload = () => {
+            loadNikkesFromCSV();
+        };
+    </script>
+</body>
+</html>
