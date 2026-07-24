@@ -58,31 +58,31 @@
                 </div>
             </div>
 
-        <!-- Character Info (MANUALLY ADJUSTABLE IMAGE HEIGHT) -->
-        <div id="info-card" class="bg-zinc-800 rounded-2xl p-3 flex flex-col overflow-y-auto">
-            
-            <!-- Manually adjust height here (e.g. h-[280px], h-[320px], h-[240px]) -->
-            <div id="info-avatar-container" class="w-full h-[300px] mb-2.5 rounded-xl overflow-hidden border-2 border-purple-400 bg-zinc-900 flex items-center justify-center flex-shrink-0">
-                <img id="info-image" src="" alt="" class="w-fit h-fit object-cover hidden">
-                <div id="info-fallback" class="text-3xl font-bold text-purple-300"></div>
-            </div>
-
-            <!-- Info details pinned below the image container -->
-            <div class="flex-shrink-0 w-full flex flex-col items-bottom justify-start">
-                <div id="info-name" class="text-lg font-bold text-bottom mb-0.5 leading-tight"></div>
+            <!-- Character Info (FIXED CONTAINER HEIGHT & FULLY CONTAINED IMAGE) -->
+            <div id="info-card" class="bg-zinc-800 rounded-2xl p-3 flex flex-col overflow-y-auto">
                 
-                <div class="space-y-0.5 mt-1 text-[11px] w-full">
-                    <div class="flex justify-between"><span class="text-zinc-400">Class:</span> <span id="info-class" class="font-medium text-purple-300"></span></div>
-                    <div class="flex justify-between"><span class="text-zinc-400">Manufacturer:</span> <span id="info-manu" class="font-medium"></span></div>
-                    <div class="flex justify-between"><span class="text-zinc-400">Weapon:</span> <span id="info-weapon" class="font-medium"></span></div>
-                    <div class="flex justify-between"><span class="text-zinc-400">Element:</span> <span id="info-element" class="font-medium"></span></div>
-                    <div class="flex justify-between"><span class="text-zinc-400">Burst:</span> <span id="info-burst" class="font-medium"></span></div>
-                    <div class="flex justify-between"><span class="text-zinc-400">Squad:</span> <span id="info-squad" class="font-medium"></span></div>
+                <!-- Manually adjust container height here (e.g. h-[280px], h-[320px], h-[240px]) -->
+                <div id="info-avatar-container" class="w-full h-[280px] mb-2.5 rounded-xl overflow-hidden border-2 border-purple-400 bg-zinc-900 flex items-center justify-center flex-shrink-0 p-1">
+                    <img id="info-image" src="" alt="" class="max-w-full max-h-full w-auto h-auto object-contain hidden">
+                    <div id="info-fallback" class="text-3xl font-bold text-purple-300"></div>
                 </div>
-
-                <div id="info-clue" class="mt-2 pt-1.5 border-t border-zinc-700 text-amber-200 text-[11px] leading-tight w-full"></div>
+            
+                <!-- Info details pinned below the image container -->
+                <div class="flex-shrink-0 w-full flex flex-col items-center">
+                    <div id="info-name" class="text-lg font-bold text-center mb-0.5 leading-tight"></div>
+                    
+                    <div class="space-y-0.5 mt-1 text-[11px] w-full">
+                        <div class="flex justify-between"><span class="text-zinc-400">Class:</span> <span id="info-class" class="font-medium text-purple-300"></span></div>
+                        <div class="flex justify-between"><span class="text-zinc-400">Manufacturer:</span> <span id="info-manu" class="font-medium"></span></div>
+                        <div class="flex justify-between"><span class="text-zinc-400">Weapon:</span> <span id="info-weapon" class="font-medium"></span></div>
+                        <div class="flex justify-between"><span class="text-zinc-400">Element:</span> <span id="info-element" class="font-medium"></span></div>
+                        <div class="flex justify-between"><span class="text-zinc-400">Burst:</span> <span id="info-burst" class="font-medium"></span></div>
+                        <div class="flex justify-between"><span class="text-zinc-400">Squad:</span> <span id="info-squad" class="font-medium"></span></div>
+                    </div>
+            
+                    <div id="info-clue" class="mt-2 pt-1.5 border-t border-zinc-700 text-amber-200 text-[11px] leading-tight w-full"></div>
+                </div>
             </div>
-        </div>
 
             <!-- REFERENCE CARDS -->
             <div class="mt-3 space-y-2 flex-shrink-0">
