@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Goddess of Logic: Nikke</title>
+    <title>Nikke Logic Grid • Goddess of Victory</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- PAPAPARSE CSV LIBRARY -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -42,8 +42,8 @@
         
         <!-- PANEL 1: LEFT PANEL -->
         <div class="w-80 bg-zinc-900 border-r border-zinc-800 p-4 flex flex-col h-full overflow-y-auto flex-shrink-0">
-            <h1 class="text-2xl font-bold text-purple-400 mb-0.5">GODDESS OF LOGIC</h1>
-            <p class="text-zinc-400 mb-3 text-xs">A Nikke logic puzzle</p>
+            <h1 class="text-2xl font-bold text-purple-400 mb-0.5">NIKKE LOGIC</h1>
+            <p class="text-zinc-400 mb-3 text-xs">Goddess of Victory Puzzle</p>
 
             <!-- TIMER & BEST TIME CARD -->
             <div class="bg-zinc-800/90 border border-purple-500/30 rounded-2xl p-2.5 mb-3 flex items-center justify-between shadow-lg flex-shrink-0">
@@ -58,16 +58,15 @@
                 </div>
             </div>
 
-            <!-- Character Info (FIXED CONTAINER HEIGHT & FULLY CONTAINED IMAGE) -->
+            <!-- Character Info (MANUALLY ADJUSTABLE IMAGE HEIGHT) -->
             <div id="info-card" class="bg-zinc-800 rounded-2xl p-3 flex flex-col overflow-y-auto">
-                
-                <!-- Manually adjust container height here (e.g. h-[280px], h-[320px], h-[240px]) -->
-                <div id="info-avatar-container" class="w-full h-[280px] mb-2.5 rounded-xl overflow-hidden border-2 border-purple-400 bg-zinc-900 flex items-center justify-center flex-shrink-0 p-1">
+                <!-- Adjust height value in Tailwind h-[300px] as needed -->
+                <div id="info-avatar-container" class="w-full h-[300px] mb-2.5 rounded-xl overflow-hidden border-2 border-purple-400 bg-zinc-900 flex items-center justify-center flex-shrink-0 p-1">
                     <img id="info-image" src="" alt="" class="max-w-full max-h-full w-auto h-auto object-contain hidden">
                     <div id="info-fallback" class="text-3xl font-bold text-purple-300"></div>
                 </div>
-            
-                <!-- Info details pinned below the image container -->
+
+                <!-- Info details pinned below image -->
                 <div class="flex-shrink-0 w-full flex flex-col items-center">
                     <div id="info-name" class="text-lg font-bold text-center mb-0.5 leading-tight"></div>
                     
@@ -79,7 +78,7 @@
                         <div class="flex justify-between"><span class="text-zinc-400">Burst:</span> <span id="info-burst" class="font-medium"></span></div>
                         <div class="flex justify-between"><span class="text-zinc-400">Squad:</span> <span id="info-squad" class="font-medium"></span></div>
                     </div>
-            
+
                     <div id="info-clue" class="mt-2 pt-1.5 border-t border-zinc-700 text-amber-200 text-[11px] leading-tight w-full"></div>
                 </div>
             </div>
@@ -91,11 +90,11 @@
                         <span>🔥</span> ELEMENT CYCLE
                     </h3>
                     <div class="flex flex-wrap gap-1 text-[9px]">
-                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-orange-400">🔥 Fire</span> → <span class="text-emerald-400">🌬️ Wind</span></span>
-                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-emerald-400">🌬️ Wind</span> → <span class="text-slate-400">🪨 Iron</span></span>
-                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-slate-400">🪨 Iron</span> → <span class="text-blue-400">⚡ Electric</span></span>
-                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-blue-400">⚡ Electric</span> → <span class="text-cyan-400">💧 Water</span></span>
-                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-cyan-400">💧 Water</span> → <span class="text-orange-400">🔥 Fire</span></span>
+                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-orange-400">Fire</span> → <span class="text-emerald-400">Wind</span></span>
+                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-emerald-400">Wind</span> → <span class="text-slate-400">Iron</span></span>
+                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-slate-400">Iron</span> → <span class="text-blue-400">Electric</span></span>
+                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-blue-400">Electric</span> → <span class="text-cyan-400">Water</span></span>
+                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-cyan-400">Water</span> → <span class="text-orange-400">Fire</span></span>
                     </div>
                 </div>
 
@@ -194,9 +193,9 @@
                 <div class="grid grid-cols-3 gap-1 text-[10px]">
                     <select id="filter-class" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1.5 py-1 rounded-lg border border-zinc-700 focus:outline-none focus:border-purple-400">
                         <option value="">All Classes</option>
-                        <option value="Attacker">Attacker</option>
-                        <option value="Defender">Defender</option>
-                        <option value="Supporter">Supporter</option>
+                        <option value="Attacker">⚔️ Attacker</option>
+                        <option value="Defender">🛡️ Defender</option>
+                        <option value="Supporter">💚 Supporter</option>
                     </select>
 
                     <select id="filter-manu" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1.5 py-1 rounded-lg border border-zinc-700 focus:outline-none focus:border-purple-400">
@@ -209,11 +208,11 @@
 
                     <select id="filter-element" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1.5 py-1 rounded-lg border border-zinc-700 focus:outline-none focus:border-purple-400">
                         <option value="">All Elements</option>
-                        <option value="Fire">Fire</option>
-                        <option value="Wind">Wind</option>
-                        <option value="Iron">Iron</option>
-                        <option value="Electric">Electric</option>
-                        <option value="Water">Water</option>
+                        <option value="Fire">🔥 Fire</option>
+                        <option value="Wind">🌬️ Wind</option>
+                        <option value="Iron">🪨 Iron</option>
+                        <option value="Electric">⚡ Electric</option>
+                        <option value="Water">💧 Water</option>
                     </select>
 
                     <select id="filter-weapon" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1.5 py-1 rounded-lg border border-zinc-700 focus:outline-none focus:border-purple-400">
@@ -536,7 +535,7 @@
         function selectTraitIcon(type, value, label, src) {
             selectedNikke = null;
 
-            // Toggle deselection if clicking the currently active marker icon
+            // Toggle deselection if clicking active icon
             if (selectedTraitMark && selectedTraitMark.type === type && selectedTraitMark.value === value) {
                 selectedTraitMark = null;
             } else {
@@ -648,23 +647,27 @@
             const allGridNikkes = [];
             for (let r = 0; r < gridRows; r++) {
                 for (let c = 0; c < gridCols; c++) {
-                    allGridNikkes.push(nikkeMap[sol[r][c]]);
+                    const n = nikkeMap[sol[r][c]];
+                    if (n) allGridNikkes.push(n);
                 }
             }
 
+            if (allGridNikkes.length === 0) return;
+
             const questionWeights = {
-                'NIKKE_ON_GRID': 6,             // Asks if a specific Nikke is on the grid
-                'ONLY_SQUAD': 4,                // Asks if they are the only member of their squad on the grid
-                'ONLY_MANUFACTURER': 4,         // Asks if they are the only member of their manufacturer on the grid
-                'ELEMENT_STRONGER': 8,          // Asks if their element is stronger than another
-                'SEE_DISTANCE': 8,              // Tells that a specific piece of information is their weapon distance away
-                'DIRECTIONAL': 8,               // Tells that a specific piece of information is in a specific direction
-                'SELF_CLASS': 5,                // Describes their own class
-                'ROW_COL_COUNT': 10,            // Row & Column specific queries
-                'ADJACENT_EXACT_COUNT': 10      // Exact neighbor count queries
+                'NIKKE_ON_GRID': 6,
+                'ONLY_SQUAD': 4,
+                'ONLY_MANUFACTURER': 4,
+                'ELEMENT_STRONGER': 8,
+                'SEE_DISTANCE': 8,
+                'DIRECTIONAL': 8,
+                'SELF_CLASS': 5,
+                'ROW_COL_COUNT': 10,
+                'ADJACENT_EXACT_COUNT': 10
             };
 
             function getWeightedRandomChoice(candidates) {
+                if (!candidates || candidates.length === 0) return null;
                 const totalWeight = candidates.reduce((sum, item) => sum + item.weight, 0);
                 if (totalWeight <= 0) return candidates[Math.floor(Math.random() * candidates.length)];
 
@@ -679,25 +682,29 @@
             for (let r = 0; r < gridRows; r++) {
                 for (let c = 0; c < gridCols; c++) {
                     const cellNikke = nikkeMap[sol[r][c]];
+                    if (!cellNikke) continue;
+
                     const cellKey = `${r},${c}`;
                     const candidates = [];
 
-                    // Helper to fetch solved Nikkes in a given row or column
                     const getRowNikkes = (targetRow) => {
                         const list = [];
-                        for (let col = 0; col < gridCols; col++) list.push(nikkeMap[sol[targetRow][col]]);
+                        for (let col = 0; col < gridCols; col++) {
+                            const n = nikkeMap[sol[targetRow][col]];
+                            if (n) list.push(n);
+                        }
                         return list;
                     };
 
                     const getColNikkes = (targetCol) => {
                         const list = [];
-                        for (let row = 0; row < gridRows; row++) list.push(nikkeMap[sol[row][targetCol]]);
+                        for (let row = 0; row < gridRows; row++) {
+                            const n = nikkeMap[sol[row][targetCol]];
+                            if (n) list.push(n);
+                        }
                         return list;
                     };
 
-                    // ----------------------------------------------------
-                    // 1. NEW: ROW / COLUMN ATTRIBUTE COUNT QUERIES
-                    // ----------------------------------------------------
                     const attributes = [
                         { key: 'manufacturer', label: 'manufacturer' },
                         { key: 'element', label: 'Element' },
@@ -706,150 +713,158 @@
                         { key: 'burst', label: 'Burst' }
                     ];
 
+                    // 1. ROW / COLUMN COUNT
                     const chosenAttr = attributes[Math.floor(Math.random() * attributes.length)];
                     const isRowQuery = Math.random() > 0.5;
 
                     if (isRowQuery) {
                         const rowNikkes = getRowNikkes(r);
-                        const valToCount = rowNikkes[Math.floor(Math.random() * rowNikkes.length)][chosenAttr.key];
-                        const actualCount = rowNikkes.filter(n => n[chosenAttr.key] === valToCount).length;
-
-                        candidates.push({
-                            type: 'ROW_COL_COUNT',
-                            weight: questionWeights['ROW_COL_COUNT'],
-                            text: `Cell R${r+1}C${c+1}: My row contains ${actualCount} ${valToCount} ${chosenAttr.label}${actualCount === 1 ? '' : 's'}.`,
-                            checkFn: (currN, neighs, gridState) => {
-                                let count = 0;
-                                for (let col = 0; col < gridCols; col++) {
-                                    const id = gridState[r][col];
-                                    if (typeof id === 'string' && nikkeMap[id] && nikkeMap[id][chosenAttr.key] === valToCount) {
-                                        count++;
-                                    }
-                                }
-                                return count === actualCount;
-                            },
-                            expected: true
-                        });
+                        if (rowNikkes.length > 0) {
+                            const valToCount = rowNikkes[Math.floor(Math.random() * rowNikkes.length)][chosenAttr.key];
+                            if (valToCount) {
+                                const actualCount = rowNikkes.filter(n => n[chosenAttr.key] === valToCount).length;
+                                candidates.push({
+                                    type: 'ROW_COL_COUNT',
+                                    weight: questionWeights['ROW_COL_COUNT'],
+                                    text: `Cell R${r+1}C${c+1}: My row contains ${actualCount} ${valToCount} ${chosenAttr.label}${actualCount === 1 ? '' : 's'}.`,
+                                    checkFn: (currN, neighs, gridState) => {
+                                        let count = 0;
+                                        for (let col = 0; col < gridCols; col++) {
+                                            const id = gridState[r][col];
+                                            if (typeof id === 'string' && nikkeMap[id] && nikkeMap[id][chosenAttr.key] === valToCount) {
+                                                count++;
+                                            }
+                                        }
+                                        return count === actualCount;
+                                    },
+                                    expected: true
+                                });
+                            }
+                        }
                     } else {
                         const colNikkes = getColNikkes(c);
-                        const valToCount = colNikkes[Math.floor(Math.random() * colNikkes.length)][chosenAttr.key];
-                        const actualCount = colNikkes.filter(n => n[chosenAttr.key] === valToCount).length;
-
-                        candidates.push({
-                            type: 'ROW_COL_COUNT',
-                            weight: questionWeights['ROW_COL_COUNT'],
-                            text: `Cell R${r+1}C${c+1}: My column contains ${actualCount} ${valToCount} ${chosenAttr.label}${actualCount === 1 ? '' : 's'}.`,
-                            checkFn: (currN, neighs, gridState) => {
-                                let count = 0;
-                                for (let row = 0; row < gridRows; row++) {
-                                    const id = gridState[row][c];
-                                    if (typeof id === 'string' && nikkeMap[id] && nikkeMap[id][chosenAttr.key] === valToCount) {
-                                        count++;
-                                    }
-                                }
-                                return count === actualCount;
-                            },
-                            expected: true
-                        });
+                        if (colNikkes.length > 0) {
+                            const valToCount = colNikkes[Math.floor(Math.random() * colNikkes.length)][chosenAttr.key];
+                            if (valToCount) {
+                                const actualCount = colNikkes.filter(n => n[chosenAttr.key] === valToCount).length;
+                                candidates.push({
+                                    type: 'ROW_COL_COUNT',
+                                    weight: questionWeights['ROW_COL_COUNT'],
+                                    text: `Cell R${r+1}C${c+1}: My column contains ${actualCount} ${valToCount} ${chosenAttr.label}${actualCount === 1 ? '' : 's'}.`,
+                                    checkFn: (currN, neighs, gridState) => {
+                                        let count = 0;
+                                        for (let row = 0; row < gridRows; row++) {
+                                            const id = gridState[row][c];
+                                            if (typeof id === 'string' && nikkeMap[id] && nikkeMap[id][chosenAttr.key] === valToCount) {
+                                                count++;
+                                            }
+                                        }
+                                        return count === actualCount;
+                                    },
+                                    expected: true
+                                });
+                            }
+                        }
                     }
 
-                    // ----------------------------------------------------
-                    // 2. NEW: EXACT ADJACENT NEIGHBOR COUNT QUERIES
-                    // ----------------------------------------------------
+                    // 2. EXACT ADJACENT NEIGHBOR COUNT
                     const neighborPositions = getNeighbors(r, c);
-                    const neighborNikkes = neighborPositions.map(nb => nikkeMap[sol[nb.row][nb.col]]);
+                    const neighborNikkes = neighborPositions.map(nb => nikkeMap[sol[nb.row][nb.col]]).filter(Boolean);
 
-                    // Pick a random attribute to test against neighbors
-                    const adjAttr = attributes[Math.floor(Math.random() * attributes.length)];
-                    
-                    // Randomly test either a present attribute or an arbitrary attribute value
-                    let targetVal = cellNikke[adjAttr.key];
-                    if (neighborNikkes.length > 0 && Math.random() > 0.3) {
-                        targetVal = neighborNikkes[Math.floor(Math.random() * neighborNikkes.length)][adjAttr.key];
-                    }
+                    if (neighborNikkes.length > 0) {
+                        const adjAttr = attributes[Math.floor(Math.random() * attributes.length)];
+                        let targetVal = cellNikke[adjAttr.key];
+                        
+                        if (Math.random() > 0.3) {
+                            const pickedN = neighborNikkes[Math.floor(Math.random() * neighborNikkes.length)];
+                            if (pickedN && pickedN[adjAttr.key]) targetVal = pickedN[adjAttr.key];
+                        }
 
-                    const actualAdjCount = neighborNikkes.filter(n => n[adjAttr.key] === targetVal).length;
+                        if (targetVal) {
+                            const actualAdjCount = neighborNikkes.filter(n => n[adjAttr.key] === targetVal).length;
 
-                    candidates.push({
-                        type: 'ADJACENT_EXACT_COUNT',
-                        weight: questionWeights['ADJACENT_EXACT_COUNT'],
-                        text: `Cell R${r+1}C${c+1}: I am next to ${actualAdjCount} ${targetVal}${adjAttr.key === 'burst' ? ' Burst' : ''} Nikke${actualAdjCount === 1 ? '' : 's'}.`,
-                        checkFn: (currN, neighs, gridState) => {
-                            let count = 0;
-                            neighborPositions.forEach(pos => {
-                                const id = gridState[pos.row][pos.col];
-                                if (typeof id === 'string' && nikkeMap[id] && nikkeMap[id][adjAttr.key] === targetVal) {
-                                    count++;
-                                }
+                            candidates.push({
+                                type: 'ADJACENT_EXACT_COUNT',
+                                weight: questionWeights['ADJACENT_EXACT_COUNT'],
+                                text: `Cell R${r+1}C${c+1}: I am next to ${actualAdjCount} ${targetVal}${adjAttr.key === 'burst' ? ' Burst' : ''} Nikke${actualAdjCount === 1 ? '' : 's'}.`,
+                                checkFn: (currN, neighs, gridState) => {
+                                    let count = 0;
+                                    neighborPositions.forEach(pos => {
+                                        const id = gridState[pos.row][pos.col];
+                                        if (typeof id === 'string' && nikkeMap[id] && nikkeMap[id][adjAttr.key] === targetVal) {
+                                            count++;
+                                        }
+                                    });
+                                    return count === actualAdjCount;
+                                },
+                                expected: true
                             });
-                            return count === actualAdjCount;
-                        },
-                        expected: true
-                    });
+                        }
+                    }
 
-                    // ----------------------------------------------------
                     // 3. SPECIFIC NIKKE ON GRID
-                    // ----------------------------------------------------
-                    const presentNikke = allGridNikkes[Math.floor(Math.random() * allGridNikkes.length)];
-                    candidates.push({
-                        type: 'NIKKE_ON_GRID',
-                        weight: questionWeights['NIKKE_ON_GRID'],
-                        text: `Cell R${r+1}C${c+1}: ${presentNikke.name} is on the grid.`,
-                        checkFn: (currN, neighs, gridState) => {
-                            return gridState.some(row => row.some(val => typeof val === 'string' && nikkeMap[val]?.name === presentNikke.name));
-                        },
-                        expected: true
-                    });
+                    if (allGridNikkes.length > 0) {
+                        const presentNikke = allGridNikkes[Math.floor(Math.random() * allGridNikkes.length)];
+                        if (presentNikke) {
+                            candidates.push({
+                                type: 'NIKKE_ON_GRID',
+                                weight: questionWeights['NIKKE_ON_GRID'],
+                                text: `Cell R${r+1}C${c+1}: ${presentNikke.name} is on the grid.`,
+                                checkFn: (currN, neighs, gridState) => {
+                                    return gridState.some(row => row.some(val => typeof val === 'string' && nikkeMap[val]?.name === presentNikke.name));
+                                },
+                                expected: true
+                            });
+                        }
+                    }
 
-                    // ----------------------------------------------------
                     // 4. ONLY SQUAD
-                    // ----------------------------------------------------
-                    const squadCount = allGridNikkes.filter(n => n.squad === cellNikke.squad).length;
-                    if (squadCount === 1) {
-                        candidates.push({
-                            type: 'ONLY_SQUAD',
-                            weight: questionWeights['ONLY_SQUAD'],
-                            text: `Cell R${r+1}C${c+1}: I am the only Nikke from my squad on the field.`,
-                            checkFn: (currN, neighs, gridState) => {
-                                let count = 0;
-                                gridState.forEach(row => row.forEach(val => {
-                                    if (typeof val === 'string' && nikkeMap[val]?.squad === currN.squad) count++;
-                                }));
-                                return count === 1;
-                            },
-                            expected: true
-                        });
+                    if (cellNikke.squad) {
+                        const squadCount = allGridNikkes.filter(n => n?.squad === cellNikke.squad).length;
+                        if (squadCount === 1) {
+                            candidates.push({
+                                type: 'ONLY_SQUAD',
+                                weight: questionWeights['ONLY_SQUAD'],
+                                text: `Cell R${r+1}C${c+1}: I am the only Nikke from my squad on the field.`,
+                                checkFn: (currN, neighs, gridState) => {
+                                    let count = 0;
+                                    gridState.forEach(row => row.forEach(val => {
+                                        if (typeof val === 'string' && nikkeMap[val]?.squad === currN?.squad) count++;
+                                    }));
+                                    return count === 1;
+                                },
+                                expected: true
+                            });
+                        }
                     }
 
-                    // ----------------------------------------------------
                     // 5. ONLY MANUFACTURER
-                    // ----------------------------------------------------
-                    const manuCount = allGridNikkes.filter(n => n.manufacturer === cellNikke.manufacturer).length;
-                    if (manuCount === 1) {
-                        candidates.push({
-                            type: 'ONLY_MANUFACTURER',
-                            weight: questionWeights['ONLY_MANUFACTURER'],
-                            text: `Cell R${r+1}C${c+1}: I am the only Nikke from my manufacturer on the field.`,
-                            checkFn: (currN, neighs, gridState) => {
-                                let count = 0;
-                                gridState.forEach(row => row.forEach(val => {
-                                    if (typeof val === 'string' && nikkeMap[val]?.manufacturer === currN.manufacturer) count++;
-                                }));
-                                return count === 1;
-                            },
-                            expected: true
-                        });
+                    if (cellNikke.manufacturer) {
+                        const manuCount = allGridNikkes.filter(n => n?.manufacturer === cellNikke.manufacturer).length;
+                        if (manuCount === 1) {
+                            candidates.push({
+                                type: 'ONLY_MANUFACTURER',
+                                weight: questionWeights['ONLY_MANUFACTURER'],
+                                text: `Cell R${r+1}C${c+1}: I am the only Nikke from my manufacturer on the field.`,
+                                checkFn: (currN, neighs, gridState) => {
+                                    let count = 0;
+                                    gridState.forEach(row => row.forEach(val => {
+                                        if (typeof val === 'string' && nikkeMap[val]?.manufacturer === currN?.manufacturer) count++;
+                                    }));
+                                    return count === 1;
+                                },
+                                expected: true
+                            });
+                        }
                     }
 
-                    // ----------------------------------------------------
                     // 6. ELEMENT ADVANTAGE
-                    // ----------------------------------------------------
                     const directions = shuffle(['ABOVE', 'BELOW', 'LEFT', 'RIGHT']);
                     for (const d of directions) {
                         const pos = getDirectionalNeighbor(r, c, d);
                         if (pos) {
                             const neighborNikke = nikkeMap[sol[pos.r][pos.c]];
-                            if (ELEMENT_ADVANTAGE[cellNikke.element] === neighborNikke.element) {
+                            if (neighborNikke && cellNikke.element && ELEMENT_ADVANTAGE[cellNikke.element] === neighborNikke.element) {
                                 candidates.push({
                                     type: 'ELEMENT_STRONGER',
                                     weight: questionWeights['ELEMENT_STRONGER'],
@@ -858,7 +873,7 @@
                                         const val = gridState[pos.r][pos.c];
                                         if (typeof val !== 'string') return false;
                                         const targetN = nikkeMap[val];
-                                        return targetN ? ELEMENT_ADVANTAGE[currN.element] === targetN.element : false;
+                                        return targetN && currN ? ELEMENT_ADVANTAGE[currN.element] === targetN.element : false;
                                     },
                                     expected: true
                                 });
@@ -867,9 +882,7 @@
                         }
                     }
 
-                    // ----------------------------------------------------
-                    // 7. WEAPON DISTANCE VISION
-                    // ----------------------------------------------------
+                    // 7. WEAPON VISION DISTANCE
                     const weaponDist = getWeaponRange(cellNikke.weapon);
                     if (weaponDist !== null) {
                         const targetDistCells = getCellsAtDistance(r, c, weaponDist);
@@ -877,75 +890,80 @@
                             const targetCell = targetDistCells[Math.floor(Math.random() * targetDistCells.length)];
                             const targetNikke = nikkeMap[sol[targetCell.row][targetCell.col]];
                             
-                            const traitChoices = [
-                                { attr: 'class', val: targetNikke.class, label: targetNikke.class },
-                                { attr: 'element', val: targetNikke.element, label: `${targetNikke.element} Element` },
-                                { attr: 'weapon', val: targetNikke.weapon, label: `${targetNikke.weapon} user` }
-                            ];
-                            const pickedTrait = traitChoices[Math.floor(Math.random() * traitChoices.length)];
+                            if (targetNikke) {
+                                const traitChoices = [
+                                    { attr: 'class', val: targetNikke.class, label: targetNikke.class },
+                                    { attr: 'element', val: targetNikke.element, label: `${targetNikke.element} Element` },
+                                    { attr: 'weapon', val: targetNikke.weapon, label: `${targetNikke.weapon} user` }
+                                ];
+                                const pickedTrait = traitChoices[Math.floor(Math.random() * traitChoices.length)];
 
-                            candidates.push({
-                                type: 'SEE_DISTANCE',
-                                weight: questionWeights['SEE_DISTANCE'],
-                                text: `Cell R${r+1}C${c+1}: I can see a ${pickedTrait.label} ${weaponDist} cell(s) away.`,
-                                checkFn: (currN, neighs, gridState) => {
-                                    const cellsAtD = getCellsAtDistance(r, c, weaponDist);
-                                    return cellsAtD.some(pos => {
-                                        const val = gridState[pos.row][pos.col];
-                                        if (typeof val !== 'string') return false;
-                                        return nikkeMap[val] && nikkeMap[val][pickedTrait.attr] === pickedTrait.val;
+                                if (pickedTrait.val) {
+                                    candidates.push({
+                                        type: 'SEE_DISTANCE',
+                                        weight: questionWeights['SEE_DISTANCE'],
+                                        text: `Cell R${r+1}C${c+1}: I can see a ${pickedTrait.label} ${weaponDist} cell(s) away.`,
+                                        checkFn: (currN, neighs, gridState) => {
+                                            const cellsAtD = getCellsAtDistance(r, c, weaponDist);
+                                            return cellsAtD.some(pos => {
+                                                const val = gridState[pos.row][pos.col];
+                                                if (typeof val !== 'string') return false;
+                                                return nikkeMap[val] && nikkeMap[val][pickedTrait.attr] === pickedTrait.val;
+                                            });
+                                        },
+                                        expected: true
                                     });
-                                },
-                                expected: true
-                            });
+                                }
+                            }
                         }
                     }
 
-                    // ----------------------------------------------------
                     // 8. DIRECTIONAL NEIGHBOR CLASS
-                    // ----------------------------------------------------
                     for (const d of directions) {
                         const pos = getDirectionalNeighbor(r, c, d);
                         if (pos) {
                             const targetNikke = nikkeMap[sol[pos.r][pos.c]];
-                            candidates.push({
-                                type: 'DIRECTIONAL',
-                                weight: questionWeights['DIRECTIONAL'],
-                                text: `Cell R${r+1}C${c+1}: The Nikke directly ${d} is a ${targetNikke.class}.`,
-                                checkFn: (currN, neighs, gridState) => {
-                                    const val = gridState[pos.r][pos.c];
-                                    return typeof val === 'string' && nikkeMap[val] ? nikkeMap[val].class === targetNikke.class : false;
-                                },
-                                expected: true
-                            });
-                            break;
+                            if (targetNikke && targetNikke.class) {
+                                candidates.push({
+                                    type: 'DIRECTIONAL',
+                                    weight: questionWeights['DIRECTIONAL'],
+                                    text: `Cell R${r+1}C${c+1}: The Nikke directly ${d} is a ${targetNikke.class}.`,
+                                    checkFn: (currN, neighs, gridState) => {
+                                        const val = gridState[pos.r][pos.c];
+                                        return typeof val === 'string' && nikkeMap[val] ? nikkeMap[val].class === targetNikke.class : false;
+                                    },
+                                    expected: true
+                                });
+                                break;
+                            }
                         }
                     }
 
-                    // ----------------------------------------------------
                     // 9. SELF CLASS FALLBACK
-                    // ----------------------------------------------------
-                    candidates.push({
-                        type: 'SELF_CLASS',
-                        weight: questionWeights['SELF_CLASS'],
-                        text: `Cell R${r+1}C${c+1}: I am a ${cellNikke.class} Nikke.`,
-                        checkFn: (currN) => currN.class === cellNikke.class,
-                        expected: true
-                    });
+                    if (cellNikke.class) {
+                        candidates.push({
+                            type: 'SELF_CLASS',
+                            weight: questionWeights['SELF_CLASS'],
+                            text: `Cell R${r+1}C${c+1}: I am a ${cellNikke.class} Nikke.`,
+                            checkFn: (currN) => currN && currN.class === cellNikke.class,
+                            expected: true
+                        });
+                    }
 
-                    // Select and map chosen question
                     const chosenClue = getWeightedRandomChoice(candidates);
-                    questionWeights[chosenClue.type] = Math.max(1, questionWeights[chosenClue.type] - 3);
+                    if (chosenClue) {
+                        questionWeights[chosenClue.type] = Math.max(1, questionWeights[chosenClue.type] - 3);
 
-                    cellCluesMap[cellKey] = chosenClue.text;
-                    cellClueRules[cellKey] = {
-                        checkFn: chosenClue.checkFn,
-                        expected: chosenClue.expected,
-                        text: chosenClue.text
-                    };
+                        cellCluesMap[cellKey] = chosenClue.text;
+                        cellClueRules[cellKey] = {
+                            checkFn: chosenClue.checkFn,
+                            expected: chosenClue.expected,
+                            text: chosenClue.text
+                        };
+                    }
                 }
             }
-        
+        }
 
         function createGrid() {
             const grid = document.getElementById('grid');
@@ -968,17 +986,14 @@
                         } else if (selectedTraitMark) {
                             let currentVal = currentGrid[r][c];
 
-                            // Replace existing Nikke string placement with object markers
                             if (typeof currentVal === 'string' || !currentVal) {
                                 currentVal = {};
                             }
 
-                            // Toggle off if clicking the same icon already placed in this category
                             if (currentVal[selectedTraitMark.type]?.value === selectedTraitMark.value) {
                                 delete currentVal[selectedTraitMark.type];
                                 currentGrid[r][c] = Object.keys(currentVal).length > 0 ? currentVal : null;
                             } else {
-                                // Add/update marker category
                                 currentVal[selectedTraitMark.type] = { ...selectedTraitMark };
                                 currentGrid[r][c] = currentVal;
                             }
@@ -1007,10 +1022,10 @@
                 const cellData = currentGrid[r][c];
                 
                 if (typeof cellData === 'string') {
-                    // Full Nikke Placed (sized to 75% of cell)
+                    // Full Nikke Placed
                     const n = allNikkesData.find(x => x.id === cellData);
                     cell.innerHTML = `
-                        <div class="w-[50%] h-[50%] rounded-xl overflow-hidden border border-purple-300 bg-zinc-900 flex items-center justify-center">
+                        <div class="w-[75%] h-[75%] rounded-xl overflow-hidden border border-purple-300 bg-zinc-900 flex items-center justify-center">
                             <img src="${n.icon}" alt="${n.name}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                             <span class="text-xs font-bold text-purple-300 hidden">${n.name.substring(0,2).toUpperCase()}</span>
                         </div>
@@ -1022,7 +1037,6 @@
                     const markerItems = Object.values(cellData);
                     const count = markerItems.length;
 
-                    // Responsive sizing per icon depending on how many traits are on this tile
                     let iconContainerStyle = 'w-12 h-12 p-1.5';
                     if (count > 2) {
                         iconContainerStyle = 'w-8 h-8 p-1';
@@ -1224,7 +1238,6 @@
                 }
             }
 
-            // ADD PENALTY FOR INCORRECT VALIDATION
             addPenaltyTime(60);
 
             const errorListHtml = `
