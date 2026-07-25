@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nikke Logic Grid • Goddess of Victory</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- PAPAPARSE CSV LIBRARY -->
@@ -10,18 +10,28 @@
     <style>
         .grid-cell {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            border: 4px solid #374151; background-color: #1f2937;
-            cursor: pointer; transition: all 0.2s; position: relative; border-radius: 16px;
-            overflow: hidden;
+            border: 3px solid #374151; background-color: #1f2937;
+            cursor: pointer; transition: all 0.2s; position: relative; border-radius: 12px;
+            overflow: hidden; flex-shrink: 0;
         }
-        .grid-cell.size-3x3 { width: 200px; height: 200px; }
-        .grid-cell.size-4x4 { width: 160px; height: 160px; }
-        .grid-cell.size-5x5 { width: 120px; height: 120px; border-radius: 12px; border-width: 3px; }
+        .grid-cell.size-3x3 { width: min(28vw, 160px); height: min(28vw, 160px); }
+        .grid-cell.size-4x4 { width: min(21vw, 120px); height: min(21vw, 120px); }
+        .grid-cell.size-5x5 { width: min(16vw, 90px); height: min(16vw, 90px); border-radius: 8px; border-width: 2px; }
+        .grid-cell.size-11x11 { width: 52px; height: 52px; border-radius: 6px; border-width: 2px; }
 
-        .grid-cell:hover { border-color: #c4b5fd; transform: scale(1.04); }
+        @media (min-width: 1024px) {
+            .grid-cell.size-3x3 { width: 180px; height: 180px; }
+            .grid-cell.size-4x4 { width: 140px; height: 140px; }
+            .grid-cell.size-5x5 { width: 110px; height: 110px; }
+            .grid-cell.size-11x11 { width: 55px; height: 55px; }
+        }
+
+        .grid-cell:hover { border-color: #c4b5fd; transform: scale(1.02); }
         .grid-cell.filled { background-color: #5b21b6; border-color: #ddd6fe; }
         .grid-cell.error { border-color: #ef4444 !important; background-color: #450a0a !important; animation: pulse 1.5s infinite; }
-        .nikke-name { font-size: 0.75rem; margin-top: 2px; font-weight: 700; color: #e0e7ff; text-align: center; line-height: 1; }
+        .nikke-name { font-size: 0.65rem; margin-top: 2px; font-weight: 700; color: #e0e7ff; text-align: center; line-height: 1; }
+
+        .grid-cell.size-11x11 .nikke-name { font-size: 0.45rem; }
 
         .trait-btn.active {
             background-color: #5b21b6 !important;
@@ -35,170 +45,132 @@
         }
     </style>
 </head>
-<body class="bg-zinc-950 text-white h-screen overflow-hidden flex flex-col">
+<body class="bg-zinc-950 text-white min-h-screen lg:h-screen overflow-x-hidden lg:overflow-hidden flex flex-col select-none">
 
-    <!-- TOP SECTION: MAIN 3-COLUMN WORKSPACE -->
-    <div class="flex flex-1 min-h-0 overflow-hidden">
+    <!-- TOP WORKSPACE: RESPONSIVE FLEX LAYOUT -->
+    <div class="flex flex-col lg:flex-row flex-1 min-h-0 overflow-y-auto lg:overflow-hidden">
         
-        <!-- PANEL 1: LEFT PANEL -->
-        <div class="w-80 bg-zinc-900 border-r border-zinc-800 p-4 flex flex-col h-full overflow-y-auto flex-shrink-0">
-            <h1 class="text-2xl font-bold text-purple-400 mb-0.5">NIKKE LOGIC</h1>
-            <p class="text-zinc-400 mb-3 text-xs">Goddess of Victory Puzzle</p>
+        <!-- PANEL 1: LEFT PANEL (Info & References) -->
+        <div class="w-full lg:w-80 bg-zinc-900 border-b lg:border-b-0 lg:border-r border-zinc-800 p-3 lg:p-4 flex flex-col flex-shrink-0">
+            <div class="flex items-center justify-between mb-2">
+                <div>
+                    <h1 class="text-xl lg:text-2xl font-bold text-purple-400 leading-tight">NIKKE LOGIC</h1>
+                    <p class="text-zinc-400 text-[10px] lg:text-xs">Goddess of Victory Puzzle</p>
+                </div>
+            </div>
 
             <!-- TIMER & BEST TIME CARD -->
-            <div class="bg-zinc-800/90 border border-purple-500/30 rounded-2xl p-2.5 mb-3 flex items-center justify-between shadow-lg flex-shrink-0">
+            <div class="bg-zinc-800/90 border border-purple-500/30 rounded-2xl p-2 mb-3 flex items-center justify-between shadow-lg flex-shrink-0">
                 <div class="flex flex-col">
                     <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">⏱️ Time</span>
-                    <span id="timer-display" class="text-xl font-black text-amber-400 font-mono">00:00</span>
+                    <span id="timer-display" class="text-lg lg:text-xl font-black text-amber-400 font-mono">00:00</span>
                 </div>
                 <div class="h-6 w-px bg-zinc-700"></div>
                 <div class="flex flex-col text-right">
                     <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">🏆 Best</span>
-                    <span id="best-time-display" class="text-base font-bold text-emerald-400 font-mono">--:--</span>
+                    <span id="best-time-display" class="text-sm lg:text-base font-bold text-emerald-400 font-mono">--:--</span>
                 </div>
             </div>
 
-            <!-- Character Info (MANUALLY ADJUSTABLE IMAGE HEIGHT) -->
-            <div id="info-card" class="bg-zinc-800 rounded-2xl p-3 flex flex-col overflow-y-auto">
-                <!-- Adjust height value in Tailwind h-[300px] as needed -->
-                <div id="info-avatar-container" class="w-full h-[300px] mb-2.5 rounded-xl overflow-hidden border-2 border-purple-400 bg-zinc-900 flex items-center justify-center flex-shrink-0 p-1">
+            <!-- Character Info Container -->
+            <div id="info-card" class="bg-zinc-800 rounded-2xl p-2.5 flex flex-col max-h-[260px] lg:max-h-none overflow-y-auto">
+                <div id="info-avatar-container" class="w-full h-[140px] lg:h-[220px] mb-2 rounded-xl overflow-hidden border-2 border-purple-400 bg-zinc-900 flex items-center justify-center flex-shrink-0 p-1">
                     <img id="info-image" src="" alt="" class="max-w-full max-h-full w-auto h-auto object-contain hidden">
-                    <div id="info-fallback" class="text-3xl font-bold text-purple-300"></div>
+                    <div id="info-fallback" class="text-2xl font-bold text-purple-300"></div>
                 </div>
 
-                <!-- Info details pinned below image -->
                 <div class="flex-shrink-0 w-full flex flex-col items-center">
-                    <div id="info-name" class="text-lg font-bold text-center mb-0.5 leading-tight"></div>
+                    <div id="info-name" class="text-base font-bold text-center mb-0.5 leading-tight"></div>
                     
-                    <div class="space-y-0.5 mt-1 text-[11px] w-full">
+                    <div class="grid grid-cols-2 lg:grid-cols-1 gap-x-2 gap-y-0.5 mt-1 text-[10px] lg:text-[11px] w-full">
                         <div class="flex justify-between"><span class="text-zinc-400">Class:</span> <span id="info-class" class="font-medium text-purple-300"></span></div>
-                        <div class="flex justify-between"><span class="text-zinc-400">Manufacturer:</span> <span id="info-manu" class="font-medium"></span></div>
+                        <div class="flex justify-between"><span class="text-zinc-400">Manu:</span> <span id="info-manu" class="font-medium"></span></div>
                         <div class="flex justify-between"><span class="text-zinc-400">Weapon:</span> <span id="info-weapon" class="font-medium"></span></div>
                         <div class="flex justify-between"><span class="text-zinc-400">Element:</span> <span id="info-element" class="font-medium"></span></div>
                         <div class="flex justify-between"><span class="text-zinc-400">Burst:</span> <span id="info-burst" class="font-medium"></span></div>
                         <div class="flex justify-between"><span class="text-zinc-400">Squad:</span> <span id="info-squad" class="font-medium"></span></div>
                     </div>
 
-                    <div id="info-clue" class="mt-2 pt-1.5 border-t border-zinc-700 text-amber-200 text-[11px] leading-tight w-full"></div>
-                </div>
-            </div>
-
-            <!-- REFERENCE CARDS -->
-            <div class="mt-3 space-y-2 flex-shrink-0">
-                <div class="bg-zinc-800 rounded-xl p-2">
-                    <h3 class="text-purple-300 font-bold text-[11px] mb-1 flex items-center gap-1">
-                        <span>🔥</span> ELEMENT CYCLE
-                    </h3>
-                    <div class="flex flex-wrap gap-1 text-[9px]">
-                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-orange-400">Fire</span> → <span class="text-emerald-400">Wind</span></span>
-                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-emerald-400">Wind</span> → <span class="text-slate-400">Iron</span></span>
-                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-slate-400">Iron</span> → <span class="text-blue-400">Electric</span></span>
-                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-blue-400">Electric</span> → <span class="text-cyan-400">Water</span></span>
-                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-cyan-400">Water</span> → <span class="text-orange-400">Fire</span></span>
-                    </div>
-                </div>
-
-                <div class="bg-zinc-800 rounded-xl p-2">
-                    <h3 class="text-purple-300 font-bold text-[11px] mb-1 flex items-center gap-1">
-                        <span>🎯</span> WEAPON RANGES
-                    </h3>
-                    <div class="grid grid-cols-2 gap-1 text-[9px]">
-                        <div class="bg-zinc-900 p-1 rounded border border-zinc-700/50">
-                            <div class="text-purple-300 font-bold">Range 1 (Close)</div>
-                            <div class="text-zinc-400">Shotgun, SMG</div>
-                        </div>
-                        <div class="bg-zinc-900 p-1 rounded border border-zinc-700/50">
-                            <div class="text-purple-300 font-bold">Range 2 (Mid)</div>
-                            <div class="text-zinc-400">Assault Rifle, MG</div>
-                        </div>
-                        <div class="bg-zinc-900 p-1 rounded border border-zinc-700/50">
-                            <div class="text-purple-300 font-bold">Range 3 (Far)</div>
-                            <div class="text-zinc-400">Sniper Rifle</div>
-                        </div>
-                        <div class="bg-zinc-900 p-1 rounded border border-zinc-700/50">
-                            <div class="text-purple-300 font-bold">Exempt</div>
-                            <div class="text-zinc-400">Rocket Launcher</div>
-                        </div>
-                    </div>
+                    <div id="info-clue" class="mt-2 pt-1.5 border-t border-zinc-700 text-amber-200 text-[10px] lg:text-[11px] leading-tight w-full"></div>
                 </div>
             </div>
         </div>
 
-        <!-- PANEL 2: CENTER PANEL -->
-        <div class="flex-1 flex flex-col h-full items-center justify-between p-4 overflow-hidden relative">
+        <!-- PANEL 2: CENTER PANEL (Grid & Game Board) -->
+        <div class="flex-1 flex flex-col items-center justify-between p-2 lg:p-4 overflow-x-hidden relative">
             
-            <!-- CONTROLS HEADER WITH DROPDOWNS -->
-            <div class="flex items-center gap-3 bg-zinc-900 px-4 py-2 rounded-2xl border border-zinc-800 shadow-md flex-shrink-0">
-                <div class="flex items-center gap-2 text-xs">
-                    <label for="select-diff" class="text-zinc-400 font-bold text-[11px]">Difficulty:</label>
-                    <select id="select-diff" onchange="handleDropdownChange()" class="bg-zinc-800 text-purple-300 font-bold px-2.5 py-1 rounded-xl border border-zinc-700 focus:outline-none focus:border-purple-400 text-xs">
+            <!-- CONTROLS HEADER -->
+            <div class="flex flex-wrap items-center justify-center gap-2 bg-zinc-900 px-3 py-2 rounded-2xl border border-zinc-800 shadow-md flex-shrink-0 w-full lg:w-auto">
+                <div class="flex items-center gap-1.5 text-xs">
+                    <label for="select-diff" class="text-zinc-400 font-bold text-[10px] lg:text-[11px]">Difficulty:</label>
+                    <select id="select-diff" onchange="handleDropdownChange()" class="bg-zinc-800 text-purple-300 font-bold px-2 py-1 rounded-xl border border-zinc-700 text-xs">
                         <option value="easy">Easy</option>
                         <option value="medium">Medium</option>
                         <option value="hard">Hard</option>
+                        <option value="insane">Insane</option>
                     </select>
                 </div>
 
-                <div class="h-4 w-px bg-zinc-800"></div>
+                <div class="hidden lg:block h-4 w-px bg-zinc-800"></div>
 
-                <div class="flex items-center gap-2 text-xs">
-                    <label for="select-size" class="text-zinc-400 font-bold text-[11px]">Grid Size:</label>
-                    <select id="select-size" onchange="handleDropdownChange()" class="bg-zinc-800 text-purple-300 font-bold px-2.5 py-1 rounded-xl border border-zinc-700 focus:outline-none focus:border-purple-400 text-xs">
+                <div class="flex items-center gap-1.5 text-xs">
+                    <label for="select-size" class="text-zinc-400 font-bold text-[10px] lg:text-[11px]">Size:</label>
+                    <select id="select-size" onchange="handleDropdownChange()" class="bg-zinc-800 text-purple-300 font-bold px-2 py-1 rounded-xl border border-zinc-700 text-xs">
                         <option value="3">3x3</option>
                         <option value="4">4x4</option>
                         <option value="5">5x5</option>
+                        <option value="11">11x11</option>
                     </select>
                 </div>
 
-                <div class="h-4 w-px bg-zinc-800"></div>
-
-                <div class="flex gap-2">
+                <div class="flex gap-1.5 ml-auto lg:ml-0">
                     <button onclick="generateNewPuzzle()" 
-                            class="px-3.5 py-1 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-semibold flex items-center gap-1 text-xs transition-all shadow-md">
-                        🎲 NEW PUZZLE
+                            class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-semibold text-xs transition-all shadow-md">
+                        🎲 NEW
                     </button>
                     <button onclick="checkSolution()" 
-                            class="px-4 py-1 bg-purple-600 hover:bg-purple-500 rounded-xl font-bold text-xs transition-all shadow-md">
+                            class="px-3 py-1 bg-purple-600 hover:bg-purple-500 rounded-xl font-bold text-xs transition-all shadow-md">
                         VERIFY
                     </button>
                 </div>
             </div>
 
-            <!-- PUZZLE GRID AREA -->
-            <div class="flex-1 flex items-center justify-center my-2 min-h-0 overflow-hidden">
-                <div id="grid" class="grid gap-2"></div>
+            <!-- PUZZLE GRID AREA WITH TOUCH SCROLL FOR LARGE GRIDS -->
+            <div class="flex-1 w-full flex items-center justify-center my-2 overflow-auto max-w-full min-h-[300px]">
+                <div id="grid" class="grid gap-1.5 p-2"></div>
             </div>
 
-            <!-- STATUS DISPLAY AT BOTTOM OF CENTER -->
-            <div id="status" class="text-xs font-medium text-center min-h-[1.5rem] max-w-xl mx-auto flex items-center justify-center flex-shrink-0"></div>
+            <!-- STATUS DISPLAY AT BOTTOM -->
+            <div id="status" class="text-xs font-medium text-center min-h-[1.5rem] max-w-xl mx-auto flex items-center justify-center flex-shrink-0 px-2"></div>
         </div>
 
-        <!-- PANEL 3: RIGHT PANEL -->
-        <div class="w-[420px] bg-zinc-900 border-l border-zinc-800 p-4 flex flex-col h-full overflow-hidden flex-shrink-0">
-            <div class="flex justify-between items-center mb-2 flex-shrink-0">
-                <h2 class="font-bold text-purple-300 text-sm">AVAILABLE NIKKES</h2>
-                <span id="nikke-count-badge" class="text-[10px] font-bold bg-purple-950 text-purple-300 border border-purple-700/60 px-2 py-0.5 rounded-full"></span>
+        <!-- PANEL 3: RIGHT PANEL (Available Nikkes) -->
+        <div class="w-full lg:w-[400px] bg-zinc-900 border-t lg:border-t-0 lg:border-l border-zinc-800 p-3 lg:p-4 flex flex-col flex-shrink-0 max-h-[350px] lg:max-h-none">
+            <div class="flex justify-between items-center mb-1.5 flex-shrink-0">
+                <h2 class="font-bold text-purple-300 text-xs lg:text-sm">AVAILABLE NIKKES</h2>
+                <span id="nikke-count-badge" class="text-[9px] lg:text-[10px] font-bold bg-purple-950 text-purple-300 border border-purple-700/60 px-2 py-0.5 rounded-full"></span>
             </div>
 
-            <!-- SELECTED NIKKE QOL PILL -->
-            <div id="selected-nikke-bar" class="mb-2 bg-zinc-950/80 border border-purple-500/40 rounded-xl px-2.5 py-1 flex items-center justify-between text-xs min-h-[30px] flex-shrink-0">
-                <span id="selected-nikke-text" class="text-zinc-400 italic">No Nikke selected</span>
-                <button id="clear-selected-btn" onclick="deselectNikke()" class="text-red-400 hover:text-red-300 font-bold hidden">✕ Clear</button>
+            <!-- SELECTED NIKKE BAR -->
+            <div id="selected-nikke-bar" class="mb-2 bg-zinc-950/80 border border-purple-500/40 rounded-xl px-2 py-1 flex items-center justify-between text-xs min-h-[28px] flex-shrink-0">
+                <span id="selected-nikke-text" class="text-zinc-400 italic text-[11px]">No Nikke selected</span>
+                <button id="clear-selected-btn" onclick="deselectNikke()" class="text-red-400 hover:text-red-300 font-bold hidden text-[11px]">✕ Clear</button>
             </div>
             
             <!-- SEARCH & FILTERS -->
-            <div class="space-y-1.5 mb-2 bg-zinc-950/60 p-2.5 rounded-2xl border border-zinc-800 flex-shrink-0">
-                <input type="text" id="filter-search" oninput="createPalette()" placeholder="🔍 Search name, squad, or class..." 
-                       class="w-full bg-zinc-800 text-xs px-2.5 py-1 rounded-xl border border-zinc-700 focus:outline-none focus:border-purple-400 placeholder-zinc-500">
+            <div class="space-y-1 mb-2 bg-zinc-950/60 p-2 rounded-2xl border border-zinc-800 flex-shrink-0">
+                <input type="text" id="filter-search" oninput="createPalette()" placeholder="🔍 Search name or class..." 
+                       class="w-full bg-zinc-800 text-xs px-2 py-1 rounded-xl border border-zinc-700 focus:outline-none focus:border-purple-400 placeholder-zinc-500">
                 
-                <div class="grid grid-cols-3 gap-1 text-[10px]">
-                    <select id="filter-class" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1.5 py-1 rounded-lg border border-zinc-700 focus:outline-none focus:border-purple-400">
+                <div class="grid grid-cols-3 gap-1 text-[9px]">
+                    <select id="filter-class" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1 py-1 rounded-lg border border-zinc-700">
                         <option value="">All Classes</option>
-                        <option value="Attacker">⚔️ Attacker</option>
-                        <option value="Defender">🛡️ Defender</option>
-                        <option value="Supporter">💚 Supporter</option>
+                        <option value="Attacker">Attacker</option>
+                        <option value="Defender">Defender</option>
+                        <option value="Supporter">Supporter</option>
                     </select>
 
-                    <select id="filter-manu" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1.5 py-1 rounded-lg border border-zinc-700 focus:outline-none focus:border-purple-400">
+                    <select id="filter-manu" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1 py-1 rounded-lg border border-zinc-700">
                         <option value="">All Manu.</option>
                         <option value="Elysion">Elysion</option>
                         <option value="Missilis">Missilis</option>
@@ -206,160 +178,271 @@
                         <option value="Pilgrim">Pilgrim</option>
                     </select>
 
-                    <select id="filter-element" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1.5 py-1 rounded-lg border border-zinc-700 focus:outline-none focus:border-purple-400">
+                    <select id="filter-element" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1 py-1 rounded-lg border border-zinc-700">
                         <option value="">All Elements</option>
-                        <option value="Fire">🔥 Fire</option>
-                        <option value="Wind">🌬️ Wind</option>
-                        <option value="Iron">🪨 Iron</option>
-                        <option value="Electric">⚡ Electric</option>
-                        <option value="Water">💧 Water</option>
-                    </select>
-
-                    <select id="filter-weapon" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1.5 py-1 rounded-lg border border-zinc-700 focus:outline-none focus:border-purple-400">
-                        <option value="">All Weapons</option>
-                        <option value="Assault Rifle">Assault Rifle</option>
-                        <option value="Rocket Launcher">Rocket Launcher</option>
-                        <option value="Shotgun">Shotgun</option>
-                        <option value="Sniper Rifle">Sniper Rifle</option>
-                        <option value="Submachine Gun">Submachine Gun</option>
-                        <option value="Machine Gun">Machine Gun</option>
-                    </select>
-
-                    <select id="filter-burst" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1.5 py-1 rounded-lg border border-zinc-700 focus:outline-none focus:border-purple-400 col-span-2">
-                        <option value="">All Burst Levels</option>
-                        <option value="1">Burst 1</option>
-                        <option value="2">Burst 2</option>
-                        <option value="3">Burst 3</option>
-                        <option value="p">Burst P</option>
+                        <option value="Fire">Fire</option>
+                        <option value="Wind">Wind</option>
+                        <option value="Iron">Iron</option>
+                        <option value="Electric">Electric</option>
+                        <option value="Water">Water</option>
                     </select>
                 </div>
-
-                <button onclick="resetFilters()" class="w-full text-[10px] text-purple-400 hover:text-purple-300 font-semibold pt-0.5">
-                    ↺ Clear Filters
-                </button>
             </div>
 
             <!-- PALETTE CONTAINER -->
-            <div id="palette" class="grid grid-cols-5 gap-1.5 overflow-y-auto flex-1 auto-rows-max content-start pr-1"></div>
+            <div id="palette" class="grid grid-cols-5 gap-1.5 overflow-y-auto flex-1 auto-rows-max content-start pr-1 min-h-0"></div>
         </div>
     </div>
 
-    <!-- PANEL 4: BOTTOM PANEL (PINNED ICON DOCK) -->
-    <div class="w-full bg-zinc-900 border-t border-zinc-800 px-4 py-2 shadow-2xl flex items-center justify-center gap-5 text-[10px] flex-shrink-0 z-50">
+    <!-- PANEL 4: BOTTOM PANEL (PINNED TRAIT DOCK) -->
+    <div class="w-full bg-zinc-900 border-t border-zinc-800 px-2 lg:px-4 py-2 shadow-2xl flex flex-wrap lg:flex-nowrap items-center justify-between lg:justify-center gap-2 lg:gap-5 text-[10px] flex-shrink-0 z-50 relative">
+        
         <!-- Elements Group -->
         <div class="flex flex-col items-center">
             <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Elements</span>
             <div class="flex gap-1">
-                <button id="btn-element-Fire" onclick="selectTraitIcon('element', 'Fire', 'Fire', 'images/Fire.jpg')" title="Fire" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-element-Fire" onclick="selectTraitIcon('element', 'Fire', 'Fire', 'images/Fire.jpg')" title="Fire" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 w-6">
                     <img src="images/Fire.jpg" alt="Fire" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-element-Wind" onclick="selectTraitIcon('element', 'Wind', 'Wind', 'images/Wind.jpg')" title="Wind" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-element-Wind" onclick="selectTraitIcon('element', 'Wind', 'Wind', 'images/Wind.jpg')" title="Wind" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 w-6">
                     <img src="images/Wind.jpg" alt="Wind" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-element-Iron" onclick="selectTraitIcon('element', 'Iron', 'Iron', 'images/Iron.jpg')" title="Iron" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-element-Iron" onclick="selectTraitIcon('element', 'Iron', 'Iron', 'images/Iron.jpg')" title="Iron" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 w-6">
                     <img src="images/Iron.jpg" alt="Iron" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-element-Electric" onclick="selectTraitIcon('element', 'Electric', 'Electric', 'images/Electric.jpg')" title="Electric" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-element-Electric" onclick="selectTraitIcon('element', 'Electric', 'Electric', 'images/Electric.jpg')" title="Electric" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 w-6">
                     <img src="images/Electric.jpg" alt="Electric" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-element-Water" onclick="selectTraitIcon('element', 'Water', 'Water', 'images/Water.jpg')" title="Water" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-element-Water" onclick="selectTraitIcon('element', 'Water', 'Water', 'images/Water.jpg')" title="Water" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 w-6">
                     <img src="images/Water.jpg" alt="Water" class="w-full h-full object-contain">
                 </button>
             </div>
         </div>
 
-        <div class="h-6 w-px bg-zinc-800"></div>
-
         <!-- Weapons Group -->
         <div class="flex flex-col items-center">
             <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Weapons</span>
             <div class="flex gap-1">
-                <button id="btn-weapon-Assault Rifle" onclick="selectTraitIcon('weapon', 'Assault Rifle', 'AR', 'images/AR.jpg')" title="Assault Rifle" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-weapon-Assault Rifle" onclick="selectTraitIcon('weapon', 'Assault Rifle', 'AR', 'images/AR.jpg')" title="AR" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 w-6">
                     <img src="images/AR.jpg" alt="AR" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-weapon-Rocket Launcher" onclick="selectTraitIcon('weapon', 'Rocket Launcher', 'RL', 'images/RL.jpg')" title="Rocket Launcher" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-weapon-Rocket Launcher" onclick="selectTraitIcon('weapon', 'Rocket Launcher', 'RL', 'images/RL.jpg')" title="RL" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 w-6">
                     <img src="images/RL.jpg" alt="RL" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-weapon-Shotgun" onclick="selectTraitIcon('weapon', 'Shotgun', 'SG', 'images/SG.jpg')" title="Shotgun" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-weapon-Shotgun" onclick="selectTraitIcon('weapon', 'Shotgun', 'SG', 'images/SG.jpg')" title="SG" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 w-6">
                     <img src="images/SG.jpg" alt="SG" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-weapon-Sniper Rifle" onclick="selectTraitIcon('weapon', 'Sniper Rifle', 'SR', 'images/SR.jpg')" title="Sniper Rifle" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-weapon-Sniper Rifle" onclick="selectTraitIcon('weapon', 'Sniper Rifle', 'SR', 'images/SR.jpg')" title="SR" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 w-6">
                     <img src="images/SR.jpg" alt="SR" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-weapon-Submachine Gun" onclick="selectTraitIcon('weapon', 'Submachine Gun', 'SMG', 'images/SMG.jpg')" title="Submachine Gun" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-weapon-Submachine Gun" onclick="selectTraitIcon('weapon', 'Submachine Gun', 'SMG', 'images/SMG.jpg')" title="SMG" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 w-6">
                     <img src="images/SMG.jpg" alt="SMG" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-weapon-Machine Gun" onclick="selectTraitIcon('weapon', 'Machine Gun', 'MG', 'images/MG.jpg')" title="Machine Gun" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-weapon-Machine Gun" onclick="selectTraitIcon('weapon', 'Machine Gun', 'MG', 'images/MG.jpg')" title="MG" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 w-6">
                     <img src="images/MG.jpg" alt="MG" class="w-full h-full object-contain">
                 </button>
             </div>
         </div>
 
-        <div class="h-6 w-px bg-zinc-800"></div>
-
         <!-- Manufacturers Group -->
         <div class="flex flex-col items-center">
-            <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Manufacturers</span>
+            <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Manu.</span>
             <div class="flex gap-1">
-                <button id="btn-manufacturer-Elysion" onclick="selectTraitIcon('manufacturer', 'Elysion', 'Elysion', 'images/Elysion.jpg')" title="Elysion" class="trait-btn bg-zinc-800 border border-zinc-700/60 px-1.5 py-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 min-w-[42px]">
-                    <img src="images/Elysion.jpg" alt="Elysion" class="h-full w-auto max-w-[55px] object-contain">
+                <button id="btn-manufacturer-Elysion" onclick="selectTraitIcon('manufacturer', 'Elysion', 'Elysion', 'images/Elysion.jpg')" title="Elysion" class="trait-btn bg-zinc-800 border border-zinc-700/60 px-1 py-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 min-w-[32px]">
+                    <img src="images/Elysion.jpg" alt="Elysion" class="h-full w-auto max-w-[40px] object-contain">
                 </button>
-                <button id="btn-manufacturer-Missilis" onclick="selectTraitIcon('manufacturer', 'Missilis', 'Missilis', 'images/Missilis.jpg')" title="Missilis" class="trait-btn bg-zinc-800 border border-zinc-700/60 px-1.5 py-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 min-w-[42px]">
-                    <img src="images/Missilis.jpg" alt="Missilis" class="h-full w-auto max-w-[55px] object-contain">
+                <button id="btn-manufacturer-Missilis" onclick="selectTraitIcon('manufacturer', 'Missilis', 'Missilis', 'images/Missilis.jpg')" title="Missilis" class="trait-btn bg-zinc-800 border border-zinc-700/60 px-1 py-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 min-w-[32px]">
+                    <img src="images/Missilis.jpg" alt="Missilis" class="h-full w-auto max-w-[40px] object-contain">
                 </button>
-                <button id="btn-manufacturer-Tetra" onclick="selectTraitIcon('manufacturer', 'Tetra', 'Tetra', 'images/Tetra.jpg')" title="Tetra" class="trait-btn bg-zinc-800 border border-zinc-700/60 px-1.5 py-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 min-w-[42px]">
-                    <img src="images/Tetra.jpg" alt="Tetra" class="h-full w-auto max-w-[55px] object-contain">
+                <button id="btn-manufacturer-Tetra" onclick="selectTraitIcon('manufacturer', 'Tetra', 'Tetra', 'images/Tetra.jpg')" title="Tetra" class="trait-btn bg-zinc-800 border border-zinc-700/60 px-1 py-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 min-w-[32px]">
+                    <img src="images/Tetra.jpg" alt="Tetra" class="h-full w-auto max-w-[40px] object-contain">
                 </button>
-                <button id="btn-manufacturer-Pilgrim" onclick="selectTraitIcon('manufacturer', 'Pilgrim', 'Pilgrim', 'images/Pilgrim.jpg')" title="Pilgrim" class="trait-btn bg-zinc-800 border border-zinc-700/60 px-1.5 py-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 min-w-[42px]">
-                    <img src="images/Pilgrim.jpg" alt="Pilgrim" class="h-full w-auto max-w-[55px] object-contain">
+                <button id="btn-manufacturer-Pilgrim" onclick="selectTraitIcon('manufacturer', 'Pilgrim', 'Pilgrim', 'images/Pilgrim.jpg')" title="Pilgrim" class="trait-btn bg-zinc-800 border border-zinc-700/60 px-1 py-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 min-w-[32px]">
+                    <img src="images/Pilgrim.jpg" alt="Pilgrim" class="h-full w-auto max-w-[40px] object-contain">
                 </button>
             </div>
         </div>
-
-        <div class="h-6 w-px bg-zinc-800"></div>
 
         <!-- Class Group -->
         <div class="flex flex-col items-center">
             <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Class</span>
             <div class="flex gap-1">
-                <button id="btn-class-Attacker" onclick="selectTraitIcon('class', 'Attacker', 'Attacker', 'images/Attacker.jpg')" title="Attacker" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-class-Attacker" onclick="selectTraitIcon('class', 'Attacker', 'Attacker', 'images/Attacker.jpg')" title="Attacker" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 w-6">
                     <img src="images/Attacker.jpg" alt="Attacker" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-class-Defender" onclick="selectTraitIcon('class', 'Defender', 'Defender', 'images/Defender.jpg')" title="Defender" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-class-Defender" onclick="selectTraitIcon('class', 'Defender', 'Defender', 'images/Defender.jpg')" title="Defender" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 w-6">
                     <img src="images/Defender.jpg" alt="Defender" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-class-Supporter" onclick="selectTraitIcon('class', 'Supporter', 'Supporter', 'images/Supporter.jpg')" title="Supporter" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-class-Supporter" onclick="selectTraitIcon('class', 'Supporter', 'Supporter', 'images/Supporter.jpg')" title="Supporter" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 w-6">
                     <img src="images/Supporter.jpg" alt="Supporter" class="w-full h-full object-contain">
                 </button>
             </div>
         </div>
 
-        <div class="h-6 w-px bg-zinc-800"></div>
-
-        <!-- Burst Level Group -->
+        <!-- Burst Group -->
         <div class="flex flex-col items-center">
             <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Burst</span>
             <div class="flex gap-1">
-                <button id="btn-burst-1" onclick="selectTraitIcon('burst', '1', 'B1', 'images/1.jpg')" title="Burst 1" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-burst-1" onclick="selectTraitIcon('burst', '1', 'B1', 'images/1.jpg')" title="B1" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 w-6">
                     <img src="images/1.jpg" alt="B1" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-burst-2" onclick="selectTraitIcon('burst', '2', 'B2', 'images/2.jpg')" title="Burst 2" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-burst-2" onclick="selectTraitIcon('burst', '2', 'B2', 'images/2.jpg')" title="B2" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 w-6">
                     <img src="images/2.jpg" alt="B2" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-burst-3" onclick="selectTraitIcon('burst', '3', 'B3', 'images/3.jpg')" title="Burst 3" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-burst-3" onclick="selectTraitIcon('burst', '3', 'B3', 'images/3.jpg')" title="B3" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 w-6">
                     <img src="images/3.jpg" alt="B3" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-burst-p" onclick="selectTraitIcon('burst', 'p', 'BP', 'images/P.jpg')" title="Burst P" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-burst-p" onclick="selectTraitIcon('burst', 'p', 'BP', 'images/P.jpg')" title="BP" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-6 w-6">
                     <img src="images/P.jpg" alt="BP" class="w-full h-full object-contain">
+                </button>
+            </div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="flex items-center gap-1.5 ml-auto lg:ml-0 lg:absolute lg:right-4">
+            <button onclick="toggleFeedbackModal(true)" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-blue-100 font-bold text-[10px] rounded-lg border border-blue-400 flex items-center gap-1">
+                💬 Feedback
+            </button>
+            <button onclick="toggleLeaderboardModal(true)" class="px-2 py-1 bg-amber-600 hover:bg-amber-500 text-amber-100 font-bold text-[10px] rounded-lg border border-amber-400 flex items-center gap-1">
+                🏆 Ranks
+            </button>
+            <button onclick="toggleTutorialModal(true)" class="px-2 py-1 bg-purple-700 hover:bg-purple-600 text-purple-100 font-bold text-[10px] rounded-lg border border-purple-400 flex items-center gap-1">
+                ❓ Help
+            </button>
+        </div>
+    </div>
+
+    <!-- TUTORIAL MODAL -->
+    <div id="tutorial-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center hidden p-4">
+        <div class="bg-zinc-900 border-2 border-purple-500/50 rounded-3xl max-w-lg w-full p-5 shadow-2xl relative flex flex-col max-h-[85vh] overflow-y-auto">
+            <button onclick="toggleTutorialModal(false)" class="absolute top-4 right-4 text-zinc-400 hover:text-white font-bold text-lg px-2">✕</button>
+            
+            <h2 class="text-xl font-bold text-purple-400 mb-2 flex items-center gap-2">
+                <span>🎮</span> How to Play
+            </h2>
+            
+            <div class="space-y-3 text-xs text-zinc-300 leading-relaxed">
+                <div class="bg-zinc-800/80 p-2.5 rounded-xl border border-zinc-700">
+                    <h3 class="font-bold text-purple-300 text-xs mb-1">1. Objective</h3>
+                    <p>Place the correct Nikke in every empty grid cell based on logic clues.</p>
+                </div>
+                <div class="bg-zinc-800/80 p-2.5 rounded-xl border border-zinc-700">
+                    <h3 class="font-bold text-purple-300 text-xs mb-1">2. Clues</h3>
+                    <p>Tap any cell to display its specific deduction clue.</p>
+                </div>
+                <div class="bg-zinc-800/80 p-2.5 rounded-xl border border-zinc-700">
+                    <h3 class="font-bold text-purple-300 text-xs mb-1">3. Trait Markers</h3>
+                    <p>Tap a trait from the bottom dock and click cells to place custom notes.</p>
+                </div>
+            </div>
+
+            <button onclick="toggleTutorialModal(false)" class="mt-4 w-full py-2 bg-purple-600 hover:bg-purple-500 rounded-xl font-bold text-xs text-white transition-all">
+                Got it!
+            </button>
+        </div>
+    </div>
+
+    <!-- WIN MODAL -->
+    <div id="win-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[110] flex items-center justify-center hidden p-4">
+        <div class="bg-zinc-900 border-2 border-emerald-500/60 rounded-3xl max-w-md w-full p-5 shadow-2xl relative flex flex-col text-center">
+            <div class="text-3xl mb-1">🎉</div>
+            <h2 class="text-xl font-black text-emerald-400 mb-1">PUZZLE SOLVED!</h2>
+            <p class="text-xs text-zinc-400 mb-3">You solved the <span id="win-diff-label" class="font-bold text-purple-300"></span> puzzle in <span id="win-time-label" class="font-bold text-amber-400 font-mono"></span>!</p>
+
+            <div class="bg-zinc-800 p-3 rounded-2xl border border-zinc-700 mb-3 text-left space-y-1.5">
+                <label for="leaderboard-player-name" class="text-[11px] font-bold text-zinc-300 block">Commander Name:</label>
+                <input type="text" id="leaderboard-player-name" placeholder="Commander" maxlength="16" 
+                       class="w-full bg-zinc-900 border border-zinc-600 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-400">
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="submitLeaderboardEntry()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold text-xs text-white shadow-md">
+                    🏆 Submit Score
+                </button>
+                <button onclick="toggleWinModal(false)" class="py-2 px-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold text-xs text-zinc-400">
+                    Skip
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- LEADERBOARD MODAL -->
+    <div id="leaderboard-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center hidden p-4">
+        <div class="bg-zinc-900 border-2 border-amber-500/50 rounded-3xl max-w-lg w-full p-5 shadow-2xl relative flex flex-col max-h-[85vh]">
+            <button onclick="toggleLeaderboardModal(false)" class="absolute top-4 right-4 text-zinc-400 hover:text-white font-bold text-lg px-2">✕</button>
+            
+            <h2 class="text-xl font-bold text-amber-400 mb-2 flex items-center gap-2">
+                <span>🏆</span> Leaderboards
+            </h2>
+
+            <div class="flex gap-1.5 mb-3 overflow-x-auto pb-1 flex-shrink-0">
+                <button onclick="filterLeaderboardDisplay('easy3')" id="lb-tab-easy3" class="lb-tab-btn px-2 py-1 bg-zinc-800 rounded-lg text-[10px] font-bold text-zinc-300 border border-zinc-700 flex-shrink-0">Easy 3x3</button>
+                <button onclick="filterLeaderboardDisplay('medium3')" id="lb-tab-medium3" class="lb-tab-btn px-2 py-1 bg-zinc-800 rounded-lg text-[10px] font-bold text-zinc-300 border border-zinc-700 flex-shrink-0">Med 3x3</button>
+                <button onclick="filterLeaderboardDisplay('hard3')" id="lb-tab-hard3" class="lb-tab-btn px-2 py-1 bg-zinc-800 rounded-lg text-[10px] font-bold text-zinc-300 border border-zinc-700 flex-shrink-0">Hard 3x3</button>
+                <button onclick="filterLeaderboardDisplay('insane11')" id="lb-tab-insane11" class="lb-tab-btn px-2 py-1 bg-zinc-800 rounded-lg text-[10px] font-bold text-zinc-300 border border-zinc-700 flex-shrink-0">Insane 11x11</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto min-h-0 bg-zinc-950/60 rounded-2xl border border-zinc-800 p-2">
+                <table class="w-full text-left text-xs">
+                    <thead class="text-[9px] uppercase text-zinc-500 border-b border-zinc-800">
+                        <tr>
+                            <th class="p-1.5 text-center">#</th>
+                            <th class="p-1.5">Commander</th>
+                            <th class="p-1.5 text-right">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-table-body" class="divide-y divide-zinc-800/50"></tbody>
+                </table>
+            </div>
+
+            <button onclick="toggleLeaderboardModal(false)" class="mt-3 w-full py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold text-xs text-zinc-300">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <!-- FEEDBACK MODAL -->
+    <div id="feedback-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[120] flex items-center justify-center hidden p-4">
+        <div class="bg-zinc-900 border-2 border-blue-500/50 rounded-3xl max-w-md w-full p-5 shadow-2xl relative flex flex-col">
+            <button onclick="toggleFeedbackModal(false)" class="absolute top-4 right-4 text-zinc-400 hover:text-white font-bold text-lg px-2">✕</button>
+            
+            <h2 class="text-xl font-bold text-blue-400 mb-3 flex items-center gap-2">
+                <span>💬</span> Send Feedback
+            </h2>
+
+            <div class="space-y-3 text-xs text-zinc-300">
+                <div>
+                    <label for="feedback-reason" class="font-bold text-zinc-300 text-[10px] block mb-1 uppercase tracking-wider">
+                        Reason for Feedback
+                    </label>
+                    <input type="text" id="feedback-reason" placeholder="e.g., Bug Report, Feature Request..." 
+                           class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-blue-400 placeholder-zinc-500">
+                </div>
+
+                <div>
+                    <label for="feedback-body" class="font-bold text-zinc-300 text-[10px] block mb-1 uppercase tracking-wider">
+                        Feedback Details
+                    </label>
+                    <textarea id="feedback-body" rows="4" placeholder="Write your feedback here..." 
+                              class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-blue-400 placeholder-zinc-500 resize-none"></textarea>
+                </div>
+            </div>
+
+            <div class="flex gap-2 mt-4">
+                <button id="feedback-submit-btn" onclick="submitFeedbackEmail()" class="flex-1 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold text-xs text-white transition-all shadow-md flex items-center justify-center gap-1">
+                    ✉️ Send Feedback
+                </button>
+                <button onclick="toggleFeedbackModal(false)" class="py-2 px-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold text-xs text-zinc-400">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN GAME SCRIPT -->
     <script>
         let allNikkesData = [];
 
-        // Element Advantage Cycle Map (Key beats Value)
         const ELEMENT_ADVANTAGE = {
             'Fire': 'Wind',
             'Wind': 'Iron',
@@ -419,11 +502,10 @@
         let solution = [];
         let currentGrid = [];
         let selectedNikke = null;
-        let selectedTraitMark = null; // Store trait icon selection
+        let selectedTraitMark = null;
         let cellCluesMap = {};
         let cellClueRules = {};
 
-        // TIMER & BEST TIME LOGIC
         let timerInterval = null;
         let elapsedSeconds = 0;
         let isTimerRunning = false;
@@ -479,7 +561,7 @@
             if (!existingBest || elapsedSeconds < parseInt(existingBest, 10)) {
                 localStorage.setItem(key, elapsedSeconds);
                 updateBestTimeDisplay();
-                return true; // Is new record
+                return true;
             }
             return false;
         }
@@ -518,9 +600,22 @@
         }
 
         function handleDropdownChange() {
-            const diffVal = document.getElementById('select-diff').value;
-            const sizeVal = document.getElementById('select-size').value;
-            currentDifficulty = `${diffVal}${sizeVal}`;
+            const diffSelect = document.getElementById('select-diff');
+            const sizeSelect = document.getElementById('select-size');
+
+            if (diffSelect.value === 'insane') {
+                sizeSelect.value = '11';
+                sizeSelect.disabled = true;
+                sizeSelect.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                sizeSelect.disabled = false;
+                sizeSelect.classList.remove('opacity-50', 'cursor-not-allowed');
+                if (sizeSelect.value === '11') {
+                    sizeSelect.value = '3';
+                }
+            }
+
+            currentDifficulty = `${diffSelect.value}${sizeSelect.value}`;
             generateNewPuzzle();
         }
 
@@ -535,7 +630,6 @@
         function selectTraitIcon(type, value, label, src) {
             selectedNikke = null;
 
-            // Toggle deselection if clicking active icon
             if (selectedTraitMark && selectedTraitMark.type === type && selectedTraitMark.value === value) {
                 selectedTraitMark = null;
             } else {
@@ -560,15 +654,15 @@
             const btnEl = document.getElementById('clear-selected-btn');
 
             if (selectedNikke) {
-                textEl.innerHTML = `Selected: <span class="font-bold text-purple-300 not-italic">${selectedNikke.name}</span> <span class="text-zinc-500">(${selectedNikke.class})</span>`;
+                textEl.innerHTML = `Selected: <span class="font-bold text-purple-300 not-italic">${selectedNikke.name}</span>`;
                 textEl.classList.remove('italic');
                 btnEl.classList.remove('hidden');
             } else if (selectedTraitMark) {
-                textEl.innerHTML = `Selected Marker: <span class="font-bold text-amber-300 not-italic">${selectedTraitMark.label}</span>`;
+                textEl.innerHTML = `Marker: <span class="font-bold text-amber-300 not-italic">${selectedTraitMark.label}</span>`;
                 textEl.classList.remove('italic');
                 btnEl.classList.remove('hidden');
             } else {
-                textEl.textContent = 'No Nikke or Marker selected';
+                textEl.textContent = 'No Nikke selected';
                 textEl.classList.add('italic');
                 btnEl.classList.add('hidden');
             }
@@ -592,13 +686,18 @@
                 else if (currentDifficulty === 'easy4') { gridRows = 4; gridCols = 4; poolSize = 17; hints = 4; }
                 else if (currentDifficulty === 'easy5') { gridRows = 5; gridCols = 5; poolSize = 26; hints = 5; }
             } else if (currentDifficulty.startsWith('medium')) {
-                if (currentDifficulty === 'medium3') { gridRows = 3; gridCols = 3; poolSize = 15; hints = 3; }
-                else if (currentDifficulty === 'medium4') { gridRows = 4; gridCols = 4; poolSize = 25; hints = 4; }
-                else if (currentDifficulty === 'medium5') { gridRows = 5; gridCols = 5; poolSize = allNikkesData.length; hints = 5; }
+                if (currentDifficulty === 'medium3') { gridRows = 3; gridCols = 3; poolSize = 15; hints = 2; }
+                else if (currentDifficulty === 'medium4') { gridRows = 4; gridCols = 4; poolSize = 25; hints = 3; }
+                else if (currentDifficulty === 'medium5') { gridRows = 5; gridCols = 5; poolSize = allNikkesData.length; hints = 4; }
             } else if (currentDifficulty.startsWith('hard')) {
-                if (currentDifficulty === 'hard3') { gridRows = 3; gridCols = 3; poolSize = 25; hints = 3; }
-                else if (currentDifficulty === 'hard4') { gridRows = 4; gridCols = 4; poolSize = 50; hints = 4; }
-                else if (currentDifficulty === 'hard5') { gridRows = 5; gridCols = 5; poolSize = allNikkesData.length; hints = 5; }
+                if (currentDifficulty === 'hard3') { gridRows = 3; gridCols = 3; poolSize = 25; hints = 1; }
+                else if (currentDifficulty === 'hard4') { gridRows = 4; gridCols = 4; poolSize = 50; hints = 2; }
+                else if (currentDifficulty === 'hard5') { gridRows = 5; gridCols = 5; poolSize = allNikkesData.length; hints = 3; }
+            } else if (currentDifficulty.startsWith('insane')) {
+                gridRows = 11; 
+                gridCols = 11; 
+                poolSize = 121; 
+                hints = 5;
             }
 
             const actualPoolSize = Math.min(poolSize, allNikkesData.length);
@@ -663,7 +762,13 @@
                 'DIRECTIONAL': 8,
                 'SELF_CLASS': 5,
                 'ROW_COL_COUNT': 10,
-                'ADJACENT_EXACT_COUNT': 10
+                'ADJACENT_EXACT_COUNT': 10,
+                'DIRECTIONAL_BURST_COMP': 8,
+                'WEAPON_RANGE_COMP': 8,
+                'SHARED_DIRECTIONAL_ATTR': 9,
+                'SQUADMATE_ADJACENT': 9,
+                'ZERO_ELEMENT_COL': 9,
+                'NOT_ADJACENT_ATTR': 9
             };
 
             function getWeightedRandomChoice(candidates) {
@@ -767,193 +872,29 @@
                         }
                     }
 
-                    // 2. EXACT ADJACENT NEIGHBOR COUNT
-                    const neighborPositions = getNeighbors(r, c);
-                    const neighborNikkes = neighborPositions.map(nb => nikkeMap[sol[nb.row][nb.col]]).filter(Boolean);
+                    // 2. DYNAMIC SELF-ATTRIBUTE FALLBACK
+                    const selfAttrChoices = [
+                        { key: 'class', label: `${cellNikke.class} Class` },
+                        { key: 'element', label: `${cellNikke.element} Element` },
+                        { key: 'manufacturer', label: `member of ${cellNikke.manufacturer}` },
+                        { key: 'weapon', label: `${cellNikke.weapon} user` },
+                        { key: 'burst', label: `Burst ${cellNikke.burst} unit` }
+                    ];
 
-                    if (neighborNikkes.length > 0) {
-                        const adjAttr = attributes[Math.floor(Math.random() * attributes.length)];
-                        let targetVal = cellNikke[adjAttr.key];
-                        
-                        if (Math.random() > 0.3) {
-                            const pickedN = neighborNikkes[Math.floor(Math.random() * neighborNikkes.length)];
-                            if (pickedN && pickedN[adjAttr.key]) targetVal = pickedN[adjAttr.key];
-                        }
+                    const pickedSelfAttr = selfAttrChoices[Math.floor(Math.random() * selfAttrChoices.length)];
 
-                        if (targetVal) {
-                            const actualAdjCount = neighborNikkes.filter(n => n[adjAttr.key] === targetVal).length;
-
-                            candidates.push({
-                                type: 'ADJACENT_EXACT_COUNT',
-                                weight: questionWeights['ADJACENT_EXACT_COUNT'],
-                                text: `Cell R${r+1}C${c+1}: I am next to ${actualAdjCount} ${targetVal}${adjAttr.key === 'burst' ? ' Burst' : ''} Nikke${actualAdjCount === 1 ? '' : 's'}.`,
-                                checkFn: (currN, neighs, gridState) => {
-                                    let count = 0;
-                                    neighborPositions.forEach(pos => {
-                                        const id = gridState[pos.row][pos.col];
-                                        if (typeof id === 'string' && nikkeMap[id] && nikkeMap[id][adjAttr.key] === targetVal) {
-                                            count++;
-                                        }
-                                    });
-                                    return count === actualAdjCount;
-                                },
-                                expected: true
-                            });
-                        }
-                    }
-
-                    // 3. SPECIFIC NIKKE ON GRID
-                    if (allGridNikkes.length > 0) {
-                        const presentNikke = allGridNikkes[Math.floor(Math.random() * allGridNikkes.length)];
-                        if (presentNikke) {
-                            candidates.push({
-                                type: 'NIKKE_ON_GRID',
-                                weight: questionWeights['NIKKE_ON_GRID'],
-                                text: `Cell R${r+1}C${c+1}: ${presentNikke.name} is on the grid.`,
-                                checkFn: (currN, neighs, gridState) => {
-                                    return gridState.some(row => row.some(val => typeof val === 'string' && nikkeMap[val]?.name === presentNikke.name));
-                                },
-                                expected: true
-                            });
-                        }
-                    }
-
-                    // 4. ONLY SQUAD
-                    if (cellNikke.squad) {
-                        const squadCount = allGridNikkes.filter(n => n?.squad === cellNikke.squad).length;
-                        if (squadCount === 1) {
-                            candidates.push({
-                                type: 'ONLY_SQUAD',
-                                weight: questionWeights['ONLY_SQUAD'],
-                                text: `Cell R${r+1}C${c+1}: I am the only Nikke from my squad on the field.`,
-                                checkFn: (currN, neighs, gridState) => {
-                                    let count = 0;
-                                    gridState.forEach(row => row.forEach(val => {
-                                        if (typeof val === 'string' && nikkeMap[val]?.squad === currN?.squad) count++;
-                                    }));
-                                    return count === 1;
-                                },
-                                expected: true
-                            });
-                        }
-                    }
-
-                    // 5. ONLY MANUFACTURER
-                    if (cellNikke.manufacturer) {
-                        const manuCount = allGridNikkes.filter(n => n?.manufacturer === cellNikke.manufacturer).length;
-                        if (manuCount === 1) {
-                            candidates.push({
-                                type: 'ONLY_MANUFACTURER',
-                                weight: questionWeights['ONLY_MANUFACTURER'],
-                                text: `Cell R${r+1}C${c+1}: I am the only Nikke from my manufacturer on the field.`,
-                                checkFn: (currN, neighs, gridState) => {
-                                    let count = 0;
-                                    gridState.forEach(row => row.forEach(val => {
-                                        if (typeof val === 'string' && nikkeMap[val]?.manufacturer === currN?.manufacturer) count++;
-                                    }));
-                                    return count === 1;
-                                },
-                                expected: true
-                            });
-                        }
-                    }
-
-                    // 6. ELEMENT ADVANTAGE
-                    const directions = shuffle(['ABOVE', 'BELOW', 'LEFT', 'RIGHT']);
-                    for (const d of directions) {
-                        const pos = getDirectionalNeighbor(r, c, d);
-                        if (pos) {
-                            const neighborNikke = nikkeMap[sol[pos.r][pos.c]];
-                            if (neighborNikke && cellNikke.element && ELEMENT_ADVANTAGE[cellNikke.element] === neighborNikke.element) {
-                                candidates.push({
-                                    type: 'ELEMENT_STRONGER',
-                                    weight: questionWeights['ELEMENT_STRONGER'],
-                                    text: `Cell R${r+1}C${c+1}: My element is stronger than the Nikke ${d}.`,
-                                    checkFn: (currN, neighs, gridState) => {
-                                        const val = gridState[pos.r][pos.c];
-                                        if (typeof val !== 'string') return false;
-                                        const targetN = nikkeMap[val];
-                                        return targetN && currN ? ELEMENT_ADVANTAGE[currN.element] === targetN.element : false;
-                                    },
-                                    expected: true
-                                });
-                                break;
-                            }
-                        }
-                    }
-
-                    // 7. WEAPON VISION DISTANCE
-                    const weaponDist = getWeaponRange(cellNikke.weapon);
-                    if (weaponDist !== null) {
-                        const targetDistCells = getCellsAtDistance(r, c, weaponDist);
-                        if (targetDistCells.length > 0) {
-                            const targetCell = targetDistCells[Math.floor(Math.random() * targetDistCells.length)];
-                            const targetNikke = nikkeMap[sol[targetCell.row][targetCell.col]];
-                            
-                            if (targetNikke) {
-                                const traitChoices = [
-                                    { attr: 'class', val: targetNikke.class, label: targetNikke.class },
-                                    { attr: 'element', val: targetNikke.element, label: `${targetNikke.element} Element` },
-                                    { attr: 'weapon', val: targetNikke.weapon, label: `${targetNikke.weapon} user` }
-                                ];
-                                const pickedTrait = traitChoices[Math.floor(Math.random() * traitChoices.length)];
-
-                                if (pickedTrait.val) {
-                                    candidates.push({
-                                        type: 'SEE_DISTANCE',
-                                        weight: questionWeights['SEE_DISTANCE'],
-                                        text: `Cell R${r+1}C${c+1}: I can see a ${pickedTrait.label} ${weaponDist} cell(s) away.`,
-                                        checkFn: (currN, neighs, gridState) => {
-                                            const cellsAtD = getCellsAtDistance(r, c, weaponDist);
-                                            return cellsAtD.some(pos => {
-                                                const val = gridState[pos.row][pos.col];
-                                                if (typeof val !== 'string') return false;
-                                                return nikkeMap[val] && nikkeMap[val][pickedTrait.attr] === pickedTrait.val;
-                                            });
-                                        },
-                                        expected: true
-                                    });
-                                }
-                            }
-                        }
-                    }
-
-                    // 8. DIRECTIONAL NEIGHBOR CLASS
-                    for (const d of directions) {
-                        const pos = getDirectionalNeighbor(r, c, d);
-                        if (pos) {
-                            const targetNikke = nikkeMap[sol[pos.r][pos.c]];
-                            if (targetNikke && targetNikke.class) {
-                                candidates.push({
-                                    type: 'DIRECTIONAL',
-                                    weight: questionWeights['DIRECTIONAL'],
-                                    text: `Cell R${r+1}C${c+1}: The Nikke directly ${d} is a ${targetNikke.class}.`,
-                                    checkFn: (currN, neighs, gridState) => {
-                                        const val = gridState[pos.r][pos.c];
-                                        return typeof val === 'string' && nikkeMap[val] ? nikkeMap[val].class === targetNikke.class : false;
-                                    },
-                                    expected: true
-                                });
-                                break;
-                            }
-                        }
-                    }
-
-                    // 9. SELF CLASS FALLBACK
-                    if (cellNikke.class) {
+                    if (cellNikke[pickedSelfAttr.key]) {
                         candidates.push({
                             type: 'SELF_CLASS',
                             weight: questionWeights['SELF_CLASS'],
-                            text: `Cell R${r+1}C${c+1}: I am a ${cellNikke.class} Nikke.`,
-                            checkFn: (currN) => currN && currN.class === cellNikke.class,
+                            text: `Cell R${r+1}C${c+1}: I am a ${pickedSelfAttr.label}.`,
+                            checkFn: (currN) => currN && currN[pickedSelfAttr.key] === cellNikke[pickedSelfAttr.key],
                             expected: true
                         });
                     }
 
                     const chosenClue = getWeightedRandomChoice(candidates);
                     if (chosenClue) {
-                        questionWeights[chosenClue.type] = Math.max(1, questionWeights[chosenClue.type] - 3);
-
                         cellCluesMap[cellKey] = chosenClue.text;
                         cellClueRules[cellKey] = {
                             checkFn: chosenClue.checkFn,
@@ -968,9 +909,10 @@
         function createGrid() {
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
-            grid.className = `grid gap-2 grid-cols-${gridCols}`;
+            grid.className = `grid gap-1.5`;
+            grid.style.gridTemplateColumns = `repeat(${gridCols}, minmax(0, 1fr))`;
 
-            const sizeClass = gridCols === 5 ? 'size-5x5' : gridCols === 4 ? 'size-4x4' : 'size-3x3';
+            const sizeClass = gridCols === 11 ? 'size-11x11' : gridCols === 5 ? 'size-5x5' : gridCols === 4 ? 'size-4x4' : 'size-3x3';
 
             for (let r = 0; r < gridRows; r++) {
                 for (let c = 0; c < gridCols; c++) {
@@ -1022,36 +964,32 @@
                 const cellData = currentGrid[r][c];
                 
                 if (typeof cellData === 'string') {
-                    // Full Nikke Placed
                     const n = allNikkesData.find(x => x.id === cellData);
                     cell.innerHTML = `
-                        <div class="w-[50%] h-[50%] rounded-xl overflow-hidden border border-purple-300 bg-zinc-900 flex items-center justify-center">
+                        <div class="w-[55%] h-[55%] rounded-lg overflow-hidden border border-purple-300 bg-zinc-900 flex items-center justify-center">
                             <img src="${n.icon}" alt="${n.name}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                            <span class="text-xs font-bold text-purple-300 hidden">${n.name.substring(0,2).toUpperCase()}</span>
+                            <span class="text-[10px] font-bold text-purple-300 hidden">${n.name.substring(0,2).toUpperCase()}</span>
                         </div>
                         <div class="nikke-name">${n.name}</div>
                     `;
                     cell.classList.add('filled');
                 } else if (cellData && typeof cellData === 'object' && Object.keys(cellData).length > 0) {
-                    // Pure Image Markers Grid Placement (No text labels)
                     const markerItems = Object.values(cellData);
                     const count = markerItems.length;
 
-                    let iconContainerStyle = 'w-12 h-12 p-1.5';
-                    if (count > 2) {
-                        iconContainerStyle = 'w-8 h-8 p-1';
-                    } else if (count === 2) {
-                        iconContainerStyle = 'w-10 h-10 p-1';
+                    let iconContainerStyle = 'w-6 h-6 p-0.5';
+                    if (gridCols === 11) {
+                        iconContainerStyle = 'w-4 h-4 p-0.5';
                     }
 
                     const markerImgsHtml = markerItems.map(item => `
-                        <div class="${iconContainerStyle} rounded-lg bg-zinc-900 border border-zinc-700/80 flex items-center justify-center shadow-md" title="${item.label}">
+                        <div class="${iconContainerStyle} rounded bg-zinc-900 border border-zinc-700 flex items-center justify-center shadow-md" title="${item.label}">
                             <img src="${item.src}" alt="${item.label}" class="w-full h-full object-contain pointer-events-none">
                         </div>
                     `).join('');
 
                     cell.innerHTML = `
-                        <div class="grid grid-cols-2 gap-1.5 p-2 items-center justify-items-center max-w-full max-h-full">
+                        <div class="grid grid-cols-2 gap-0.5 p-0.5 items-center justify-items-center max-w-full max-h-full">
                             ${markerImgsHtml}
                         </div>
                     `;
@@ -1068,8 +1006,6 @@
             document.getElementById('filter-class').value = '';
             document.getElementById('filter-manu').value = '';
             document.getElementById('filter-element').value = '';
-            document.getElementById('filter-weapon').value = '';
-            document.getElementById('filter-burst').value = '';
             createPalette();
         }
 
@@ -1081,8 +1017,6 @@
             const classVal = document.getElementById('filter-class').value;
             const manuVal = document.getElementById('filter-manu').value;
             const elementVal = document.getElementById('filter-element').value;
-            const weaponVal = document.getElementById('filter-weapon').value;
-            const burstVal = document.getElementById('filter-burst').value;
 
             const filteredList = shuffledPalette.filter(n => {
                 const matchesSearch = !searchVal || 
@@ -1093,10 +1027,8 @@
                 const matchesClass = !classVal || n.class === classVal;
                 const matchesManu = !manuVal || n.manufacturer === manuVal;
                 const matchesElement = !elementVal || n.element === elementVal;
-                const matchesWeapon = !weaponVal || n.weapon === weaponVal;
-                const matchesBurst = !burstVal || n.burst.toString() === burstVal;
 
-                return matchesSearch && matchesClass && matchesManu && matchesElement && matchesWeapon && matchesBurst;
+                return matchesSearch && matchesClass && matchesManu && matchesElement;
             });
 
             const badge = document.getElementById('nikke-count-badge');
@@ -1105,19 +1037,19 @@
             }
 
             if (filteredList.length === 0) {
-                p.innerHTML = `<div class="col-span-5 text-center text-xs text-zinc-500 py-6">No matching Nikkes found</div>`;
+                p.innerHTML = `<div class="col-span-5 text-center text-xs text-zinc-500 py-4">No Nikkes found</div>`;
                 return;
             }
 
             filteredList.forEach(n => {
                 const btn = document.createElement('button');
-                btn.className = `p-1 aspect-square rounded-xl flex flex-col items-center justify-center transition-all hover:scale-105 ${selectedNikke?.id === n.id ? 'bg-purple-900 border-2 border-purple-400' : 'hover:bg-zinc-800 bg-zinc-900/50'}`;
+                btn.className = `p-1 aspect-square rounded-xl flex flex-col items-center justify-center transition-all ${selectedNikke?.id === n.id ? 'bg-purple-900 border-2 border-purple-400' : 'hover:bg-zinc-800 bg-zinc-900/50'}`;
                 btn.innerHTML = `
-                    <div class="w-7 h-7 rounded-lg overflow-hidden mb-0.5 border border-zinc-700 bg-zinc-800 flex items-center justify-center flex-shrink-0">
+                    <div class="w-6 h-6 rounded-lg overflow-hidden mb-0.5 border border-zinc-700 bg-zinc-800 flex items-center justify-center flex-shrink-0">
                         <img src="${n.icon}" alt="${n.name}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                        <span class="text-[10px] font-bold text-zinc-400 hidden">${n.name.substring(0,2).toUpperCase()}</span>
+                        <span class="text-[9px] font-bold text-zinc-400 hidden">${n.name.substring(0,2).toUpperCase()}</span>
                     </div>
-                    <div class="text-[8px] font-bold text-center leading-tight truncate w-full">${n.name}</div>
+                    <div class="text-[7px] font-bold text-center leading-tight truncate w-full">${n.name}</div>
                 `;
                 btn.onclick = () => {
                     selectedTraitMark = null;
@@ -1130,9 +1062,6 @@
                     }
                     updateSelectedNikkeBar();
                     createPalette();
-                };
-                btn.onmouseenter = () => {
-                    if (!selectedNikke) showInfo(n);
                 };
                 p.appendChild(btn);
             });
@@ -1185,7 +1114,6 @@
 
                     if (result !== rule.expected) {
                         failedClues.push({ row: r, col: c, text: rule.text });
-                        
                         const cellElem = document.querySelector(`.grid-cell[data-row="${r}"][data-col="${c}"]`);
                         if (cellElem) cellElem.classList.add('error');
                     }
@@ -1198,7 +1126,7 @@
             clearErrorHighlights();
 
             const filledWithNikkes = currentGrid.every(r => r.every(c => typeof c === 'string'));
-            if (!filledWithNikkes) return setStatus('⚠️ Fill every cell with a Nikke first (Markers don\'t count as solutions)!', 'text-amber-400 font-semibold');
+            if (!filledWithNikkes) return setStatus('⚠️ Fill every cell with a Nikke first!', 'text-amber-400 font-semibold');
 
             const placedNikkes = currentGrid.flat();
             const counts = {};
@@ -1221,37 +1149,139 @@
 
             if (hasDuplicates) {
                 addPenaltyTime(60);
-                return setStatus('❌ Duplicate Nikke placed! (+1:00 Penalty added)', 'text-red-400 font-bold');
+                return setStatus('❌ Duplicate Nikke placed! (+1:00 Penalty)', 'text-red-400 font-bold');
             }
 
             const failedClues = validateGridWithClues();
 
             if (failedClues.length === 0) {
                 stopTimer();
-                const isNewRecord = saveBestTimeIfRecord();
-                const timeString = formatTime(elapsedSeconds);
-
-                if (isNewRecord) {
-                    return setStatus(`🎉 SOLVED in ${timeString}! 🏆 NEW BEST TIME RECORD!`, 'text-emerald-400 font-bold text-xl');
-                } else {
-                    return setStatus(`🎉 PUZZLE SOLVED in ${timeString}!`, 'text-emerald-400 font-bold text-xl');
-                }
+                saveBestTimeIfRecord();
+                setStatus(`🎉 SOLVED in ${formatTime(elapsedSeconds)}!`, 'text-emerald-400 font-bold text-lg');
+                setTimeout(() => toggleWinModal(true), 500);
+                return;
             }
 
             addPenaltyTime(60);
-
-            const errorListHtml = `
-                <div class="text-red-400 font-bold mb-1">❌ Incorrect! ${failedClues.length} clue(s) not fulfilled (+1:00 Penalty added):</div>
-                <div class="bg-red-950/50 border border-red-800/80 rounded-2xl p-2 text-xs text-red-200 text-left space-y-1 max-h-24 overflow-y-auto">
-                    ${failedClues.map(f => `<div>• <span class="font-bold text-red-300">Cell R${f.row+1}C${f.col+1}:</span> ${f.text.replace(`Cell R${f.row+1}C${f.col+1}: `, '')}</div>`).join('')}
-                </div>
-            `;
-            setStatus(errorListHtml, '');
+            setStatus(`❌ Incorrect! ${failedClues.length} clue(s) failed (+1:00 Penalty).`, 'text-red-400 font-bold');
         }
 
         function setStatus(text, cls) {
             const el = document.getElementById('status');
             el.innerHTML = cls ? `<span class="${cls}">${text}</span>` : text;
+        }
+
+        function toggleTutorialModal(show) {
+            document.getElementById('tutorial-modal').classList.toggle('hidden', !show);
+        }
+
+        function toggleWinModal(show) {
+            const modal = document.getElementById('win-modal');
+            if (show) {
+                document.getElementById('win-diff-label').textContent = currentDifficulty.toUpperCase();
+                document.getElementById('win-time-label').textContent = formatTime(elapsedSeconds);
+                document.getElementById('leaderboard-player-name').value = localStorage.getItem('last_commander_name') || '';
+            }
+            modal.classList.toggle('hidden', !show);
+        }
+
+        function toggleLeaderboardModal(show) {
+            if (show) filterLeaderboardDisplay(currentDifficulty);
+            document.getElementById('leaderboard-modal').classList.toggle('hidden', !show);
+        }
+
+        function toggleFeedbackModal(show) {
+            if (show) {
+                document.getElementById('feedback-reason').value = '';
+                document.getElementById('feedback-body').value = '';
+            }
+            document.getElementById('feedback-modal').classList.toggle('hidden', !show);
+        }
+
+        function submitLeaderboardEntry() {
+            const nameInput = document.getElementById('leaderboard-player-name');
+            const commanderName = nameInput.value.trim() || 'Commander';
+            localStorage.setItem('last_commander_name', commanderName);
+
+            const storageKey = `leaderboard_${currentDifficulty}`;
+            const existingScores = JSON.parse(localStorage.getItem(storageKey) || '[]');
+
+            existingScores.push({ name: commanderName, time: elapsedSeconds, date: new Date().toLocaleDateString() });
+            existingScores.sort((a, b) => a.time - b.time);
+
+            localStorage.setItem(storageKey, JSON.stringify(existingScores.slice(0, 10)));
+
+            toggleWinModal(false);
+            toggleLeaderboardModal(true);
+        }
+
+        function filterLeaderboardDisplay(diffMode) {
+            document.querySelectorAll('.lb-tab-btn').forEach(btn => {
+                btn.classList.remove('bg-amber-600', 'text-amber-100');
+                btn.classList.add('bg-zinc-800', 'text-zinc-300');
+            });
+
+            const activeTabBtn = document.getElementById(`lb-tab-${diffMode}`);
+            if (activeTabBtn) {
+                activeTabBtn.classList.remove('bg-zinc-800', 'text-zinc-300');
+                activeTabBtn.classList.add('bg-amber-600', 'text-amber-100');
+            }
+
+            const tbody = document.getElementById('leaderboard-table-body');
+            const scores = JSON.parse(localStorage.getItem(`leaderboard_${diffMode}`) || '[]');
+
+            if (scores.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="text-center py-6 text-zinc-500 italic">No records yet!</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = scores.map((s, idx) => `
+                <tr>
+                    <td class="p-1.5 text-center font-bold text-amber-400">${idx + 1}</td>
+                    <td class="p-1.5 font-semibold text-zinc-200">${s.name}</td>
+                    <td class="p-1.5 text-right font-mono font-bold text-emerald-400">${formatTime(s.time)}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function submitFeedbackEmail() {
+            const reasonInput = document.getElementById('feedback-reason').value.trim();
+            const bodyInput = document.getElementById('feedback-body').value.trim();
+            const submitBtn = document.getElementById('feedback-submit-btn');
+
+            if (!reasonInput || !bodyInput) {
+                alert('Please fill out both fields.');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '⌛ Sending...';
+
+            try {
+                const response = await fetch('https://api.web3forms.com/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        access_key: 'YOUR_WEB3FORMS_ACCESS_KEY',
+                        to_email: 'legaldatman3@gmail.com',
+                        subject: `Nikke Logic Feedback: ${reasonInput}`,
+                        reason: reasonInput,
+                        message: bodyInput
+                    })
+                });
+
+                if (response.status === 200) {
+                    alert('✅ Feedback sent!');
+                    toggleFeedbackModal(false);
+                } else {
+                    alert('⚠️ Could not send feedback.');
+                }
+            } catch (error) {
+                alert('⚠️ Network error.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '✉️ Send Feedback';
+            }
         }
 
         window.onload = () => {
