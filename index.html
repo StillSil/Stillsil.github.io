@@ -1398,27 +1398,45 @@
             });
         }
 
+        /* SAFE SHOWINFO FUNCTION WITH NULL-CHECKS FOR MISSING DOM ELEMENTS & IMAGE PROPERTIES */
         function showInfo(n) {
             if (!n) return;
+            
             const img = document.getElementById('info-image');
             const fallback = document.getElementById('info-fallback');
             
-            // img.src = n.image; Images not currently being used, only Icons
-            img.classList.remove('hidden');
-            fallback.classList.add('hidden');
-            img.onerror = () => {
-                img.classList.add('hidden');
-                fallback.classList.remove('hidden');
-                fallback.textContent = n.name.substring(0, 2).toUpperCase();
-            };
+            if (img && fallback) {
+                if (n.image) {
+                    img.src = n.image;
+                    img.classList.remove('hidden');
+                    fallback.classList.add('hidden');
+                    img.onerror = () => {
+                        img.classList.add('hidden');
+                        fallback.classList.remove('hidden');
+                        fallback.textContent = n.name ? n.name.substring(0, 2).toUpperCase() : '';
+                    };
+                } else {
+                    img.classList.add('hidden');
+                    fallback.classList.remove('hidden');
+                    fallback.textContent = n.name ? n.name.substring(0, 2).toUpperCase() : '';
+                }
+            }
 
-            document.getElementById('info-name').textContent = n.name;
-            document.getElementById('info-class').textContent = n.class;
-            document.getElementById('info-manu').textContent = n.manufacturer;
-            document.getElementById('info-weapon').textContent = n.weapon;
-            document.getElementById('info-element').textContent = n.element;
-            document.getElementById('info-burst').textContent = `Burst ${n.burst}`;
-            document.getElementById('info-squad').textContent = n.squad;
+            const nameEl = document.getElementById('info-name');
+            const classEl = document.getElementById('info-class');
+            const manuEl = document.getElementById('info-manu');
+            const weaponEl = document.getElementById('info-weapon');
+            const elemEl = document.getElementById('info-element');
+            const burstEl = document.getElementById('info-burst');
+            const squadEl = document.getElementById('info-squad');
+        
+            if (nameEl) nameEl.textContent = n.name || '';
+            if (classEl) classEl.textContent = n.class || '';
+            if (manuEl) manuEl.textContent = n.manufacturer || '';
+            if (weaponEl) weaponEl.textContent = n.weapon || '';
+            if (elemEl) elemEl.textContent = n.element || '';
+            if (burstEl) burstEl.textContent = n.burst ? `Burst ${n.burst}` : '';
+            if (squadEl) squadEl.textContent = n.squad || '';
         }
 
         function clearErrorHighlights() {
