@@ -67,10 +67,11 @@
 
             <!-- Character Info; Displays all relevent info for the current selected character, or character that was last hovered -->
             <div id="info-card" class="bg-zinc-800 rounded-2xl p-3 flex flex-col overflow-y-auto">
-                <div id="info-avatar-container" class="w-full h-[300px] mb-2.5 rounded-xl overflow-hidden border-2 border-purple-400 bg-zinc-900 flex items-center justify-center flex-shrink-0 p-1">
+                <!-- Image Container. Not currently used -->
+                <!-- <div id="info-avatar-container" class="w-full h-[300px] mb-2.5 rounded-xl overflow-hidden border-2 border-purple-400 bg-zinc-900 flex items-center justify-center flex-shrink-0 p-1">
                     <img id="info-image" src="" alt="" class="max-w-full max-h-full w-auto h-auto object-contain hidden">
                     <div id="info-fallback" class="text-3xl font-bold text-purple-300"></div>
-                </div>
+                </div> -->
 
                 <div class="flex-shrink-0 w-full flex flex-col items-center">
                     <div id="info-name" class="text-lg font-bold text-center mb-0.5 leading-tight"></div>
@@ -440,7 +441,7 @@
                                     element: row.element ? row.element.trim() : 'Unknown',
                                     burst: row.burst ? row.burst.trim() : '1',
                                     squad: row.squad ? row.squad.trim() : 'Unknown',
-                                    image: `images/${name}.jpg`,
+                                    image: `images/${name}.jpg`, // This isn't currently used as it has no real purpose. As much as It looks nice, I feel it is better to put more focus on the actual info of the Nikke
                                     icon: `images/${name}Icon.jpg`
                                 };
                             });
