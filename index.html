@@ -1403,7 +1403,7 @@
             const img = document.getElementById('info-image');
             const fallback = document.getElementById('info-fallback');
             
-            img.src = n.image;
+            // img.src = n.image; Images not currently being used, only Icons
             img.classList.remove('hidden');
             fallback.classList.add('hidden');
             img.onerror = () => {
