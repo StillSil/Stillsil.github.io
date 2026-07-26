@@ -416,58 +416,58 @@
         // DIFFICULTY-BASED CLUE WEIGHT PROFILES
         const DIFFICULTY_WEIGHT_PROFILES = {
             easy: {
-                'SELF_ATTRIBUTE': 25,
-                'NIKKE_ON_GRID': 20,
-                'DIRECTIONAL_NEIGHBOR_ATTR': 15,
-                'SAME_COLUMN_NIKKE': 12,
-                'ADJACENT_SPECIFIC_ATTR_COUNT': 10,
-                'SQUADMATE_ADJACENT': 10,
-                'ELEMENT_STRONGER': 8,
-                'SHARED_DIRECTIONAL_ATTR': 6,
-                'ROW_COL_COUNT': 5,
-                'WEAPON_RANGE_COMP': 4,
-                'DIRECTIONAL_BURST_COMP': 4,
-                'ADJACENT_SAME_ATTR_COUNT': 3,
-                'SEE_DISTANCE_RANGE': 3,
-                'ONLY_SQUAD_GRID': 2,
-                'GLOBAL_MOST_ATTR': 2,
-                'ROW_MAJORITY_ATTR': 1
+                'SELF_ATTRIBUTE': 10, // What is my attribute? (self)
+                'NIKKE_ON_GRID': 0, // Which Nikke is on the grid? (global)
+                'DIRECTIONAL_NEIGHBOR_ATTR': 10, // What is the attribute of my directional neighbor? (adjacent)
+                'SAME_COLUMN_NIKKE': 5, // Which Nikke is in the same column? (row / column)
+                'ADJACENT_SPECIFIC_ATTR_COUNT': 7, // How many of a specific attribute are adjacent to me? (adjacent)
+                'SQUADMATE_ADJACENT': 2, // How many of my squadmates are adjacent to me? (adjacent)
+                'ELEMENT_STRONGER': 7, // Which element is stronger than me? (adjacent)
+                'SHARED_DIRECTIONAL_ATTR': 7, // Which of my directional neighbors share the same attribute as me? (adjacent)
+                'ROW_COL_COUNT': 3, // How many of the same attribute are in my row or column? (row / column)
+                'WEAPON_RANGE_COMP': 3, // Which of my directional neighbors have a weapon range greater than me? (adjacent)
+                'DIRECTIONAL_BURST_COMP': 5, // Which of my directional neighbors have a burst level greater than me? (adjacent)
+                'ADJACENT_SAME_ATTR_COUNT': 3, // How many of the same attribute are adjacent to me? (adjacent)
+                'SEE_DISTANCE_RANGE': 0, // At my weapons range, what attribute does a nikke have? (range)
+                'ONLY_SQUAD_GRID': 0, // Am I the only one of my squad on the grid? (global)
+                'GLOBAL_MOST_ATTR': 0, // Which attribute is the most common on the grid? (global)
+                'ROW_MAJORITY_ATTR': 2 // Which attribute is the majority in my row? (row / column)
             },
             medium: {
-                'ROW_COL_COUNT': 10,
-                'ADJACENT_SAME_ATTR_COUNT': 9,
-                'DIRECTIONAL_BURST_COMP': 8,
-                'WEAPON_RANGE_COMP': 8,
-                'SHARED_DIRECTIONAL_ATTR': 9,
-                'SQUADMATE_ADJACENT': 9,
-                'ADJACENT_SPECIFIC_ATTR_COUNT': 9,
-                'ROW_MAJORITY_ATTR': 8,
-                'ELEMENT_STRONGER': 8,
-                'DIRECTIONAL_NEIGHBOR_ATTR': 8,
-                'SEE_DISTANCE_RANGE': 8,
-                'SAME_COLUMN_NIKKE': 7,
-                'NIKKE_ON_GRID': 6,
-                'ONLY_SQUAD_GRID': 5,
-                'GLOBAL_MOST_ATTR': 5,
-                'SELF_ATTRIBUTE': 5
+                'SELF_ATTRIBUTE': 10, // What is my attribute? (self)
+                'NIKKE_ON_GRID': 3, // Which Nikke is on the grid? (global)
+                'DIRECTIONAL_NEIGHBOR_ATTR': 8, // What is the attribute of my directional neighbor? (adjacent)
+                'SAME_COLUMN_NIKKE': 5, // Which Nikke is in the same column? (row / column)
+                'ADJACENT_SPECIFIC_ATTR_COUNT': 7, // How many of a specific attribute are adjacent to me? (adjacent)
+                'SQUADMATE_ADJACENT': 3, // How many of my squadmates are adjacent to me? (adjacent)
+                'ELEMENT_STRONGER': 10, // Which element is stronger than me? (adjacent)
+                'SHARED_DIRECTIONAL_ATTR': 5, // Which of my directional neighbors share the same attribute as me? (adjacent)
+                'ROW_COL_COUNT': 4, // How many of the same attribute are in my row or column? (row / column)
+                'WEAPON_RANGE_COMP': 5, // Which of my directional neighbors have a weapon range greater than me? (adjacent)
+                'DIRECTIONAL_BURST_COMP': 5, // Which of my directional neighbors have a burst level greater than me? (adjacent)
+                'ADJACENT_SAME_ATTR_COUNT': 5, // How many of the same attribute are adjacent to me? (adjacent)
+                'SEE_DISTANCE_RANGE': 2, // At my weapons range, what attribute does a nikke have? (range)
+                'ONLY_SQUAD_GRID': 2, // Am I the only one of my squad on the grid? (global)
+                'GLOBAL_MOST_ATTR': 1, // Which attribute is the most common on the grid? (global)
+                'ROW_MAJORITY_ATTR': 3 // Which attribute is the majority in my row? (row / column)
             },
             hard: {
-                'ROW_COL_COUNT': 20,
-                'ROW_MAJORITY_ATTR': 18,
-                'ADJACENT_SAME_ATTR_COUNT': 15,
-                'GLOBAL_MOST_ATTR': 15,
-                'SEE_DISTANCE_RANGE': 14,
-                'DIRECTIONAL_BURST_COMP': 12,
-                'WEAPON_RANGE_COMP': 12,
-                'SHARED_DIRECTIONAL_ATTR': 10,
-                'ADJACENT_SPECIFIC_ATTR_COUNT': 10,
-                'ELEMENT_STRONGER': 8,
-                'ONLY_SQUAD_GRID': 8,
-                'SQUADMATE_ADJACENT': 6,
-                'SAME_COLUMN_NIKKE': 5,
-                'DIRECTIONAL_NEIGHBOR_ATTR': 4,
-                'NIKKE_ON_GRID': 2,
-                'SELF_ATTRIBUTE': 1
+                'SELF_ATTRIBUTE': 7, // What is my attribute? (self)
+                'NIKKE_ON_GRID': 5, // Which Nikke is on the grid? (global)
+                'DIRECTIONAL_NEIGHBOR_ATTR': 5, // What is the attribute of my directional neighbor? (adjacent)
+                'SAME_COLUMN_NIKKE': 3, // Which Nikke is in the same column? (row / column)
+                'ADJACENT_SPECIFIC_ATTR_COUNT': 8, // How many of a specific attribute are adjacent to me? (adjacent)
+                'SQUADMATE_ADJACENT': 5, // How many of my squadmates are adjacent to me? (adjacent)
+                'ELEMENT_STRONGER': 7, // Which element is stronger than me? (adjacent)
+                'SHARED_DIRECTIONAL_ATTR': 7, // Which of my directional neighbors share the same attribute as me? (adjacent)
+                'ROW_COL_COUNT': 8, // How many of the same attribute are in my row or column? (row / column)
+                'WEAPON_RANGE_COMP': 10, // Which of my directional neighbors have a weapon range greater than me? (adjacent)
+                'DIRECTIONAL_BURST_COMP': 4, // Which of my directional neighbors have a burst level greater than me? (adjacent)
+                'ADJACENT_SAME_ATTR_COUNT': 7, // How many of the same attribute are adjacent to me? (adjacent)
+                'SEE_DISTANCE_RANGE': 6, // At my weapons range, what attribute does a nikke have? (range)
+                'ONLY_SQUAD_GRID': 3, // Am I the only one of my squad on the grid? (global)
+                'GLOBAL_MOST_ATTR': 2, // Which attribute is the most common on the grid? (global)
+                'ROW_MAJORITY_ATTR': 4 // Which attribute is the majority in my row? (row / column)
             }
         };
 
