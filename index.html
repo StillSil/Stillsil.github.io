@@ -455,6 +455,67 @@
             }
         }
 
+        // Define weights for question types
+        const DIFFICULTY_WEIGHT_PROFILES = {
+            // Easy: Favors direct clues, simple attribute reveals, and direct neighbors
+            easy: {
+                'SELF_ATTRIBUTE': 25,
+                'NIKKE_ON_GRID': 20,
+                'DIRECTIONAL_NEIGHBOR_ATTR': 15,
+                'SAME_COLUMN_NIKKE': 12,
+                'ADJACENT_SPECIFIC_ATTR_COUNT': 10,
+                'SQUADMATE_ADJACENT': 10,
+                'ELEMENT_STRONGER': 8,
+                'SHARED_DIRECTIONAL_ATTR': 6,
+                'ROW_COL_COUNT': 5,
+                'WEAPON_RANGE_COMP': 4,
+                'DIRECTIONAL_BURST_COMP': 4,
+                'ADJACENT_SAME_ATTR_COUNT': 3,
+                'SEE_DISTANCE_RANGE': 3,
+                'ONLY_SQUAD_GRID': 2,
+                'GLOBAL_MOST_ATTR': 2,
+                'ROW_MAJORITY_ATTR': 1
+            },
+            // Medium: Balanced distribution across all clue types
+            medium: {
+                'ROW_COL_COUNT': 10,
+                'ADJACENT_SAME_ATTR_COUNT': 9,
+                'DIRECTIONAL_BURST_COMP': 8,
+                'WEAPON_RANGE_COMP': 8,
+                'SHARED_DIRECTIONAL_ATTR': 9,
+                'SQUADMATE_ADJACENT': 9,
+                'ADJACENT_SPECIFIC_ATTR_COUNT': 9,
+                'ROW_MAJORITY_ATTR': 8,
+                'ELEMENT_STRONGER': 8,
+                'DIRECTIONAL_NEIGHBOR_ATTR': 8,
+                'SEE_DISTANCE_RANGE': 8,
+                'SAME_COLUMN_NIKKE': 7,
+                'NIKKE_ON_GRID': 6,
+                'ONLY_SQUAD_GRID': 5,
+                'GLOBAL_MOST_ATTR': 5,
+                'SELF_ATTRIBUTE': 5
+            },
+            // Hard & Insane: Heavily favors complex relational, counting, and distance clues
+            hard: {
+                'ROW_COL_COUNT': 20,
+                'ROW_MAJORITY_ATTR': 18,
+                'ADJACENT_SAME_ATTR_COUNT': 15,
+                'GLOBAL_MOST_ATTR': 15,
+                'SEE_DISTANCE_RANGE': 14,
+                'DIRECTIONAL_BURST_COMP': 12,
+                'WEAPON_RANGE_COMP': 12,
+                'SHARED_DIRECTIONAL_ATTR': 10,
+                'ADJACENT_SPECIFIC_ATTR_COUNT': 10,
+                'ELEMENT_STRONGER': 8,
+                'ONLY_SQUAD_GRID': 8,
+                'SQUADMATE_ADJACENT': 6,
+                'SAME_COLUMN_NIKKE': 5,
+                'DIRECTIONAL_NEIGHBOR_ATTR': 4,
+                'NIKKE_ON_GRID': 2,
+                'SELF_ATTRIBUTE': 1
+            }
+        };
+    
         let currentDifficulty = 'easy3'; // Default difficulty is easy3. Easy3 refers to Difficulty being Easy on a grid size of 3x3
         let gridRows = 3; // Default amount of rows in the grid is 3
         let gridCols = 3; // Default amount of Columns in the grid is 3
@@ -466,6 +527,7 @@
         let selectedTraitMark = null; // The currently selected trait mark from the trait dock
         let cellCluesMap = {}; // A map of cell positions to their corresponding clues
         let cellClueRules = {}; // A map of cell positions to their corresponding clue rules
+
 
         // Timer Logic. This counts up the players time, starts when they open the website, select a new difficulty or grid size, or click new puzzle. Timer will stop when the player clicks verify and the puzzle is successfully completed
         let timerInterval = null;
@@ -716,25 +778,49 @@
         
             if (allGridNikkes.length === 0) return;
         
-            // Define weights for question types
-            const questionWeights = {
-                'NIKKE_ON_GRID': 6,
-                'ROW_COL_COUNT': 10,
-                'ADJACENT_SAME_ATTR_COUNT': 9,
-                'ONLY_SQUAD_GRID': 5,
-                'GLOBAL_MOST_ATTR': 5,
-                'ELEMENT_STRONGER': 8,
-                'DIRECTIONAL_NEIGHBOR_ATTR': 8,
-                'SEE_DISTANCE_RANGE': 8,
-                'SELF_ATTRIBUTE': 5,
-                'DIRECTIONAL_BURST_COMP': 8,
-                'WEAPON_RANGE_COMP': 8,
-                'SHARED_DIRECTIONAL_ATTR': 9,
-                'SQUADMATE_ADJACENT': 9,
-                'ADJACENT_SPECIFIC_ATTR_COUNT': 9,
-                'SAME_COLUMN_NIKKE': 7,
-                'ROW_MAJORITY_ATTR': 8
-            };
+            // Detect general difficulty mode prefix (easy, medium, hard, insane)
+            let diffCategory = 'medium';
+            if (currentDifficulty.startsWith('easy')) diffCategory = 'easy';
+            else if (currentDifficulty.startsWith('hard') || currentDifficulty.startsWith('insane')) diffCategory = 'hard';
+        
+            // Clone weight profile for current difficulty so modifications during loop don't pollute global config
+            const questionWeights = { ...DIFFICULTY_WEIGHT_PROFILES[diffCategory] };
+        
+            const parseBurstVal = (bStr) => (bStr === 'p' || bStr === 'P') ? 4 : parseInt(bStr, 10) || 1;
+        
+            function getWeightedRandomChoice(candidates) {
+                if (!candidates || candidates.length === 0) return null;
+                const totalWeight = candidates.reduce((sum, item) => sum + item.weight, 0);
+                if (totalWeight <= 0) return candidates[Math.floor(Math.random() * candidates.length)];
+        
+                let randomVal = Math.random() * totalWeight;
+                for (const item of candidates) {
+                    if (randomVal < item.weight) return item;
+                    randomVal -= item.weight;
+                }
+                return candidates[0];
+            }
+        
+            // MAIN GRID LOOP
+            for (let r = 0; r < gridRows; r++) {
+                for (let c = 0; c < gridCols; c++) {
+                    const cellNikke = nikkeMap[sol[r][c]];
+                    if (!cellNikke) continue;
+        
+                    const cellKey = `${r},${c}`;
+                    const candidates = [];
+        
+                    const directionsList = shuffle(['ABOVE', 'BELOW', 'LEFT', 'RIGHT']);
+                    const neighborPositions = getNeighbors(r, c);
+                    const neighborNikkes = neighborPositions.map(nb => nikkeMap[sol[nb.row][nb.col]]).filter(Boolean);
+        
+                    const countAttrs = [
+                        { key: 'manufacturer', label: 'manufacturer' },
+                        { key: 'element', label: 'Element' },
+                        { key: 'weapon', label: 'user' },
+                        { key: 'class', label: 'Class' },
+                        { key: 'burst', label: 'Burst' }
+                    ];
         
             const parseBurstVal = (bStr) => (bStr === 'p' || bStr === 'P') ? 4 : parseInt(bStr, 10) || 1;
         
@@ -1263,21 +1349,22 @@
                         }
                     }
         
-                    // Select weighted random clue
-                    const chosenClue = getWeightedRandomChoice(candidates);
-                    if (chosenClue) {
-                        questionWeights[chosenClue.type] = Math.max(1, questionWeights[chosenClue.type] - 3);
-        
-                        cellCluesMap[cellKey] = chosenClue.text;
-                        cellClueRules[cellKey] = {
-                            checkFn: chosenClue.checkFn,
-                            expected: chosenClue.expected,
-                            text: chosenClue.text
-                        };
-                    }
+                // Select weighted random clue
+                const chosenClue = getWeightedRandomChoice(candidates);
+                if (chosenClue) {
+                    // Diminishing returns: reduce weight after picking to encourage variety across grid cells
+                    questionWeights[chosenClue.type] = Math.max(1, questionWeights[chosenClue.type] - 4);
+    
+                    cellCluesMap[cellKey] = chosenClue.text;
+                    cellClueRules[cellKey] = {
+                        checkFn: chosenClue.checkFn,
+                        expected: chosenClue.expected,
+                        text: chosenClue.text
+                    };
                 }
             }
         }
+    }
 
         function createGrid() {
             const grid = document.getElementById('grid');
