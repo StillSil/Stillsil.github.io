@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nikke Logic Grid • Goddess of Victory</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- PAPAPARSE CSV LIBRARY -->
@@ -13,23 +13,35 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
+        /* Mobile-First Grid Cell Sizes */
         .grid-cell {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            border: 4px solid #374151; background-color: #1f2937;
-            cursor: pointer; transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s; position: relative; border-radius: 16px;
+            border: 3px solid #374151; background-color: #1f2937;
+            cursor: pointer; transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s; position: relative; border-radius: 12px;
             overflow: hidden; flex-shrink: 0;
         }
-        .grid-cell.size-3x3 { width: 200px; height: 200px; } /* Larger Cell sizes for 3x3 grids */
-        .grid-cell.size-4x4 { width: 160px; height: 160px; } /* Medium Cell sizes for 4x4 grids */
-        .grid-cell.size-5x5 { width: 120px; height: 120px; border-radius: 12px; border-width: 3px; } /* Small Cell sizes for 5x5 grids */
-        .grid-cell.size-11x11 { width: 60px; height: 60px; border-radius: 6px; border-width: 2px; } /* Tiny Cell sizes for 11x11 grids */
+        .grid-cell.size-3x3 { width: min(28vw, 180px); height: min(28vw, 180px); }
+        .grid-cell.size-4x4 { width: min(21vw, 140px); height: min(21vw, 140px); }
+        .grid-cell.size-5x5 { width: min(16vw, 100px); height: min(16vw, 100px); border-radius: 8px; border-width: 2px; }
+        .grid-cell.size-11x11 { width: 50px; height: 50px; border-radius: 6px; border-width: 2px; }
 
+        /* Desktop Grid Cell Sizes */
+        @media (min-width: 1024px) {
+            .grid-cell { border-radius: 16px; border-width: 4px; }
+            .grid-cell.size-3x3 { width: 200px; height: 200px; }
+            .grid-cell.size-4x4 { width: 160px; height: 160px; }
+            .grid-cell.size-5x5 { width: 120px; height: 120px; border-radius: 12px; border-width: 3px; }
+            .grid-cell.size-11x11 { width: 60px; height: 60px; border-radius: 6px; border-width: 2px; }
+        }
+
+        /* Hover Glow without size transform to prevent scrollbars */
         .grid-cell:hover { border-color: #c4b5fd; box-shadow: inset 0 0 12px rgba(196, 181, 253, 0.4); }
         .grid-cell.filled { background-color: #5b21b6; border-color: #ddd6fe; }
         .grid-cell.error { border-color: #ef4444 !important; background-color: #450a0a !important; animation: pulse 1.5s infinite; }
-        .nikke-name { font-size: 0.75rem; margin-top: 2px; font-weight: 700; color: #e0e7ff; text-align: center; line-height: 1; }
-
-        .grid-cell.size-11x11 .nikke-name { font-size: 0.5rem; }
+        
+        .nikke-name { font-size: 0.65rem; margin-top: 2px; font-weight: 700; color: #e0e7ff; text-align: center; line-height: 1; }
+        @media (min-width: 1024px) { .nikke-name { font-size: 0.75rem; } }
+        .grid-cell.size-11x11 .nikke-name { font-size: 0.45rem; }
 
         .trait-btn.active {
             background-color: #5b21b6 !important;
@@ -43,101 +55,19 @@
         }
     </style>
 </head>
-<body class="bg-zinc-950 text-white h-screen overflow-hidden flex flex-col">
+<body class="bg-zinc-950 text-white min-h-screen lg:h-screen overflow-y-auto lg:overflow-hidden flex flex-col select-none">
 
-    <div class="flex flex-1 min-h-0 overflow-hidden">
+    <!-- MAIN WORKSPACE: STACKED ON MOBILE (flex-col), 3-COLUMN ON DESKTOP (lg:flex-row) -->
+    <div class="flex flex-col lg:flex-row flex-1 min-h-0 w-full overflow-y-auto lg:overflow-hidden">
         
-        <!-- Panel 1: Left Side. Holds the Time card, Character info, Element Cycle and Gun ranges -->
-        <div class="w-80 bg-zinc-900 border-r border-zinc-800 p-4 flex flex-col h-full overflow-y-auto flex-shrink-0">
-            <h1 class="text-2xl font-bold text-purple-400 mb-0.5">NIKKE LOGIC</h1>
-            <p class="text-zinc-400 mb-3 text-xs">Goddess of Victory Puzzle</p>
-
-            <!-- Time Cards: Shows users current and best time on the current difficulty and grid size -->
-            <div class="bg-zinc-800/90 border border-purple-500/30 rounded-2xl p-2.5 mb-3 flex items-center justify-between shadow-lg flex-shrink-0">
-                <div class="flex flex-col">
-                    <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">⏱️ Time</span>
-                    <span id="timer-display" class="text-xl font-black text-amber-400 font-mono">00:00</span>
-                </div>
-                <div class="h-6 w-px bg-zinc-700"></div>
-                <div class="flex flex-col text-right">
-                    <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">🏆 Best</span>
-                    <span id="best-time-display" class="text-base font-bold text-emerald-400 font-mono">--:--</span>
-                </div>
-            </div>
-
-            <!-- Character Info; Displays all relevent info for the current selected character, or character that was last hovered -->
-            <div id="info-card" class="bg-zinc-800 rounded-2xl p-3 flex flex-col overflow-y-auto">
-                <!-- Image Container. Not currently used -->
-                <!-- <div id="info-avatar-container" class="w-full h-[300px] mb-2.5 rounded-xl overflow-hidden border-2 border-purple-400 bg-zinc-900 flex items-center justify-center flex-shrink-0 p-1">
-                    <img id="info-image" src="" alt="" class="max-w-full max-h-full w-auto h-auto object-contain hidden">
-                    <div id="info-fallback" class="text-3xl font-bold text-purple-300"></div>
-                </div> -->
-
-                <div class="flex-shrink-0 w-full flex flex-col items-center">
-                    <div id="info-name" class="text-lg font-bold text-center mb-0.5 leading-tight"></div>
-                    
-                    <div class="space-y-0.5 mt-1 text-[11px] w-full">
-                        <div class="flex justify-between"><span class="text-zinc-400">Class:</span> <span id="info-class" class="font-medium text-purple-300"></span></div> <!-- Classes are Attacker, Defender and Supporter -->
-                        <div class="flex justify-between"><span class="text-zinc-400">Manufacturer:</span> <span id="info-manu" class="font-medium"></span></div> <!-- Manufacturers are Elysion, Missilis, Tetra and Pilgrim -->
-                        <div class="flex justify-between"><span class="text-zinc-400">Weapon:</span> <span id="info-weapon" class="font-medium"></span></div> <!-- Weapons are Assault Rifle, Rocket Launcher, Shotgun, Submachine Gun, Sniper Rifle -->
-                        <div class="flex justify-between"><span class="text-zinc-400">Element:</span> <span id="info-element" class="font-medium"></span></div> <!-- Elements are Fire, Wind, Iron, Electric, Water -->
-                        <div class="flex justify-between"><span class="text-zinc-400">Burst:</span> <span id="info-burst" class="font-medium"></span></div> <!-- Burst goes 1, 2 then 3. Red Hood as a burst of P or Omega, which counts as all 3 -->
-                        <div class="flex justify-between"><span class="text-zinc-400">Squad:</span> <span id="info-squad" class="font-medium"></span></div> <!-- No way Am I listing all the squads, use the excell sheet you psycho -->
-                    </div>
-
-                    <div id="info-clue" class="mt-2 pt-1.5 border-t border-zinc-700 text-amber-200 text-[11px] leading-tight w-full"></div>
-                </div>
-            </div>
-
-            <!-- Elements Cycle and Weapon Ranges: The element cycle displays what elements are stronger against others. The weapon ranges show the range of all weapons, except Rocket launcher, which is excempt from this, but thats also shown. -->
-            <div class="mt-3 space-y-2 flex-shrink-0">
-                <div class="bg-zinc-800 rounded-xl p-2">
-                    <h3 class="text-purple-300 font-bold text-[11px] mb-1 flex items-center gap-1">
-                        <span>🔥</span> ELEMENT CYCLE
-                    </h3>
-                    <div class="flex flex-wrap gap-1 text-[9px]">
-                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-orange-400">Fire</span> → <span class="text-emerald-400">Wind</span></span> <!-- Fire is stronger than Wind -->
-                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-emerald-400">Wind</span> → <span class="text-slate-400">Iron</span></span> <!-- Wind is stronger than Iron -->
-                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-slate-400">Iron</span> → <span class="text-blue-400">Electric</span></span> <!-- Iron is stronger than Electric -->
-                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-blue-400">Electric</span> → <span class="text-cyan-400">Water</span></span> <!-- Electric is stronger than Water -->
-                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-cyan-400">Water</span> → <span class="text-orange-400">Fire</span></span> <!-- Water is stronger than Fire -->
-                    </div>
-                </div>
-
-                <div class="bg-zinc-800 rounded-xl p-2">
-                    <h3 class="text-purple-300 font-bold text-[11px] mb-1 flex items-center gap-1">
-                        <span>🎯</span> WEAPON RANGES
-                    </h3>
-                    <div class="grid grid-cols-2 gap-1 text-[9px]">
-                        <div class="bg-zinc-900 p-1 rounded border border-zinc-700/50">
-                            <div class="text-purple-300 font-bold">Range 1 (Close)</div> <!-- The shotgun and SMG (Submachine Gun) both have a range of 1, which affects adjacent tiles-->
-                            <div class="text-zinc-400">Shotgun, SMG</div>
-                        </div>
-                        <div class="bg-zinc-900 p-1 rounded border border-zinc-700/50">
-                            <div class="text-purple-300 font-bold">Range 2 (Mid)</div> <!-- The assault rifle and Machine Gun both have a range of 2, which affects tiles that are 2 spaces away -->
-                            <div class="text-zinc-400">Assault Rifle, MG</div>
-                        </div>
-                        <div class="bg-zinc-900 p-1 rounded border border-zinc-700/50">
-                            <div class="text-purple-300 font-bold">Range 3 (Far)</div> <!-- The sniper rifle has a range of 3, which affects tiles that are 3 spaces away -->
-                            <div class="text-zinc-400">Sniper Rifle</div>
-                        </div>
-                        <div class="bg-zinc-900 p-1 rounded border border-zinc-700/50">
-                            <div class="text-purple-300 font-bold">Exempt</div> <!-- The Rocket launcher is exempt from range rules, effectivly having a range of 0 -->
-                            <div class="text-zinc-400">Rocket Launcher</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Panel 2: This is the game panel, which lets players see the grid they play on, as well as the difficulty options, Starting a new game and Verifying their answer -->
-        <div class="flex-1 flex flex-col h-full items-center justify-between p-4 overflow-hidden relative">
+        <!-- PANEL 2: GAME BOARD & CONTROLS (ORDER 1 ON MOBILE) -->
+        <div class="w-full lg:flex-1 flex flex-col items-center justify-between p-3 lg:p-4 border-b lg:border-b-0 border-zinc-800 order-1 lg:order-2 flex-shrink-0 lg:flex-shrink relative">
             
-            <!-- Difficulty and Grid size dropdown selectors -->
-            <div class="flex items-center gap-3 bg-zinc-900 px-4 py-2 rounded-2xl border border-zinc-800 shadow-md flex-shrink-0">
-                <div class="flex items-center gap-2 text-xs">
-                    <label for="select-diff" class="text-zinc-400 font-bold text-[11px]">Difficulty:</label>
-                    <select id="select-diff" onchange="handleDropdownChange()" class="bg-zinc-800 text-purple-300 font-bold px-2.5 py-1 rounded-xl border border-zinc-700 focus:outline-none focus:border-purple-400 text-xs">
+            <!-- CONTROLS HEADER -->
+            <div class="flex flex-wrap items-center justify-center gap-2 bg-zinc-900 px-3 py-2 rounded-2xl border border-zinc-800 shadow-md w-full lg:w-auto flex-shrink-0">
+                <div class="flex items-center gap-1.5 text-xs">
+                    <label for="select-diff" class="text-zinc-400 font-bold text-[10px] lg:text-[11px]">Difficulty:</label>
+                    <select id="select-diff" onchange="handleDropdownChange()" class="bg-zinc-800 text-purple-300 font-bold px-2 py-1 rounded-xl border border-zinc-700 focus:outline-none focus:border-purple-400 text-xs">
                         <option value="easy">Easy</option>
                         <option value="medium">Medium</option>
                         <option value="hard">Hard</option>
@@ -145,11 +75,11 @@
                     </select>
                 </div>
 
-                <div class="h-4 w-px bg-zinc-800"></div>
+                <div class="hidden lg:block h-4 w-px bg-zinc-800"></div>
 
-                <div class="flex items-center gap-2 text-xs">
-                    <label for="select-size" class="text-zinc-400 font-bold text-[11px]">Grid Size:</label>
-                    <select id="select-size" onchange="handleDropdownChange()" class="bg-zinc-800 text-purple-300 font-bold px-2.5 py-1 rounded-xl border border-zinc-700 focus:outline-none focus:border-purple-400 text-xs">
+                <div class="flex items-center gap-1.5 text-xs">
+                    <label for="select-size" class="text-zinc-400 font-bold text-[10px] lg:text-[11px]">Grid Size:</label>
+                    <select id="select-size" onchange="handleDropdownChange()" class="bg-zinc-800 text-purple-300 font-bold px-2 py-1 rounded-xl border border-zinc-700 focus:outline-none focus:border-purple-400 text-xs">
                         <option value="3">3x3</option>
                         <option value="4">4x4</option>
                         <option value="5">5x5</option>
@@ -157,57 +87,54 @@
                     </select>
                 </div>
 
-                <div class="h-4 w-px bg-zinc-800"></div>
-                
-                <!-- New Puzzle and Verify solution Buttons -->
-                <div class="flex gap-2">
+                <div class="flex gap-1.5 ml-auto lg:ml-0">
                     <button onclick="generateNewPuzzle()" 
-                            class="px-3.5 py-1 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-semibold flex items-center gap-1 text-xs transition-all shadow-md">
+                            class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-semibold flex items-center gap-1 text-xs transition-all shadow-md">
                         🎲 NEW PUZZLE
                     </button>
                     <button onclick="checkSolution()" 
-                            class="px-4 py-1 bg-purple-600 hover:bg-purple-500 rounded-xl font-bold text-xs transition-all shadow-md">
+                            class="px-3.5 py-1 bg-purple-600 hover:bg-purple-500 rounded-xl font-bold text-xs transition-all shadow-md">
                         VERIFY
                     </button>
                 </div>
             </div>
 
-            <!-- Game Grid -->
-            <div class="flex-1 flex items-center justify-center my-2 min-h-0 overflow-auto max-w-full">
-                <div id="grid" class="grid gap-2"></div>
+            <!-- PUZZLE GRID AREA WITH TOUCH SCROLL -->
+            <div class="w-full flex-1 flex items-center justify-center my-3 overflow-auto max-w-full min-h-[280px]">
+                <div id="grid" class="grid gap-1.5 lg:gap-2 p-1"></div>
             </div>
 
-            <!-- This area displays status messages, such as clues, wrong answers or if the user has successfully completed a puzzle -->
-            <div id="status" class="text-xs font-medium text-center min-h-[1.5rem] max-w-xl mx-auto flex items-center justify-center flex-shrink-0"></div>
+            <!-- STATUS DISPLAY -->
+            <div id="status" class="text-xs font-medium text-center min-h-[1.5rem] max-w-xl mx-auto flex items-center justify-center flex-shrink-0 px-2 pb-1"></div>
         </div>
 
-        <!-- Panel 3: The right side handles the Search and filtering of all characters, the status of the current selected nikke or badge, and the list of available nikkes for the current puzzle -->
-        <div class="w-[420px] bg-zinc-900 border-l border-zinc-800 p-4 flex flex-col h-full overflow-hidden flex-shrink-0">
-            <div class="flex justify-between items-center mb-2 flex-shrink-0">
-                <h2 class="font-bold text-purple-300 text-sm">AVAILABLE NIKKES</h2>
-                <span id="nikke-count-badge" class="text-[10px] font-bold bg-purple-950 text-purple-300 border border-purple-700/60 px-2 py-0.5 rounded-full"></span>
+        <!-- PANEL 3: AVAILABLE NIKKES SELECTION (ORDER 2 ON MOBILE) -->
+        <div class="w-full lg:w-[420px] bg-zinc-900 border-b lg:border-b-0 lg:border-l border-zinc-800 p-3 lg:p-4 flex flex-col order-2 lg:order-3 flex-shrink-0 max-h-[380px] lg:max-h-none lg:h-full overflow-hidden">
+            <div class="flex justify-between items-center mb-1.5 flex-shrink-0">
+                <h2 class="font-bold text-purple-300 text-xs lg:text-sm">AVAILABLE NIKKES</h2>
+                <span id="nikke-count-badge" class="text-[9px] lg:text-[10px] font-bold bg-purple-950 text-purple-300 border border-purple-700/60 px-2 py-0.5 rounded-full"></span>
             </div>
 
-            <!-- This is a bar at the top of the panel showing the current selected badge or nikke, as well as that nikkes class -->
-            <div id="selected-nikke-bar" class="mb-2 bg-zinc-950/80 border border-purple-500/40 rounded-xl px-2.5 py-1 flex items-center justify-between text-xs min-h-[30px] flex-shrink-0">
-                <span id="selected-nikke-text" class="text-zinc-400 italic">No Nikke selected</span>
-                <button id="clear-selected-btn" onclick="deselectNikke()" class="text-red-400 hover:text-red-300 font-bold hidden">✕ Clear</button>
+            <!-- SELECTED NIKKE BAR -->
+            <div id="selected-nikke-bar" class="mb-2 bg-zinc-950/80 border border-purple-500/40 rounded-xl px-2.5 py-1 flex items-center justify-between text-xs min-h-[28px] flex-shrink-0">
+                <span id="selected-nikke-text" class="text-zinc-400 italic text-[11px]">No Nikke selected</span>
+                <button id="clear-selected-btn" onclick="deselectNikke()" class="text-red-400 hover:text-red-300 font-bold hidden text-[11px]">✕ Clear</button>
             </div>
             
-            <!-- This is a search for a nikkes name, squad or class. As well as this, there are a bunch of filters for class, manufacturer, element, weapon and burst level -->
-            <div class="space-y-1.5 mb-2 bg-zinc-950/60 p-2.5 rounded-2xl border border-zinc-800 flex-shrink-0">
+            <!-- SEARCH & FILTERS -->
+            <div class="space-y-1 mb-2 bg-zinc-950/60 p-2 rounded-2xl border border-zinc-800 flex-shrink-0">
                 <input type="text" id="filter-search" oninput="createPalette()" placeholder="🔍 Search name, squad, or class..." 
                        class="w-full bg-zinc-800 text-xs px-2.5 py-1 rounded-xl border border-zinc-700 focus:outline-none focus:border-purple-400 placeholder-zinc-500">
                 
-                <div class="grid grid-cols-3 gap-1 text-[10px]">
-                    <select id="filter-class" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1.5 py-1 rounded-lg border border-zinc-700 focus:outline-none focus:border-purple-400">
+                <div class="grid grid-cols-3 gap-1 text-[9px]">
+                    <select id="filter-class" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1 py-1 rounded-lg border border-zinc-700">
                         <option value="">All Classes</option>
                         <option value="Attacker">Attacker</option>
                         <option value="Defender">Defender</option>
                         <option value="Supporter">Supporter</option>
                     </select>
 
-                    <select id="filter-manu" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1.5 py-1 rounded-lg border border-zinc-700 focus:outline-none focus:border-purple-400">
+                    <select id="filter-manu" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1 py-1 rounded-lg border border-zinc-700">
                         <option value="">All Manu.</option>
                         <option value="Elysion">Elysion</option>
                         <option value="Missilis">Missilis</option>
@@ -215,7 +142,7 @@
                         <option value="Pilgrim">Pilgrim</option>
                     </select>
 
-                    <select id="filter-element" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1.5 py-1 rounded-lg border border-zinc-700 focus:outline-none focus:border-purple-400">
+                    <select id="filter-element" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1 py-1 rounded-lg border border-zinc-700">
                         <option value="">All Elements</option>
                         <option value="Fire">Fire</option>
                         <option value="Wind">Wind</option>
@@ -224,7 +151,7 @@
                         <option value="Water">Water</option>
                     </select>
 
-                    <select id="filter-weapon" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1.5 py-1 rounded-lg border border-zinc-700 focus:outline-none focus:border-purple-400">
+                    <select id="filter-weapon" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1 py-1 rounded-lg border border-zinc-700">
                         <option value="">All Weapons</option>
                         <option value="Assault Rifle">Assault Rifle</option>
                         <option value="Rocket Launcher">Rocket Launcher</option>
@@ -234,7 +161,7 @@
                         <option value="Machine Gun">Machine Gun</option>
                     </select>
 
-                    <select id="filter-burst" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1.5 py-1 rounded-lg border border-zinc-700 focus:outline-none focus:border-purple-400 col-span-2">
+                    <select id="filter-burst" onchange="createPalette()" class="bg-zinc-800 text-zinc-300 px-1 py-1 rounded-lg border border-zinc-700 col-span-2">
                         <option value="">All Burst Levels</option>
                         <option value="1">Burst 1</option>
                         <option value="2">Burst 2</option>
@@ -243,127 +170,212 @@
                     </select>
                 </div>
 
-                <button onclick="resetFilters()" class="w-full text-[10px] text-purple-400 hover:text-purple-300 font-semibold pt-0.5">
+                <button onclick="resetFilters()" class="w-full text-[9px] text-purple-400 hover:text-purple-300 font-semibold pt-0.5">
                     ↺ Clear Filters
                 </button>
             </div>
 
-            <div id="palette" class="grid grid-cols-5 gap-1.5 overflow-y-auto flex-1 auto-rows-max content-start pr-1"></div>
+            <!-- PALETTE CONTAINER -->
+            <div id="palette" class="grid grid-cols-5 gap-1.5 overflow-y-auto flex-1 auto-rows-max content-start pr-1 min-h-0"></div>
+        </div>
+
+        <!-- PANEL 1: LEFT PANEL - INFO & CHARTS (ORDER 3 ON MOBILE) -->
+        <div class="w-full lg:w-80 bg-zinc-900 border-b lg:border-b-0 lg:border-r border-zinc-800 p-3 lg:p-4 flex flex-col order-3 lg:order-1 flex-shrink-0 lg:h-full lg:overflow-y-auto">
+            <h1 class="text-xl lg:text-2xl font-bold text-purple-400 mb-0.5">NIKKE LOGIC</h1>
+            <p class="text-zinc-400 mb-2 lg:mb-3 text-[10px] lg:text-xs">Goddess of Victory Puzzle</p>
+
+            <!-- TIMER & BEST TIME CARD -->
+            <div class="bg-zinc-800/90 border border-purple-500/30 rounded-2xl p-2 lg:p-2.5 mb-3 flex items-center justify-between shadow-lg flex-shrink-0">
+                <div class="flex flex-col">
+                    <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">⏱️ Time</span>
+                    <span id="timer-display" class="text-lg lg:text-xl font-black text-amber-400 font-mono">00:00</span>
+                </div>
+                <div class="h-6 w-px bg-zinc-700"></div>
+                <div class="flex flex-col text-right">
+                    <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">🏆 Best</span>
+                    <span id="best-time-display" class="text-sm lg:text-base font-bold text-emerald-400 font-mono">--:--</span>
+                </div>
+            </div>
+
+            <!-- CHARACTER INFO -->
+            <div id="info-card" class="bg-zinc-800 rounded-2xl p-3 flex flex-col overflow-y-auto">
+                <!-- Image Container (Uncomment if needed) -->
+                <!-- <div id="info-avatar-container" class="w-full h-[180px] lg:h-[280px] mb-2 rounded-xl overflow-hidden border-2 border-purple-400 bg-zinc-900 flex items-center justify-center flex-shrink-0 p-1">
+                    <img id="info-image" src="" alt="" class="max-w-full max-h-full w-auto h-auto object-contain hidden">
+                    <div id="info-fallback" class="text-2xl lg:text-3xl font-bold text-purple-300"></div>
+                </div> -->
+
+                <div class="flex-shrink-0 w-full flex flex-col items-center">
+                    <div id="info-name" class="text-base lg:text-lg font-bold text-center mb-0.5 leading-tight"></div>
+                    
+                    <div class="space-y-0.5 mt-1 text-[10px] lg:text-[11px] w-full">
+                        <div class="flex justify-between"><span class="text-zinc-400">Class:</span> <span id="info-class" class="font-medium text-purple-300"></span></div>
+                        <div class="flex justify-between"><span class="text-zinc-400">Manufacturer:</span> <span id="info-manu" class="font-medium"></span></div>
+                        <div class="flex justify-between"><span class="text-zinc-400">Weapon:</span> <span id="info-weapon" class="font-medium"></span></div>
+                        <div class="flex justify-between"><span class="text-zinc-400">Element:</span> <span id="info-element" class="font-medium"></span></div>
+                        <div class="flex justify-between"><span class="text-zinc-400">Burst:</span> <span id="info-burst" class="font-medium"></span></div>
+                        <div class="flex justify-between"><span class="text-zinc-400">Squad:</span> <span id="info-squad" class="font-medium"></span></div>
+                    </div>
+
+                    <div id="info-clue" class="mt-2 pt-1.5 border-t border-zinc-700 text-amber-200 text-[10px] lg:text-[11px] leading-tight w-full"></div>
+                </div>
+            </div>
+
+            <!-- REFERENCE CARDS -->
+            <div class="mt-3 space-y-2 flex-shrink-0">
+                <div class="bg-zinc-800 rounded-xl p-2">
+                    <h3 class="text-purple-300 font-bold text-[10px] lg:text-[11px] mb-1 flex items-center gap-1">
+                        <span>🔥</span> ELEMENT CYCLE
+                    </h3>
+                    <div class="flex flex-wrap gap-1 text-[9px]">
+                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-orange-400">Fire</span> → <span class="text-emerald-400">Wind</span></span>
+                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-emerald-400">Wind</span> → <span class="text-slate-400">Iron</span></span>
+                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-slate-400">Iron</span> → <span class="text-blue-400">Electric</span></span>
+                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-blue-400">Electric</span> → <span class="text-cyan-400">Water</span></span>
+                        <span class="bg-zinc-900 px-1 py-0.5 rounded border border-zinc-700/50"><span class="text-cyan-400">Water</span> → <span class="text-orange-400">Fire</span></span>
+                    </div>
+                </div>
+
+                <div class="bg-zinc-800 rounded-xl p-2">
+                    <h3 class="text-purple-300 font-bold text-[10px] lg:text-[11px] mb-1 flex items-center gap-1">
+                        <span>🎯</span> WEAPON RANGES
+                    </h3>
+                    <div class="grid grid-cols-2 gap-1 text-[9px]">
+                        <div class="bg-zinc-900 p-1 rounded border border-zinc-700/50">
+                            <div class="text-purple-300 font-bold">Range 1 (Close)</div>
+                            <div class="text-zinc-400">Shotgun, SMG</div>
+                        </div>
+                        <div class="bg-zinc-900 p-1 rounded border border-zinc-700/50">
+                            <div class="text-purple-300 font-bold">Range 2 (Mid)</div>
+                            <div class="text-zinc-400">Assault Rifle, MG</div>
+                        </div>
+                        <div class="bg-zinc-900 p-1 rounded border border-zinc-700/50">
+                            <div class="text-purple-300 font-bold">Range 3 (Far)</div>
+                            <div class="text-zinc-400">Sniper Rifle</div>
+                        </div>
+                        <div class="bg-zinc-900 p-1 rounded border border-zinc-700/50">
+                            <div class="text-purple-300 font-bold">Exempt</div>
+                            <div class="text-zinc-400">Rocket Launcher</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Panel 4: A small bar at the bottom of the screen that has the note taking tools (Trait Icons) Which can be used on cells to indicate possible placements. There are also the How to play, leaderboard, feedback and Kofi buttons -->
-    <div class="w-full bg-zinc-900 border-t border-zinc-800 px-4 py-2 shadow-2xl flex items-center justify-center gap-5 text-[10px] flex-shrink-0 z-50 relative">
-        <!-- Element Trait icons -->
+    <!-- PANEL 4: BOTTOM STICKY DOCK (TRAIT DOCK & BUTTONS) -->
+    <div class="w-full bg-zinc-900 border-t border-zinc-800 px-2 lg:px-4 py-2 shadow-2xl flex flex-wrap lg:flex-nowrap items-center justify-between lg:justify-center gap-2 lg:gap-5 text-[10px] flex-shrink-0 z-50 sticky lg:relative bottom-0">
+        
+        <!-- Elements Group -->
         <div class="flex flex-col items-center">
             <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Elements</span>
             <div class="flex gap-1">
-                <button id="btn-element-Fire" onclick="selectTraitIcon('element', 'Fire', 'Fire', 'images/Fire.jpg')" title="Fire" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-element-Fire" onclick="selectTraitIcon('element', 'Fire', 'Fire', 'images/Fire.jpg')" title="Fire" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
                     <img src="images/Fire.jpg" alt="Fire" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-element-Wind" onclick="selectTraitIcon('element', 'Wind', 'Wind', 'images/Wind.jpg')" title="Wind" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-element-Wind" onclick="selectTraitIcon('element', 'Wind', 'Wind', 'images/Wind.jpg')" title="Wind" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
                     <img src="images/Wind.jpg" alt="Wind" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-element-Iron" onclick="selectTraitIcon('element', 'Iron', 'Iron', 'images/Iron.jpg')" title="Iron" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-element-Iron" onclick="selectTraitIcon('element', 'Iron', 'Iron', 'images/Iron.jpg')" title="Iron" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
                     <img src="images/Iron.jpg" alt="Iron" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-element-Electric" onclick="selectTraitIcon('element', 'Electric', 'Electric', 'images/Electric.jpg')" title="Electric" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-element-Electric" onclick="selectTraitIcon('element', 'Electric', 'Electric', 'images/Electric.jpg')" title="Electric" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
                     <img src="images/Electric.jpg" alt="Electric" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-element-Water" onclick="selectTraitIcon('element', 'Water', 'Water', 'images/Water.jpg')" title="Water" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-element-Water" onclick="selectTraitIcon('element', 'Water', 'Water', 'images/Water.jpg')" title="Water" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
                     <img src="images/Water.jpg" alt="Water" class="w-full h-full object-contain">
                 </button>
             </div>
         </div>
 
-        <div class="h-6 w-px bg-zinc-800"></div>
+        <div class="hidden lg:block h-6 w-px bg-zinc-800"></div>
 
-        <!-- Weapon trait Icons -->
+        <!-- Weapons Group -->
         <div class="flex flex-col items-center">
             <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Weapons</span>
             <div class="flex gap-1">
-                <button id="btn-weapon-Assault Rifle" onclick="selectTraitIcon('weapon', 'Assault Rifle', 'AR', 'images/AR.jpg')" title="Assault Rifle" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-weapon-Assault Rifle" onclick="selectTraitIcon('weapon', 'Assault Rifle', 'AR', 'images/AR.jpg')" title="AR" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
                     <img src="images/AR.jpg" alt="AR" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-weapon-Rocket Launcher" onclick="selectTraitIcon('weapon', 'Rocket Launcher', 'RL', 'images/RL.jpg')" title="Rocket Launcher" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-weapon-Rocket Launcher" onclick="selectTraitIcon('weapon', 'Rocket Launcher', 'RL', 'images/RL.jpg')" title="RL" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
                     <img src="images/RL.jpg" alt="RL" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-weapon-Shotgun" onclick="selectTraitIcon('weapon', 'Shotgun', 'SG', 'images/SG.jpg')" title="Shotgun" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-weapon-Shotgun" onclick="selectTraitIcon('weapon', 'Shotgun', 'SG', 'images/SG.jpg')" title="SG" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
                     <img src="images/SG.jpg" alt="SG" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-weapon-Sniper Rifle" onclick="selectTraitIcon('weapon', 'Sniper Rifle', 'SR', 'images/SR.jpg')" title="Sniper Rifle" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-weapon-Sniper Rifle" onclick="selectTraitIcon('weapon', 'Sniper Rifle', 'SR', 'images/SR.jpg')" title="SR" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
                     <img src="images/SR.jpg" alt="SR" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-weapon-Submachine Gun" onclick="selectTraitIcon('weapon', 'Submachine Gun', 'SMG', 'images/SMG.jpg')" title="Submachine Gun" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-weapon-Submachine Gun" onclick="selectTraitIcon('weapon', 'Submachine Gun', 'SMG', 'images/SMG.jpg')" title="SMG" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
                     <img src="images/SMG.jpg" alt="SMG" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-weapon-Machine Gun" onclick="selectTraitIcon('weapon', 'Machine Gun', 'MG', 'images/MG.jpg')" title="Machine Gun" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-weapon-Machine Gun" onclick="selectTraitIcon('weapon', 'Machine Gun', 'MG', 'images/MG.jpg')" title="MG" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
                     <img src="images/MG.jpg" alt="MG" class="w-full h-full object-contain">
                 </button>
             </div>
         </div>
 
-        <div class="h-6 w-px bg-zinc-800"></div>
+        <div class="hidden lg:block h-6 w-px bg-zinc-800"></div>
 
-        <!-- Manufacturer Trait Icons -->
+        <!-- Manufacturers Group -->
         <div class="flex flex-col items-center">
-            <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Manufacturers</span>
+            <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Manu.</span>
             <div class="flex gap-1">
-                <button id="btn-manufacturer-Elysion" onclick="selectTraitIcon('manufacturer', 'Elysion', 'Elysion', 'images/Elysion.jpg')" title="Elysion" class="trait-btn bg-zinc-800 border border-zinc-700/60 px-1.5 py-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 min-w-[42px]">
-                    <img src="images/Elysion.jpg" alt="Elysion" class="h-full w-auto max-w-[55px] object-contain">
+                <button id="btn-manufacturer-Elysion" onclick="selectTraitIcon('manufacturer', 'Elysion', 'Elysion', 'images/Elysion.jpg')" title="Elysion" class="trait-btn bg-zinc-800 border border-zinc-700/60 px-1 py-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 min-w-[34px] lg:h-8 lg:min-w-[42px]">
+                    <img src="images/Elysion.jpg" alt="Elysion" class="h-full w-auto max-w-[45px] object-contain">
                 </button>
-                <button id="btn-manufacturer-Missilis" onclick="selectTraitIcon('manufacturer', 'Missilis', 'Missilis', 'images/Missilis.jpg')" title="Missilis" class="trait-btn bg-zinc-800 border border-zinc-700/60 px-1.5 py-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 min-w-[42px]">
-                    <img src="images/Missilis.jpg" alt="Missilis" class="h-full w-auto max-w-[55px] object-contain">
+                <button id="btn-manufacturer-Missilis" onclick="selectTraitIcon('manufacturer', 'Missilis', 'Missilis', 'images/Missilis.jpg')" title="Missilis" class="trait-btn bg-zinc-800 border border-zinc-700/60 px-1 py-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 min-w-[34px] lg:h-8 lg:min-w-[42px]">
+                    <img src="images/Missilis.jpg" alt="Missilis" class="h-full w-auto max-w-[45px] object-contain">
                 </button>
-                <button id="btn-manufacturer-Tetra" onclick="selectTraitIcon('manufacturer', 'Tetra', 'Tetra', 'images/Tetra.jpg')" title="Tetra" class="trait-btn bg-zinc-800 border border-zinc-700/60 px-1.5 py-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 min-w-[42px]">
-                    <img src="images/Tetra.jpg" alt="Tetra" class="h-full w-auto max-w-[55px] object-contain">
+                <button id="btn-manufacturer-Tetra" onclick="selectTraitIcon('manufacturer', 'Tetra', 'Tetra', 'images/Tetra.jpg')" title="Tetra" class="trait-btn bg-zinc-800 border border-zinc-700/60 px-1 py-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 min-w-[34px] lg:h-8 lg:min-w-[42px]">
+                    <img src="images/Tetra.jpg" alt="Tetra" class="h-full w-auto max-w-[45px] object-contain">
                 </button>
-                <button id="btn-manufacturer-Pilgrim" onclick="selectTraitIcon('manufacturer', 'Pilgrim', 'Pilgrim', 'images/Pilgrim.jpg')" title="Pilgrim" class="trait-btn bg-zinc-800 border border-zinc-700/60 px-1.5 py-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 min-w-[42px]">
-                    <img src="images/Pilgrim.jpg" alt="Pilgrim" class="h-full w-auto max-w-[55px] object-contain">
+                <button id="btn-manufacturer-Pilgrim" onclick="selectTraitIcon('manufacturer', 'Pilgrim', 'Pilgrim', 'images/Pilgrim.jpg')" title="Pilgrim" class="trait-btn bg-zinc-800 border border-zinc-700/60 px-1 py-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 min-w-[34px] lg:h-8 lg:min-w-[42px]">
+                    <img src="images/Pilgrim.jpg" alt="Pilgrim" class="h-full w-auto max-w-[45px] object-contain">
                 </button>
             </div>
         </div>
 
-        <div class="h-6 w-px bg-zinc-800"></div>
+        <div class="hidden lg:block h-6 w-px bg-zinc-800"></div>
 
-        <!-- Class Trait Icons -->
+        <!-- Class Group -->
         <div class="flex flex-col items-center">
             <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Class</span>
             <div class="flex gap-1">
-                <button id="btn-class-Attacker" onclick="selectTraitIcon('class', 'Attacker', 'Attacker', 'images/Attacker.jpg')" title="Attacker" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-class-Attacker" onclick="selectTraitIcon('class', 'Attacker', 'Attacker', 'images/Attacker.jpg')" title="Attacker" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
                     <img src="images/Attacker.jpg" alt="Attacker" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-class-Defender" onclick="selectTraitIcon('class', 'Defender', 'Defender', 'images/Defender.jpg')" title="Defender" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-class-Defender" onclick="selectTraitIcon('class', 'Defender', 'Defender', 'images/Defender.jpg')" title="Defender" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
                     <img src="images/Defender.jpg" alt="Defender" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-class-Supporter" onclick="selectTraitIcon('class', 'Supporter', 'Supporter', 'images/Supporter.jpg')" title="Supporter" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-class-Supporter" onclick="selectTraitIcon('class', 'Supporter', 'Supporter', 'images/Supporter.jpg')" title="Supporter" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
                     <img src="images/Supporter.jpg" alt="Supporter" class="w-full h-full object-contain">
                 </button>
             </div>
         </div>
 
-        <div class="h-6 w-px bg-zinc-800"></div>
+        <div class="hidden lg:block h-6 w-px bg-zinc-800"></div>
 
-        <!-- Burst Level Trait Icons -->
+        <!-- Burst Level Group -->
         <div class="flex flex-col items-center">
             <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Burst</span>
             <div class="flex gap-1">
-                <button id="btn-burst-1" onclick="selectTraitIcon('burst', '1', 'B1', 'images/1.jpg')" title="Burst 1" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-burst-1" onclick="selectTraitIcon('burst', '1', 'B1', 'images/1.jpg')" title="Burst 1" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
                     <img src="images/1.jpg" alt="B1" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-burst-2" onclick="selectTraitIcon('burst', '2', 'B2', 'images/2.jpg')" title="Burst 2" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-burst-2" onclick="selectTraitIcon('burst', '2', 'B2', 'images/2.jpg')" title="Burst 2" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
                     <img src="images/2.jpg" alt="B2" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-burst-3" onclick="selectTraitIcon('burst', '3', 'B3', 'images/3.jpg')" title="Burst 3" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-burst-3" onclick="selectTraitIcon('burst', '3', 'B3', 'images/3.jpg')" title="Burst 3" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
                     <img src="images/3.jpg" alt="B3" class="w-full h-full object-contain">
                 </button>
-                <button id="btn-burst-p" onclick="selectTraitIcon('burst', 'p', 'BP', 'images/P.jpg')" title="Burst P" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-1 rounded-lg hover:bg-purple-900/60 transition-all flex items-center justify-center h-8 w-8">
+                <button id="btn-burst-p" onclick="selectTraitIcon('burst', 'p', 'BP', 'images/P.jpg')" title="Burst P" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
                     <img src="images/P.jpg" alt="BP" class="w-full h-full object-contain">
                 </button>
             </div>
         </div>
 
-        <!-- How to play, Leaderboard, Feedback and Kofi buttons -->
+        <!-- ACTION BUTTONS -->
         <div class="flex items-center gap-1.5 w-full lg:w-auto justify-end lg:absolute lg:right-4 pt-1 lg:pt-0 border-t lg:border-t-0 border-zinc-800">
             <button onclick="toggleTutorialModal(true)" class="px-2.5 py-1 bg-purple-700 hover:bg-purple-600 text-purple-100 font-bold text-[10px] rounded-lg border border-purple-400 flex items-center gap-1 transition-all shadow-md">
                 ❓ How to Play
@@ -379,9 +391,11 @@
                 ☕ Ko-fi
             </a>
         </div>
+    </div>
 
+    <!-- MAIN GAME SCRIPT -->
     <script>
-        // Firebase config for the leaderboard, which connects the game to the firebase database, allowing players to submit their best times and view the leaderboard in real time
+        // FIREBASE SETUP
         const firebaseConfig = {
             apiKey: "AIzaSyBpVZi1wQYiXN4mSjalAGEP8FEUiNEepzI",
             authDomain: "goddess-of-logic.firebaseapp.com",
@@ -391,7 +405,6 @@
             appId: "1:216414524695:web:54a8512a758839fc8e1352"
         };
 
-        // Initialize Firebase
         let db = null;
         try {
             firebase.initializeApp(firebaseConfig);
@@ -400,9 +413,66 @@
             console.warn("Firebase initialize warning:", e);
         }
 
+        // DIFFICULTY-BASED CLUE WEIGHT PROFILES
+        const DIFFICULTY_WEIGHT_PROFILES = {
+            easy: {
+                'SELF_ATTRIBUTE': 25,
+                'NIKKE_ON_GRID': 20,
+                'DIRECTIONAL_NEIGHBOR_ATTR': 15,
+                'SAME_COLUMN_NIKKE': 12,
+                'ADJACENT_SPECIFIC_ATTR_COUNT': 10,
+                'SQUADMATE_ADJACENT': 10,
+                'ELEMENT_STRONGER': 8,
+                'SHARED_DIRECTIONAL_ATTR': 6,
+                'ROW_COL_COUNT': 5,
+                'WEAPON_RANGE_COMP': 4,
+                'DIRECTIONAL_BURST_COMP': 4,
+                'ADJACENT_SAME_ATTR_COUNT': 3,
+                'SEE_DISTANCE_RANGE': 3,
+                'ONLY_SQUAD_GRID': 2,
+                'GLOBAL_MOST_ATTR': 2,
+                'ROW_MAJORITY_ATTR': 1
+            },
+            medium: {
+                'ROW_COL_COUNT': 10,
+                'ADJACENT_SAME_ATTR_COUNT': 9,
+                'DIRECTIONAL_BURST_COMP': 8,
+                'WEAPON_RANGE_COMP': 8,
+                'SHARED_DIRECTIONAL_ATTR': 9,
+                'SQUADMATE_ADJACENT': 9,
+                'ADJACENT_SPECIFIC_ATTR_COUNT': 9,
+                'ROW_MAJORITY_ATTR': 8,
+                'ELEMENT_STRONGER': 8,
+                'DIRECTIONAL_NEIGHBOR_ATTR': 8,
+                'SEE_DISTANCE_RANGE': 8,
+                'SAME_COLUMN_NIKKE': 7,
+                'NIKKE_ON_GRID': 6,
+                'ONLY_SQUAD_GRID': 5,
+                'GLOBAL_MOST_ATTR': 5,
+                'SELF_ATTRIBUTE': 5
+            },
+            hard: {
+                'ROW_COL_COUNT': 20,
+                'ROW_MAJORITY_ATTR': 18,
+                'ADJACENT_SAME_ATTR_COUNT': 15,
+                'GLOBAL_MOST_ATTR': 15,
+                'SEE_DISTANCE_RANGE': 14,
+                'DIRECTIONAL_BURST_COMP': 12,
+                'WEAPON_RANGE_COMP': 12,
+                'SHARED_DIRECTIONAL_ATTR': 10,
+                'ADJACENT_SPECIFIC_ATTR_COUNT': 10,
+                'ELEMENT_STRONGER': 8,
+                'ONLY_SQUAD_GRID': 8,
+                'SQUADMATE_ADJACENT': 6,
+                'SAME_COLUMN_NIKKE': 5,
+                'DIRECTIONAL_NEIGHBOR_ATTR': 4,
+                'NIKKE_ON_GRID': 2,
+                'SELF_ATTRIBUTE': 1
+            }
+        };
+
         let allNikkesData = [];
 
-        // Element Advantage Cycle Map (Key beats Value)
         const ELEMENT_ADVANTAGE = {
             'Fire': 'Wind',
             'Wind': 'Iron',
@@ -418,7 +488,6 @@
             return null;
         }
 
-        // Load nikke data from CSV file. 
         async function loadNikkesFromCSV() {
             try {
                 const response = await fetch('nikkeinfo.csv');
@@ -441,7 +510,6 @@
                                     element: row.element ? row.element.trim() : 'Unknown',
                                     burst: row.burst ? row.burst.trim() : '1',
                                     squad: row.squad ? row.squad.trim() : 'Unknown',
-                                    // image: `images/${name}.jpg`, // This isn't currently used as it has no real purpose. As much as It looks nice, I feel it is better to put more focus on the actual info of the Nikke
                                     icon: `images/${name}Icon.jpg`
                                 };
                             });
@@ -455,81 +523,18 @@
             }
         }
 
-        // Define weights for question types
-        const DIFFICULTY_WEIGHT_PROFILES = {
-            // Easy: Favors direct clues, simple attribute reveals, and direct neighbors
-            easy: {
-                'SELF_ATTRIBUTE': 25,
-                'NIKKE_ON_GRID': 20,
-                'DIRECTIONAL_NEIGHBOR_ATTR': 15,
-                'SAME_COLUMN_NIKKE': 12,
-                'ADJACENT_SPECIFIC_ATTR_COUNT': 10,
-                'SQUADMATE_ADJACENT': 10,
-                'ELEMENT_STRONGER': 8,
-                'SHARED_DIRECTIONAL_ATTR': 6,
-                'ROW_COL_COUNT': 5,
-                'WEAPON_RANGE_COMP': 4,
-                'DIRECTIONAL_BURST_COMP': 4,
-                'ADJACENT_SAME_ATTR_COUNT': 3,
-                'SEE_DISTANCE_RANGE': 3,
-                'ONLY_SQUAD_GRID': 2,
-                'GLOBAL_MOST_ATTR': 2,
-                'ROW_MAJORITY_ATTR': 1
-            },
-            // Medium: Balanced distribution across all clue types
-            medium: {
-                'ROW_COL_COUNT': 10,
-                'ADJACENT_SAME_ATTR_COUNT': 9,
-                'DIRECTIONAL_BURST_COMP': 8,
-                'WEAPON_RANGE_COMP': 8,
-                'SHARED_DIRECTIONAL_ATTR': 9,
-                'SQUADMATE_ADJACENT': 9,
-                'ADJACENT_SPECIFIC_ATTR_COUNT': 9,
-                'ROW_MAJORITY_ATTR': 8,
-                'ELEMENT_STRONGER': 8,
-                'DIRECTIONAL_NEIGHBOR_ATTR': 8,
-                'SEE_DISTANCE_RANGE': 8,
-                'SAME_COLUMN_NIKKE': 7,
-                'NIKKE_ON_GRID': 6,
-                'ONLY_SQUAD_GRID': 5,
-                'GLOBAL_MOST_ATTR': 5,
-                'SELF_ATTRIBUTE': 5
-            },
-            // Hard & Insane: Heavily favors complex relational, counting, and distance clues
-            hard: {
-                'ROW_COL_COUNT': 20,
-                'ROW_MAJORITY_ATTR': 18,
-                'ADJACENT_SAME_ATTR_COUNT': 15,
-                'GLOBAL_MOST_ATTR': 15,
-                'SEE_DISTANCE_RANGE': 14,
-                'DIRECTIONAL_BURST_COMP': 12,
-                'WEAPON_RANGE_COMP': 12,
-                'SHARED_DIRECTIONAL_ATTR': 10,
-                'ADJACENT_SPECIFIC_ATTR_COUNT': 10,
-                'ELEMENT_STRONGER': 8,
-                'ONLY_SQUAD_GRID': 8,
-                'SQUADMATE_ADJACENT': 6,
-                'SAME_COLUMN_NIKKE': 5,
-                'DIRECTIONAL_NEIGHBOR_ATTR': 4,
-                'NIKKE_ON_GRID': 2,
-                'SELF_ATTRIBUTE': 1
-            }
-        };
-    
-        let currentDifficulty = 'easy3'; // Default difficulty is easy3. Easy3 refers to Difficulty being Easy on a grid size of 3x3
-        let gridRows = 3; // Default amount of rows in the grid is 3
-        let gridCols = 3; // Default amount of Columns in the grid is 3
-        let activePool = []; // The pool of nikkes that are currently available for the current puzzle
-        let shuffledPalette = []; // A shuffled version of the active pool for the palette
-        let solution = []; // The solution for the current puzzle
-        let currentGrid = []; // The current state of the grid
-        let selectedNikke = null; // The currently selected nikke from the palette
-        let selectedTraitMark = null; // The currently selected trait mark from the trait dock
-        let cellCluesMap = {}; // A map of cell positions to their corresponding clues
-        let cellClueRules = {}; // A map of cell positions to their corresponding clue rules
+        let currentDifficulty = 'easy3';
+        let gridRows = 3;
+        let gridCols = 3;
+        let activePool = []; 
+        let shuffledPalette = []; 
+        let solution = [];
+        let currentGrid = [];
+        let selectedNikke = null;
+        let selectedTraitMark = null;
+        let cellCluesMap = {};
+        let cellClueRules = {};
 
-
-        // Timer Logic. This counts up the players time, starts when they open the website, select a new difficulty or grid size, or click new puzzle. Timer will stop when the player clicks verify and the puzzle is successfully completed
         let timerInterval = null;
         let elapsedSeconds = 0;
         let isTimerRunning = false;
@@ -559,7 +564,6 @@
             isTimerRunning = false;
         }
 
-        // If the player verify's and their answer is incorrect, they will be given a penalty of 1 minute.
         function addPenaltyTime(penaltySecs = 60) { 
             elapsedSeconds += penaltySecs;
             updateTimerDisplay();
@@ -763,11 +767,12 @@
             setTimeout(() => document.getElementById('status').textContent = '', 3000);
         }
 
+        // 16-QUESTION DYNAMIC CLUE GENERATOR WITH DIFFICULTY PROFILES
         function generateClues(sol) {
             cellCluesMap = {};
             cellClueRules = {};
             const nikkeMap = Object.fromEntries(allNikkesData.map(n => [n.id, n]));
-        
+
             const allGridNikkes = [];
             for (let r = 0; r < gridRows; r++) {
                 for (let c = 0; c < gridCols; c++) {
@@ -775,24 +780,21 @@
                     if (n) allGridNikkes.push(n);
                 }
             }
-        
+
             if (allGridNikkes.length === 0) return;
-        
-            // Detect general difficulty mode prefix (easy, medium, hard, insane)
+
             let diffCategory = 'medium';
             if (currentDifficulty.startsWith('easy')) diffCategory = 'easy';
             else if (currentDifficulty.startsWith('hard') || currentDifficulty.startsWith('insane')) diffCategory = 'hard';
-        
-            // Clone weight profile for current difficulty so modifications during loop don't pollute global config
+
             const questionWeights = { ...DIFFICULTY_WEIGHT_PROFILES[diffCategory] };
-        
             const parseBurstVal = (bStr) => (bStr === 'p' || bStr === 'P') ? 4 : parseInt(bStr, 10) || 1;
-        
+
             function getWeightedRandomChoice(candidates) {
                 if (!candidates || candidates.length === 0) return null;
                 const totalWeight = candidates.reduce((sum, item) => sum + item.weight, 0);
                 if (totalWeight <= 0) return candidates[Math.floor(Math.random() * candidates.length)];
-        
+
                 let randomVal = Math.random() * totalWeight;
                 for (const item of candidates) {
                     if (randomVal < item.weight) return item;
@@ -800,20 +802,19 @@
                 }
                 return candidates[0];
             }
-        
-            // MAIN GRID LOOP
+
             for (let r = 0; r < gridRows; r++) {
                 for (let c = 0; c < gridCols; c++) {
                     const cellNikke = nikkeMap[sol[r][c]];
                     if (!cellNikke) continue;
-        
+
                     const cellKey = `${r},${c}`;
                     const candidates = [];
-        
+
                     const directionsList = shuffle(['ABOVE', 'BELOW', 'LEFT', 'RIGHT']);
                     const neighborPositions = getNeighbors(r, c);
                     const neighborNikkes = neighborPositions.map(nb => nikkeMap[sol[nb.row][nb.col]]).filter(Boolean);
-        
+
                     const countAttrs = [
                         { key: 'manufacturer', label: 'manufacturer' },
                         { key: 'element', label: 'Element' },
@@ -821,53 +822,14 @@
                         { key: 'class', label: 'Class' },
                         { key: 'burst', label: 'Burst' }
                     ];
-        
-            const parseBurstVal = (bStr) => (bStr === 'p' || bStr === 'P') ? 4 : parseInt(bStr, 10) || 1;
-        
-            function getWeightedRandomChoice(candidates) {
-                if (!candidates || candidates.length === 0) return null;
-                const totalWeight = candidates.reduce((sum, item) => sum + item.weight, 0);
-                if (totalWeight <= 0) return candidates[Math.floor(Math.random() * candidates.length)];
-        
-                let randomVal = Math.random() * totalWeight;
-                for (const item of candidates) {
-                    if (randomVal < item.weight) return item;
-                    randomVal -= item.weight;
-                }
-                return candidates[0];
-            }
-        
-            // MAIN GRID LOOP
-            for (let r = 0; r < gridRows; r++) {
-                for (let c = 0; c < gridCols; c++) {
-                    const cellNikke = nikkeMap[sol[r][c]];
-                    if (!cellNikke) continue;
-        
-                    const cellKey = `${r},${c}`;
-                    const candidates = [];
-        
-                    // FIXED: These position variables MUST be initialized inside the loop for cell (r, c)
-                    const directionsList = shuffle(['ABOVE', 'BELOW', 'LEFT', 'RIGHT']);
-                    const neighborPositions = getNeighbors(r, c);
-                    const neighborNikkes = neighborPositions.map(nb => nikkeMap[sol[nb.row][nb.col]]).filter(Boolean);
-        
-                    const countAttrs = [
-                        { key: 'manufacturer', label: 'manufacturer' },
-                        { key: 'element', label: 'Element' },
-                        { key: 'weapon', label: 'Weapon' },
-                        { key: 'class', label: 'Class' },
-                        { key: 'burst', label: 'Burst' }
-                    ];
-        
-                    // ----------------------------------------------------
+
                     // 1. Which Nikke is on the grid?
-                    // ----------------------------------------------------
                     if (allGridNikkes.length > 0) {
                         const presentNikke = allGridNikkes[Math.floor(Math.random() * allGridNikkes.length)];
                         if (presentNikke) {
                             candidates.push({
                                 type: 'NIKKE_ON_GRID',
-                                weight: questionWeights['NIKKE_ON_GRID'],
+                                weight: questionWeights['NIKKE_ON_GRID'] || 5,
                                 text: `Cell R${r+1}C${c+1}: ${presentNikke.name} is on the grid.`,
                                 checkFn: (currN, neighs, gridState) => {
                                     return gridState.some(row => row.some(val => typeof val === 'string' && nikkeMap[val]?.name === presentNikke.name));
@@ -876,13 +838,11 @@
                             });
                         }
                     }
-        
-                    // ----------------------------------------------------
+
                     // 2. How many Nikkes of a certain attribute in row / column
-                    // ----------------------------------------------------
                     const chosenAttr = countAttrs[Math.floor(Math.random() * countAttrs.length)];
                     const isRowQuery = Math.random() > 0.5;
-        
+
                     if (isRowQuery) {
                         const rowNikkes = [];
                         for (let col = 0; col < gridCols; col++) {
@@ -895,7 +855,7 @@
                                 const actualCount = rowNikkes.filter(n => n[chosenAttr.key] === valToCount).length;
                                 candidates.push({
                                     type: 'ROW_COL_COUNT',
-                                    weight: questionWeights['ROW_COL_COUNT'],
+                                    weight: questionWeights['ROW_COL_COUNT'] || 5,
                                     text: `Cell R${r+1}C${c+1}: My row contains ${actualCount} ${valToCount} ${chosenAttr.label}${actualCount === 1 ? '' : 's'}.`,
                                     checkFn: (currN, neighs, gridState) => {
                                         let count = 0;
@@ -921,7 +881,7 @@
                                 const actualCount = colNikkes.filter(n => n[chosenAttr.key] === valToCount).length;
                                 candidates.push({
                                     type: 'ROW_COL_COUNT',
-                                    weight: questionWeights['ROW_COL_COUNT'],
+                                    weight: questionWeights['ROW_COL_COUNT'] || 5,
                                     text: `Cell R${r+1}C${c+1}: My column contains ${actualCount} ${valToCount} ${chosenAttr.label}${actualCount === 1 ? '' : 's'}.`,
                                     checkFn: (currN, neighs, gridState) => {
                                         let count = 0;
@@ -936,10 +896,8 @@
                             }
                         }
                     }
-        
-                    // ----------------------------------------------------
+
                     // 3. How many Nikkes are adjacent to me with the same attribute
-                    // ----------------------------------------------------
                     if (neighborNikkes.length > 0) {
                         const chosenSameAttr = countAttrs[Math.floor(Math.random() * countAttrs.length)];
                         const myVal = cellNikke[chosenSameAttr.key];
@@ -947,7 +905,7 @@
                             const matchCount = neighborNikkes.filter(n => n[chosenSameAttr.key] === myVal).length;
                             candidates.push({
                                 type: 'ADJACENT_SAME_ATTR_COUNT',
-                                weight: questionWeights['ADJACENT_SAME_ATTR_COUNT'],
+                                weight: questionWeights['ADJACENT_SAME_ATTR_COUNT'] || 5,
                                 text: `Cell R${r+1}C${c+1}: I am next to ${matchCount} Nikke${matchCount === 1 ? '' : 's'} with the same ${chosenSameAttr.label} as me.`,
                                 checkFn: (currN, neighs, gridState) => {
                                     if (!currN) return false;
@@ -962,16 +920,14 @@
                             });
                         }
                     }
-        
-                    // ----------------------------------------------------
+
                     // 4. Am I the only member of my squad on the grid
-                    // ----------------------------------------------------
                     if (cellNikke.squad && cellNikke.squad !== 'Unknown') {
                         const squadCount = allGridNikkes.filter(n => n?.squad === cellNikke.squad).length;
                         if (squadCount === 1) {
                             candidates.push({
                                 type: 'ONLY_SQUAD_GRID',
-                                weight: questionWeights['ONLY_SQUAD_GRID'],
+                                weight: questionWeights['ONLY_SQUAD_GRID'] || 5,
                                 text: `Cell R${r+1}C${c+1}: I am the only member of my squad on the field.`,
                                 checkFn: (currN, neighs, gridState) => {
                                     if (!currN) return false;
@@ -985,16 +941,14 @@
                             });
                         }
                     }
-        
-                    // ----------------------------------------------------
+
                     // 5. Most of the Nikkes are from my [attribute]
-                    // ----------------------------------------------------
                     const globalCat = [
                         { key: 'manufacturer', label: 'manufacturer' },
                         { key: 'class', label: 'class' },
                         { key: 'element', label: 'element' }
                     ][Math.floor(Math.random() * 3)];
-        
+
                     const myGlobalVal = cellNikke[globalCat.key];
                     if (myGlobalVal) {
                         const counts = {};
@@ -1004,7 +958,7 @@
                         if (counts[myGlobalVal] === maxVal && Object.values(counts).filter(v => v === maxVal).length === 1) {
                             candidates.push({
                                 type: 'GLOBAL_MOST_ATTR',
-                                weight: questionWeights['GLOBAL_MOST_ATTR'],
+                                weight: questionWeights['GLOBAL_MOST_ATTR'] || 5,
                                 text: `Cell R${r+1}C${c+1}: Most of the Nikkes on the grid are from my ${globalCat.label} (${myGlobalVal}).`,
                                 checkFn: (currN, neighs, gridState) => {
                                     if (!currN) return false;
@@ -1022,10 +976,8 @@
                             });
                         }
                     }
-        
-                    // ----------------------------------------------------
+
                     // 6. Is my element stronger than one of my neighbours
-                    // ----------------------------------------------------
                     for (const d of directionsList) {
                         const pos = getDirectionalNeighbor(r, c, d);
                         if (pos) {
@@ -1033,7 +985,7 @@
                             if (neighborNikke && cellNikke.element && ELEMENT_ADVANTAGE[cellNikke.element] === neighborNikke.element) {
                                 candidates.push({
                                     type: 'ELEMENT_STRONGER',
-                                    weight: questionWeights['ELEMENT_STRONGER'],
+                                    weight: questionWeights['ELEMENT_STRONGER'] || 5,
                                     text: `Cell R${r+1}C${c+1}: My element is stronger than the Nikke directly ${d} me.`,
                                     checkFn: (currN, neighs, gridState) => {
                                         const val = gridState[pos.r][pos.c];
@@ -1047,10 +999,8 @@
                             }
                         }
                     }
-        
-                    // ----------------------------------------------------
+
                     // 7. What [attribute] does one of my neighbours have
-                    // ----------------------------------------------------
                     for (const d of directionsList) {
                         const pos = getDirectionalNeighbor(r, c, d);
                         if (pos) {
@@ -1061,7 +1011,7 @@
                                 if (neighVal) {
                                     candidates.push({
                                         type: 'DIRECTIONAL_NEIGHBOR_ATTR',
-                                        weight: questionWeights['DIRECTIONAL_NEIGHBOR_ATTR'],
+                                        weight: questionWeights['DIRECTIONAL_NEIGHBOR_ATTR'] || 5,
                                         text: `Cell R${r+1}C${c+1}: The Nikke directly ${d} me is a ${neighVal} ${attrPick.label}.`,
                                         checkFn: (currN, neighs, gridState) => {
                                             const val = gridState[pos.r][pos.c];
@@ -1074,10 +1024,8 @@
                             }
                         }
                     }
-        
-                    // ----------------------------------------------------
+
                     // 8. Checks a Nikkes [attribute] based on weapon range
-                    // ----------------------------------------------------
                     const weaponDist = getWeaponRange(cellNikke.weapon);
                     if (weaponDist !== null) {
                         const targetDistCells = getCellsAtDistance(r, c, weaponDist);
@@ -1092,11 +1040,11 @@
                                     { attr: 'weapon', val: targetNikke.weapon, label: `${targetNikke.weapon} user` }
                                 ];
                                 const pickedTrait = traitChoices[Math.floor(Math.random() * traitChoices.length)];
-        
+
                                 if (pickedTrait.val) {
                                     candidates.push({
                                         type: 'SEE_DISTANCE_RANGE',
-                                        weight: questionWeights['SEE_DISTANCE_RANGE'],
+                                        weight: questionWeights['SEE_DISTANCE_RANGE'] || 5,
                                         text: `Cell R${r+1}C${c+1}: I can see a ${pickedTrait.label} ${weaponDist} cell(s) away.`,
                                         checkFn: (currN, neighs, gridState) => {
                                             const cellsAtD = getCellsAtDistance(r, c, weaponDist);
@@ -1112,10 +1060,8 @@
                             }
                         }
                     }
-        
-                    // ----------------------------------------------------
+
                     // 9. What [attribute] do I have
-                    // ----------------------------------------------------
                     const selfAttrChoices = [
                         { key: 'class', label: `${cellNikke.class} Class` },
                         { key: 'element', label: `${cellNikke.element} Element` },
@@ -1124,20 +1070,18 @@
                         { key: 'burst', label: `Burst ${cellNikke.burst} unit` }
                     ];
                     const pickedSelfAttr = selfAttrChoices[Math.floor(Math.random() * selfAttrChoices.length)];
-        
+
                     if (cellNikke[pickedSelfAttr.key]) {
                         candidates.push({
                             type: 'SELF_ATTRIBUTE',
-                            weight: questionWeights['SELF_ATTRIBUTE'],
+                            weight: questionWeights['SELF_ATTRIBUTE'] || 5,
                             text: `Cell R${r+1}C${c+1}: I am a ${pickedSelfAttr.label}.`,
                             checkFn: (currN) => currN && currN[pickedSelfAttr.key] === cellNikke[pickedSelfAttr.key],
                             expected: true
                         });
                     }
-        
-                    // ----------------------------------------------------
+
                     // 10. Does my neighbour have a higher or lower burst than me
-                    // ----------------------------------------------------
                     for (const d of directionsList) {
                         const pos = getDirectionalNeighbor(r, c, d);
                         if (pos) {
@@ -1145,14 +1089,14 @@
                             if (neighborNikke) {
                                 const myBurst = parseBurstVal(cellNikke.burst);
                                 const neighBurst = parseBurstVal(neighborNikke.burst);
-        
+
                                 if (myBurst !== neighBurst) {
                                     const isHigher = neighBurst > myBurst;
                                     const compText = isHigher ? 'HIGHER' : 'LOWER';
-        
+
                                     candidates.push({
                                         type: 'DIRECTIONAL_BURST_COMP',
-                                        weight: questionWeights['DIRECTIONAL_BURST_COMP'],
+                                        weight: questionWeights['DIRECTIONAL_BURST_COMP'] || 5,
                                         text: `Cell R${r+1}C${c+1}: The Nikke directly ${d} me has a ${compText} Burst stage than I do.`,
                                         checkFn: (currN, neighs, gridState) => {
                                             if (!currN) return false;
@@ -1169,10 +1113,8 @@
                             }
                         }
                     }
-        
-                    // ----------------------------------------------------
+
                     // 11. Does my neighbour have a longer or shorter range than me
-                    // ----------------------------------------------------
                     for (const d of directionsList) {
                         const pos = getDirectionalNeighbor(r, c, d);
                         if (pos) {
@@ -1180,14 +1122,14 @@
                             if (neighborNikke) {
                                 const myRange = getWeaponRange(cellNikke.weapon);
                                 const neighRange = getWeaponRange(neighborNikke.weapon);
-        
+
                                 if (myRange !== null && neighRange !== null && myRange !== neighRange) {
                                     const isLonger = neighRange > myRange;
                                     const compText = isLonger ? 'LONGER' : 'SHORTER';
-        
+
                                     candidates.push({
                                         type: 'WEAPON_RANGE_COMP',
-                                        weight: questionWeights['WEAPON_RANGE_COMP'],
+                                        weight: questionWeights['WEAPON_RANGE_COMP'] || 5,
                                         text: `Cell R${r+1}C${c+1}: The Nikke directly ${d} me uses a weapon with a ${compText} range than mine.`,
                                         checkFn: (currN, neighs, gridState) => {
                                             if (!currN) return false;
@@ -1205,10 +1147,8 @@
                             }
                         }
                     }
-        
-                    // ----------------------------------------------------
+
                     // 12. Does my neighbour have the same [attribute] as me
-                    // ----------------------------------------------------
                     for (const d of directionsList) {
                         const pos = getDirectionalNeighbor(r, c, d);
                         if (pos) {
@@ -1219,7 +1159,7 @@
                                     const chosenMatch = matchingPicked[Math.floor(Math.random() * matchingPicked.length)];
                                     candidates.push({
                                         type: 'SHARED_DIRECTIONAL_ATTR',
-                                        weight: questionWeights['SHARED_DIRECTIONAL_ATTR'],
+                                        weight: questionWeights['SHARED_DIRECTIONAL_ATTR'] || 5,
                                         text: `Cell R${r+1}C${c+1}: I share the same ${chosenMatch.label} as the Nikke directly ${d} me.`,
                                         checkFn: (currN, neighs, gridState) => {
                                             if (!currN) return false;
@@ -1234,15 +1174,13 @@
                             }
                         }
                     }
-        
-                    // ----------------------------------------------------
+
                     // 13. Is one of my neighbours a squadmate
-                    // ----------------------------------------------------
                     const hasSquadmateAdj = neighborNikkes.some(n => n.squad === cellNikke.squad && cellNikke.squad !== 'Unknown');
                     if (hasSquadmateAdj) {
                         candidates.push({
                             type: 'SQUADMATE_ADJACENT',
-                            weight: questionWeights['SQUADMATE_ADJACENT'],
+                            weight: questionWeights['SQUADMATE_ADJACENT'] || 5,
                             text: `Cell R${r+1}C${c+1}: I am directly adjacent to my squadmate.`,
                             checkFn: (currN, neighs, gridState) => {
                                 if (!currN) return false;
@@ -1254,19 +1192,17 @@
                             expected: true
                         });
                     }
-        
-                    // ----------------------------------------------------
+
                     // 14. How many of my neighbours have a specific [attribute]
-                    // ----------------------------------------------------
                     if (neighborNikkes.length > 0) {
                         const specAttr = countAttrs[Math.floor(Math.random() * countAttrs.length)];
                         const targetVal = neighborNikkes[Math.floor(Math.random() * neighborNikkes.length)][specAttr.key];
-        
+
                         if (targetVal) {
                             const actualCount = neighborNikkes.filter(n => n[specAttr.key] === targetVal).length;
                             candidates.push({
                                 type: 'ADJACENT_SPECIFIC_ATTR_COUNT',
-                                weight: questionWeights['ADJACENT_SPECIFIC_ATTR_COUNT'],
+                                weight: questionWeights['ADJACENT_SPECIFIC_ATTR_COUNT'] || 5,
                                 text: `Cell R${r+1}C${c+1}: I am next to ${actualCount} ${targetVal}${specAttr.key === 'burst' ? ' Burst' : ''} Nikke${actualCount === 1 ? '' : 's'}.`,
                                 checkFn: (currN, neighs, gridState) => {
                                     let count = 0;
@@ -1280,10 +1216,8 @@
                             });
                         }
                     }
-        
-                    // ----------------------------------------------------
+
                     // 15. I am in the same column as [Nikke Name]
-                    // ----------------------------------------------------
                     const colNikkeNames = [];
                     for (let row = 0; row < gridRows; row++) {
                         if (row !== r) {
@@ -1291,12 +1225,12 @@
                             if (n) colNikkeNames.push(n.name);
                         }
                     }
-        
+
                     if (colNikkeNames.length > 0) {
                         const pickedColName = colNikkeNames[Math.floor(Math.random() * colNikkeNames.length)];
                         candidates.push({
                             type: 'SAME_COLUMN_NIKKE',
-                            weight: questionWeights['SAME_COLUMN_NIKKE'],
+                            weight: questionWeights['SAME_COLUMN_NIKKE'] || 5,
                             text: `Cell R${r+1}C${c+1}: I am in the same column as ${pickedColName}.`,
                             checkFn: (currN, neighs, gridState) => {
                                 for (let row = 0; row < gridRows; row++) {
@@ -1308,28 +1242,26 @@
                             expected: true
                         });
                     }
-        
-                    // ----------------------------------------------------
+
                     // 16. My [Attribute] holds the majority in my row
-                    // ----------------------------------------------------
                     const rowCat = countAttrs[Math.floor(Math.random() * countAttrs.length)];
                     const myRowVal = cellNikke[rowCat.key];
-        
+
                     if (myRowVal) {
                         const rowNikkesList = [];
                         for (let col = 0; col < gridCols; col++) {
                             const n = nikkeMap[sol[r][col]];
                             if (n) rowNikkesList.push(n);
                         }
-        
+
                         const rowCounts = {};
                         rowNikkesList.forEach(n => { if (n[rowCat.key]) rowCounts[n[rowCat.key]] = (rowCounts[n[rowCat.key]] || 0) + 1; });
                         const rowMax = Math.max(...Object.values(rowCounts));
-        
+
                         if (rowCounts[myRowVal] === rowMax && Object.values(rowCounts).filter(v => v === rowMax).length === 1) {
                             candidates.push({
                                 type: 'ROW_MAJORITY_ATTR',
-                                weight: questionWeights['ROW_MAJORITY_ATTR'],
+                                weight: questionWeights['ROW_MAJORITY_ATTR'] || 5,
                                 text: `Cell R${r+1}C${c+1}: My ${rowCat.label} (${myRowVal}) holds the majority in my row.`,
                                 checkFn: (currN, neighs, gridState) => {
                                     if (!currN) return false;
@@ -1348,23 +1280,22 @@
                             });
                         }
                     }
-        
-                // Select weighted random clue
-                const chosenClue = getWeightedRandomChoice(candidates);
-                if (chosenClue) {
-                    // Diminishing returns: reduce weight after picking to encourage variety across grid cells
-                    questionWeights[chosenClue.type] = Math.max(1, questionWeights[chosenClue.type] - 4);
-    
-                    cellCluesMap[cellKey] = chosenClue.text;
-                    cellClueRules[cellKey] = {
-                        checkFn: chosenClue.checkFn,
-                        expected: chosenClue.expected,
-                        text: chosenClue.text
-                    };
+
+                    // Select weighted random clue
+                    const chosenClue = getWeightedRandomChoice(candidates);
+                    if (chosenClue) {
+                        questionWeights[chosenClue.type] = Math.max(1, questionWeights[chosenClue.type] - 4);
+
+                        cellCluesMap[cellKey] = chosenClue.text;
+                        cellClueRules[cellKey] = {
+                            checkFn: chosenClue.checkFn,
+                            expected: chosenClue.expected,
+                            text: chosenClue.text
+                        };
+                    }
                 }
             }
         }
-    }
 
         function createGrid() {
             const grid = document.getElementById('grid');
@@ -1424,7 +1355,6 @@
                 const cellData = currentGrid[r][c];
                 
                 if (typeof cellData === 'string') {
-                    // Full Nikke Placed
                     const n = allNikkesData.find(x => x.id === cellData);
                     cell.innerHTML = `
                         <div class="w-[50%] h-[50%] rounded-xl overflow-hidden border border-purple-300 bg-zinc-900 flex items-center justify-center">
@@ -1435,7 +1365,6 @@
                     `;
                     cell.classList.add('filled');
                 } else if (cellData && typeof cellData === 'object' && Object.keys(cellData).length > 0) {
-                    // Pure Image Markers Grid Placement
                     const markerItems = Object.values(cellData);
                     const count = markerItems.length;
 
@@ -1573,7 +1502,7 @@
             const elemEl = document.getElementById('info-element');
             const burstEl = document.getElementById('info-burst');
             const squadEl = document.getElementById('info-squad');
-        
+
             if (nameEl) nameEl.textContent = n.name || '';
             if (classEl) classEl.textContent = n.class || '';
             if (manuEl) manuEl.textContent = n.manufacturer || '';
@@ -1659,7 +1588,6 @@
                     setStatus(`🎉 PUZZLE SOLVED in ${timeString}!`, 'text-emerald-400 font-bold text-xl');
                 }
 
-                // Trigger Win & Leaderboard prompt
                 setTimeout(() => toggleWinModal(true), 600);
                 return;
             }
@@ -1729,7 +1657,6 @@
                     console.error("Firestore submission failed:", e);
                 }
             } else {
-                // LocalStorage Fallback
                 const storageKey = `leaderboard_${currentDifficulty}`;
                 const existingScores = JSON.parse(localStorage.getItem(storageKey) || '[]');
 
@@ -1752,11 +1679,9 @@
             toggleLeaderboardModal(true);
         }
 
-        // FIXED: Queries Firestore directly by mode and sorts locally in JS to prevent indexing errors
         async function filterLeaderboardDisplay(diffMode) {
             selectedLeaderboardTab = diffMode;
             
-            // Update Tab UI styles
             document.querySelectorAll('.lb-tab-btn').forEach(btn => {
                 btn.classList.remove('bg-amber-600', 'text-amber-100', 'border-amber-400');
                 btn.classList.add('bg-zinc-800', 'text-zinc-300');
@@ -1780,7 +1705,6 @@
                         .get();
 
                     scores = snapshot.docs.map(doc => doc.data());
-                    // Sort scores fastest first in memory
                     scores.sort((a, b) => a.time - b.time);
                     scores = scores.slice(0, 10);
                 } catch (e) {
@@ -1889,12 +1813,12 @@
 
     <!-- PUZZLE WIN / LEADERBOARD SUBMISSION MODAL -->
     <div id="win-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[110] flex items-center justify-center hidden p-4">
-        <div class="bg-zinc-900 border-2 border-emerald-500/60 rounded-3xl max-w-md w-full p-6 shadow-2xl relative flex flex-col text-center">
-            <div class="text-4xl mb-2">🎉</div>
-            <h2 class="text-2xl font-black text-emerald-400 mb-1">PUZZLE SOLVED!</h2>
-            <p class="text-xs text-zinc-400 mb-4">You solved the <span id="win-diff-label" class="font-bold text-purple-300"></span> puzzle in <span id="win-time-label" class="font-bold text-amber-400 font-mono"></span>!</p>
+        <div class="bg-zinc-900 border-2 border-emerald-500/60 rounded-3xl max-w-md w-full p-5 lg:p-6 shadow-2xl relative flex flex-col text-center">
+            <div class="text-3xl mb-1">🎉</div>
+            <h2 class="text-xl lg:text-2xl font-black text-emerald-400 mb-1">PUZZLE SOLVED!</h2>
+            <p class="text-xs text-zinc-400 mb-3 lg:mb-4">You solved the <span id="win-diff-label" class="font-bold text-purple-300"></span> puzzle in <span id="win-time-label" class="font-bold text-amber-400 font-mono"></span>!</p>
 
-            <div class="bg-zinc-800 p-4 rounded-2xl border border-zinc-700 mb-4 text-left space-y-2">
+            <div class="bg-zinc-800 p-3 lg:p-4 rounded-2xl border border-zinc-700 mb-3 lg:mb-4 text-left space-y-2">
                 <label for="leaderboard-player-name" class="text-xs font-bold text-zinc-300 block">Enter your Commander Name for the Leaderboard:</label>
                 <input type="text" id="leaderboard-player-name" placeholder="Commander" maxlength="16" 
                        class="w-full bg-zinc-900 border border-zinc-600 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-400">
@@ -1913,16 +1837,16 @@
 
     <!-- FEEDBACK POP-UP MODAL -->
     <div id="feedback-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[120] flex items-center justify-center hidden p-4">
-        <div class="bg-zinc-900 border-2 border-blue-500/50 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative flex flex-col">
+        <div class="bg-zinc-900 border-2 border-blue-500/50 rounded-3xl max-w-lg w-full p-5 lg:p-6 shadow-2xl relative flex flex-col">
             <button onclick="toggleFeedbackModal(false)" class="absolute top-4 right-4 text-zinc-400 hover:text-white font-bold text-lg px-2">✕</button>
             
-            <h2 class="text-2xl font-bold text-blue-400 mb-4 flex items-center gap-2">
+            <h2 class="text-xl lg:text-2xl font-bold text-blue-400 mb-3 lg:mb-4 flex items-center gap-2">
                 <span>💬</span> Send Feedback
             </h2>
 
-            <div class="space-y-4 text-xs text-zinc-300">
+            <div class="space-y-3 lg:space-y-4 text-xs text-zinc-300">
                 <div>
-                    <label for="feedback-reason" class="font-bold text-zinc-300 text-xs block mb-1.5 uppercase tracking-wider">
+                    <label for="feedback-reason" class="font-bold text-zinc-300 text-xs block mb-1 uppercase tracking-wider">
                         Reason for Feedback
                     </label>
                     <input type="text" id="feedback-reason" placeholder="e.g., Bug Report, Feature Request, General Thoughts..." 
@@ -1930,15 +1854,15 @@
                 </div>
 
                 <div>
-                    <label for="feedback-body" class="font-bold text-zinc-300 text-xs block mb-1.5 uppercase tracking-wider">
+                    <label for="feedback-body" class="font-bold text-zinc-300 text-xs block mb-1 uppercase tracking-wider">
                         Feedback Details
                     </label>
-                    <textarea id="feedback-body" rows="6" placeholder="Write your feedback here..." 
+                    <textarea id="feedback-body" rows="5" placeholder="Write your feedback here..." 
                               class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-400 placeholder-zinc-500 resize-none"></textarea>
                 </div>
             </div>
 
-            <div class="flex gap-2 mt-5">
+            <div class="flex gap-2 mt-4 lg:mt-5">
                 <button id="feedback-submit-btn" onclick="submitFeedbackEmail()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold text-xs text-white transition-all shadow-md flex items-center justify-center gap-1">
                     ✉️ Send Feedback
                 </button>
@@ -1951,44 +1875,43 @@
 
     <!-- LEADERBOARD DISPLAY MODAL -->
     <div id="leaderboard-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center hidden p-4">
-        <!-- FIXED: Expanded max-w-2xl and height for a taller, fully readable menu -->
-        <div class="bg-zinc-900 border-2 border-amber-500/50 rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative flex flex-col h-[90vh]">
+        <div class="bg-zinc-900 border-2 border-amber-500/50 rounded-3xl max-w-2xl w-full p-5 lg:p-6 shadow-2xl relative flex flex-col max-h-[90vh] h-auto">
             <button onclick="toggleLeaderboardModal(false)" class="absolute top-4 right-4 text-zinc-400 hover:text-white font-bold text-lg px-2">✕</button>
             
-            <h2 class="text-2xl font-bold text-amber-400 mb-3 flex items-center gap-2">
+            <h2 class="text-xl lg:text-2xl font-bold text-amber-400 mb-3 flex items-center gap-2">
                 <span>🏆</span> Global Leaderboards
             </h2>
 
-            <!-- FIXED: Organized multi-row layout showing all tabs simultaneously -->
-            <div class="bg-zinc-950/80 p-3 rounded-2xl border border-zinc-800 mb-3 space-y-2 flex-shrink-0">
-                <!-- Easy Column -->
+            <!-- MULTI-ROW TABS (RESPONSIVE) -->
+            <div class="bg-zinc-950/80 p-2.5 lg:p-3 rounded-2xl border border-zinc-800 mb-3 space-y-1.5 lg:space-y-2 flex-shrink-0">
+                <!-- Easy Row -->
                 <div class="flex items-center gap-2">
-                    <span class="text-[10px] font-bold text-zinc-400 uppercase w-14">Easy:</span>
-                    <div class="flex gap-1.5 flex-1">
-                        <button onclick="filterLeaderboardDisplay('easy3')" id="lb-tab-easy3" class="lb-tab-btn flex-1 py-1 bg-zinc-800 rounded-lg text-xs font-bold text-zinc-300 hover:text-white border border-zinc-700">3x3</button>
-                        <button onclick="filterLeaderboardDisplay('easy4')" id="lb-tab-easy4" class="lb-tab-btn flex-1 py-1 bg-zinc-800 rounded-lg text-xs font-bold text-zinc-300 hover:text-white border border-zinc-700">4x4</button>
-                        <button onclick="filterLeaderboardDisplay('easy5')" id="lb-tab-easy5" class="lb-tab-btn flex-1 py-1 bg-zinc-800 rounded-lg text-xs font-bold text-zinc-300 hover:text-white border border-zinc-700">5x5</button>
+                    <span class="text-[9px] lg:text-[10px] font-bold text-zinc-400 uppercase w-12 lg:w-14 flex-shrink-0">Easy:</span>
+                    <div class="flex gap-1 lg:gap-1.5 flex-1">
+                        <button onclick="filterLeaderboardDisplay('easy3')" id="lb-tab-easy3" class="lb-tab-btn flex-1 py-1 bg-zinc-800 rounded-lg text-[10px] lg:text-xs font-bold text-zinc-300 hover:text-white border border-zinc-700">3x3</button>
+                        <button onclick="filterLeaderboardDisplay('easy4')" id="lb-tab-easy4" class="lb-tab-btn flex-1 py-1 bg-zinc-800 rounded-lg text-[10px] lg:text-xs font-bold text-zinc-300 hover:text-white border border-zinc-700">4x4</button>
+                        <button onclick="filterLeaderboardDisplay('easy5')" id="lb-tab-easy5" class="lb-tab-btn flex-1 py-1 bg-zinc-800 rounded-lg text-[10px] lg:text-xs font-bold text-zinc-300 hover:text-white border border-zinc-700">5x5</button>
                     </div>
                 </div>
 
-                <!-- Medium Column -->
+                <!-- Medium Row -->
                 <div class="flex items-center gap-2">
-                    <span class="text-[10px] font-bold text-zinc-400 uppercase w-14">Medium:</span>
-                    <div class="flex gap-1.5 flex-1">
-                        <button onclick="filterLeaderboardDisplay('medium3')" id="lb-tab-medium3" class="lb-tab-btn flex-1 py-1 bg-zinc-800 rounded-lg text-xs font-bold text-zinc-300 hover:text-white border border-zinc-700">3x3</button>
-                        <button onclick="filterLeaderboardDisplay('medium4')" id="lb-tab-medium4" class="lb-tab-btn flex-1 py-1 bg-zinc-800 rounded-lg text-xs font-bold text-zinc-300 hover:text-white border border-zinc-700">4x4</button>
-                        <button onclick="filterLeaderboardDisplay('medium5')" id="lb-tab-medium5" class="lb-tab-btn flex-1 py-1 bg-zinc-800 rounded-lg text-xs font-bold text-zinc-300 hover:text-white border border-zinc-700">5x5</button>
+                    <span class="text-[9px] lg:text-[10px] font-bold text-zinc-400 uppercase w-12 lg:w-14 flex-shrink-0">Medium:</span>
+                    <div class="flex gap-1 lg:gap-1.5 flex-1">
+                        <button onclick="filterLeaderboardDisplay('medium3')" id="lb-tab-medium3" class="lb-tab-btn flex-1 py-1 bg-zinc-800 rounded-lg text-[10px] lg:text-xs font-bold text-zinc-300 hover:text-white border border-zinc-700">3x3</button>
+                        <button onclick="filterLeaderboardDisplay('medium4')" id="lb-tab-medium4" class="lb-tab-btn flex-1 py-1 bg-zinc-800 rounded-lg text-[10px] lg:text-xs font-bold text-zinc-300 hover:text-white border border-zinc-700">4x4</button>
+                        <button onclick="filterLeaderboardDisplay('medium5')" id="lb-tab-medium5" class="lb-tab-btn flex-1 py-1 bg-zinc-800 rounded-lg text-[10px] lg:text-xs font-bold text-zinc-300 hover:text-white border border-zinc-700">5x5</button>
                     </div>
                 </div>
 
-                <!-- Hard & Insane Column -->
+                <!-- Hard & Insane Row -->
                 <div class="flex items-center gap-2">
-                    <span class="text-[10px] font-bold text-zinc-400 uppercase w-14">Hard+:</span>
-                    <div class="flex gap-1.5 flex-1">
-                        <button onclick="filterLeaderboardDisplay('hard3')" id="lb-tab-hard3" class="lb-tab-btn flex-1 py-1 bg-zinc-800 rounded-lg text-xs font-bold text-zinc-300 hover:text-white border border-zinc-700">Hard 3x3</button>
-                        <button onclick="filterLeaderboardDisplay('hard4')" id="lb-tab-hard4" class="lb-tab-btn flex-1 py-1 bg-zinc-800 rounded-lg text-xs font-bold text-zinc-300 hover:text-white border border-zinc-700">Hard 4x4</button>
-                        <button onclick="filterLeaderboardDisplay('hard5')" id="lb-tab-hard5" class="lb-tab-btn flex-1 py-1 bg-zinc-800 rounded-lg text-xs font-bold text-zinc-300 hover:text-white border border-zinc-700">Hard 5x5</button>
-                        <button onclick="filterLeaderboardDisplay('insane11')" id="lb-tab-insane11" class="lb-tab-btn flex-1 py-1 bg-zinc-800 rounded-lg text-xs font-bold text-amber-300 hover:text-amber-200 border border-amber-500/50">Insane 11x11</button>
+                    <span class="text-[9px] lg:text-[10px] font-bold text-zinc-400 uppercase w-12 lg:w-14 flex-shrink-0">Hard+:</span>
+                    <div class="flex gap-1 lg:gap-1.5 flex-1">
+                        <button onclick="filterLeaderboardDisplay('hard3')" id="lb-tab-hard3" class="lb-tab-btn flex-1 py-1 bg-zinc-800 rounded-lg text-[10px] lg:text-xs font-bold text-zinc-300 hover:text-white border border-zinc-700">3x3</button>
+                        <button onclick="filterLeaderboardDisplay('hard4')" id="lb-tab-hard4" class="lb-tab-btn flex-1 py-1 bg-zinc-800 rounded-lg text-[10px] lg:text-xs font-bold text-zinc-300 hover:text-white border border-zinc-700">4x4</button>
+                        <button onclick="filterLeaderboardDisplay('hard5')" id="lb-tab-hard5" class="lb-tab-btn flex-1 py-1 bg-zinc-800 rounded-lg text-[10px] lg:text-xs font-bold text-zinc-300 hover:text-white border border-zinc-700">5x5</button>
+                        <button onclick="filterLeaderboardDisplay('insane11')" id="lb-tab-insane11" class="lb-tab-btn flex-1 py-1 bg-zinc-800 rounded-lg text-[10px] lg:text-xs font-bold text-amber-300 hover:text-amber-200 border border-amber-500/50">11x11</button>
                     </div>
                 </div>
             </div>
@@ -2002,13 +1925,11 @@
                             <th class="p-2 text-right">Time</th>
                         </tr>
                     </thead>
-                    <tbody id="leaderboard-table-body" class="divide-y divide-zinc-800/50">
-                        <!-- Populated dynamically via JS -->
-                    </tbody>
+                    <tbody id="leaderboard-table-body" class="divide-y divide-zinc-800/50"></tbody>
                 </table>
             </div>
 
-            <button onclick="toggleLeaderboardModal(false)" class="mt-4 w-full py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold text-xs text-zinc-300 transition-all">
+            <button onclick="toggleLeaderboardModal(false)" class="mt-3 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold text-xs text-zinc-300 transition-all flex-shrink-0">
                 Close
             </button>
         </div>
@@ -2016,14 +1937,14 @@
 
     <!-- TUTORIAL POP-UP MODAL -->
     <div id="tutorial-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center hidden p-4">
-        <div class="bg-zinc-900 border-2 border-purple-500/50 rounded-3xl max-w-xl w-full p-6 shadow-2xl relative flex flex-col max-h-[85vh] overflow-y-auto">
+        <div class="bg-zinc-900 border-2 border-purple-500/50 rounded-3xl max-w-xl w-full p-5 lg:p-6 shadow-2xl relative flex flex-col max-h-[85vh] overflow-y-auto">
             <button onclick="toggleTutorialModal(false)" class="absolute top-4 right-4 text-zinc-400 hover:text-white font-bold text-lg px-2">✕</button>
             
-            <h2 class="text-2xl font-bold text-purple-400 mb-2 flex items-center gap-2">
-                <span></span> How to Play Goddess of Logic
+            <h2 class="text-xl lg:text-2xl font-bold text-purple-400 mb-2 flex items-center gap-2">
+                <span>🎮</span> How to Play Goddess of Logic
             </h2>
             
-            <div class="space-y-4 text-xs text-zinc-300 leading-relaxed">
+            <div class="space-y-3 lg:space-y-4 text-xs text-zinc-300 leading-relaxed">
                 <div class="bg-zinc-800/80 p-3 rounded-xl border border-zinc-700">
                     <h3 class="font-bold text-purple-300 text-sm mb-1">1. Layout</h3>
                     <p>In this game, you must place the nikke's in the correct positions on the grid based on the given clues. On the left panel, you will be able to find you current and best time, the current selected Nikke's information, The element cycle chart and weapon ranges. The right side lets you choose accessible Nikke's, as well as filtering and searching for specific information. At the bottom, you will be able to find the Trait markers, which can be placed on individual cells to take notes.</p>
@@ -2045,7 +1966,7 @@
                 </div>
             </div>
 
-            <button onclick="toggleTutorialModal(false)" class="mt-5 w-full py-2.5 bg-purple-600 hover:bg-purple-500 rounded-xl font-bold text-xs text-white transition-all">
+            <button onclick="toggleTutorialModal(false)" class="mt-4 lg:mt-5 w-full py-2.5 bg-purple-600 hover:bg-purple-500 rounded-xl font-bold text-xs text-white transition-all">
                 Got it! Let's Play
             </button>
         </div>
