@@ -500,7 +500,7 @@
         const DIFFICULTY_WEIGHT_PROFILES = {
             easy: {
                 'SELF_ATTRIBUTE': 3,                // What is one of my attributes
-                'NIKKE_ON_GRID': 0,                 // Is a specific Nikke on the grid
+                'NIKKE_ON_GRID': 1,                 // Is a specific Nikke on the grid
                 'DIRECTIONAL_NEIGHBOR_ATTR': 3,     // What is one of my directional neighbor's attributes
                 'SAME_COLUMN_NIKKE': 0,             // Is a specific Nikke in the same column or row
                 'ADJACENT_SPECIFIC_ATTR_COUNT': 0,  // How many of a specific attribute are adjacent to me
@@ -536,7 +536,7 @@
             },
             hard: {
                 'SELF_ATTRIBUTE': 2,                // What is one of my attributes
-                'NIKKE_ON_GRID': 2,                 // Is a specific Nikke on the grid
+                'NIKKE_ON_GRID': 0,                 // Is a specific Nikke on the grid
                 'DIRECTIONAL_NEIGHBOR_ATTR': 2,     // What is one of my directional neighbor's attributes
                 'SAME_COLUMN_NIKKE': 1,             // Is a specific Nikke in the same column or row
                 'ADJACENT_SPECIFIC_ATTR_COUNT': 3,  // How many of a specific attribute are adjacent to me
@@ -875,7 +875,7 @@
             setTimeout(() => document.getElementById('status').textContent = '', 3500);
         }
 
-        // 16-QUESTION DYNAMIC CLUE GENERATOR WITH CORRUPTION & DIFFICULTY PROFILES
+        // Question and corruption generation
         function generateClues(sol) {
             cellCluesMap = {};
             cellClueRules = {};
@@ -1050,7 +1050,7 @@
                         }
                     }
 
-// 5. Most of the Nikkes are from my [attribute]
+                    // 5. Most of the Nikkes are from my [attribute]
                     const globalCat = [
                         { key: 'manufacturer', label: 'manufacturer' },
                         { key: 'class', label: 'class' },
@@ -1107,7 +1107,7 @@
                                 candidates.push({
                                     type: 'ELEMENT_STRONGER',
                                     weight: questionWeights['ELEMENT_STRONGER'] || 5,
-                                    text: `Cell R${r+1}C${c+1}: My element is stronger than the Nikke directly ${d} me.`,
+                                    text: `Cell R${r+1}C${c+1}: My element is stronger than the Nikke ${d} me.`,
                                     checkFn: (currN, neighs, gridState) => {
                                         const val = gridState[pos.r][pos.c];
                                         if (typeof val !== 'string') return false;
@@ -1133,7 +1133,7 @@
                                     candidates.push({
                                         type: 'DIRECTIONAL_NEIGHBOR_ATTR',
                                         weight: questionWeights['DIRECTIONAL_NEIGHBOR_ATTR'] || 5,
-                                        text: `Cell R${r+1}C${c+1}: The Nikke directly ${d} me is a ${neighVal} ${attrPick.label}.`,
+                                        text: `Cell R${r+1}C${c+1}: The Nikke ${d} me is a ${neighVal} ${attrPick.label}.`,
                                         checkFn: (currN, neighs, gridState) => {
                                             const val = gridState[pos.r][pos.c];
                                             return typeof val === 'string' && nikkeMap[val] ? nikkeMap[val][attrPick.key] === neighVal : false;
@@ -1218,7 +1218,7 @@
                                     candidates.push({
                                         type: 'DIRECTIONAL_BURST_COMP',
                                         weight: questionWeights['DIRECTIONAL_BURST_COMP'] || 5,
-                                        text: `Cell R${r+1}C${c+1}: The Nikke directly ${d} me has a ${compText} Burst stage than I do.`,
+                                        text: `Cell R${r+1}C${c+1}: The Nikke ${d} me has a ${compText} Burst stage than I do.`,
                                         checkFn: (currN, neighs, gridState) => {
                                             if (!currN) return false;
                                             const targetId = gridState[pos.r][pos.c];
@@ -1251,7 +1251,7 @@
                                     candidates.push({
                                         type: 'WEAPON_RANGE_COMP',
                                         weight: questionWeights['WEAPON_RANGE_COMP'] || 5,
-                                        text: `Cell R${r+1}C${c+1}: The Nikke directly ${d} me uses a weapon with a ${compText} range than mine.`,
+                                        text: `Cell R${r+1}C${c+1}: The Nikke ${d} me uses a weapon with a ${compText} range than mine.`,
                                         checkFn: (currN, neighs, gridState) => {
                                             if (!currN) return false;
                                             const targetId = gridState[pos.r][pos.c];
@@ -1281,7 +1281,7 @@
                                     candidates.push({
                                         type: 'SHARED_DIRECTIONAL_ATTR',
                                         weight: questionWeights['SHARED_DIRECTIONAL_ATTR'] || 5,
-                                        text: `Cell R${r+1}C${c+1}: I share the same ${chosenMatch.label} as the Nikke directly ${d} me.`,
+                                        text: `Cell R${r+1}C${c+1}: I share the same ${chosenMatch.label} as the Nikke ${d} me.`,
                                         checkFn: (currN, neighs, gridState) => {
                                             if (!currN) return false;
                                             const targetId = gridState[pos.r][pos.c];
@@ -1302,7 +1302,7 @@
                         candidates.push({
                             type: 'SQUADMATE_ADJACENT',
                             weight: questionWeights['SQUADMATE_ADJACENT'] || 5,
-                            text: `Cell R${r+1}C${c+1}: I am directly adjacent to my squadmate.`,
+                            text: `Cell R${r+1}C${c+1}: I am adjacent to my squadmate.`,
                             checkFn: (currN, neighs, gridState) => {
                                 if (!currN) return false;
                                 return neighborPositions.some(pos => {
