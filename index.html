@@ -69,7 +69,7 @@
             75% { opacity: 0.8; }
         }
 
-        /* OPTION 2: Runs a single 0.2s burst whenever the class is applied via JS */
+        /* OPTION 2: Triggered dynamically by JavaScript */
         .img-glitch-active {
             animation: imageGlitch 0.2s steps(1);
         }
@@ -462,11 +462,11 @@
             "All adjacent cells are lying..."
         ];
 
-        /* OPTION 2 LOGIC: Triggers random glitches at unpredictable delays */
+        /* RANDOM JS GLITCH LOOP (Option 2 Implementation) */
         function scheduleGlitchLoop() {
             if (glitchTimeoutId) clearTimeout(glitchTimeoutId);
 
-            // Random delay between 0.5s and 3.5s
+            // Random interval between 0.5s and 3.5s
             const nextDelay = Math.random() * 3000 + 500;
 
             glitchTimeoutId = setTimeout(() => {
@@ -479,13 +479,13 @@
             const glitchImgs = document.querySelectorAll('.img-glitch');
             if (glitchImgs.length === 0) return;
 
-            // Pick a random image element marked for glitches
+            // Pick a random image marked for corruption
             const targetImg = glitchImgs[Math.floor(Math.random() * glitchImgs.length)];
             
             targetImg.classList.add('img-glitch-active');
             setTimeout(() => {
                 targetImg.classList.remove('img-glitch-active');
-            }, 200); // Duration matching CSS keyframes (200ms)
+            }, 200); // Glitch burst duration (200ms)
         }
 
         function getMaxCorruptionCount() {
@@ -499,58 +499,58 @@
         // DIFFICULTY-BASED CLUE WEIGHT PROFILES
         const DIFFICULTY_WEIGHT_PROFILES = {
             easy: {
-                'SELF_ATTRIBUTE': 25,
-                'NIKKE_ON_GRID': 20,
-                'DIRECTIONAL_NEIGHBOR_ATTR': 15,
-                'SAME_COLUMN_NIKKE': 12,
-                'ADJACENT_SPECIFIC_ATTR_COUNT': 10,
-                'SQUADMATE_ADJACENT': 10,
-                'ELEMENT_STRONGER': 8,
-                'SHARED_DIRECTIONAL_ATTR': 6,
-                'ROW_COL_COUNT': 5,
-                'WEAPON_RANGE_COMP': 4,
-                'DIRECTIONAL_BURST_COMP': 4,
-                'ADJACENT_SAME_ATTR_COUNT': 3,
-                'SEE_DISTANCE_RANGE': 3,
-                'ONLY_SQUAD_GRID': 2,
-                'GLOBAL_MOST_ATTR': 2,
-                'ROW_MAJORITY_ATTR': 1
+                'SELF_ATTRIBUTE': 3,                // What is one of my attributes
+                'NIKKE_ON_GRID': 0,                 // Is a specific Nikke on the grid
+                'DIRECTIONAL_NEIGHBOR_ATTR': 3,     // What is one of my directional neighbor's attributes
+                'SAME_COLUMN_NIKKE': 0,             // Is a specific Nikke in the same column or row
+                'ADJACENT_SPECIFIC_ATTR_COUNT': 0,  // How many of a specific attribute are adjacent to me
+                'SQUADMATE_ADJACENT': 0,            // Is a squadmate adjacent to me
+                'ELEMENT_STRONGER': 2,              // Is my element stronger than an adjacent Nikke's element
+                'SHARED_DIRECTIONAL_ATTR': 2,       // Do I share a attribute with an adjacent Nikke
+                'ROW_COL_COUNT': 0,                 // How many of a specific attribute are in my row or column
+                'WEAPON_RANGE_COMP': 1,             // Is my weapon range greater than an adjacent Nikke's weapon range
+                'DIRECTIONAL_BURST_COMP': 2,        // Is my burst level greater than an adjacent Nikke's burst level
+                'ADJACENT_SAME_ATTR_COUNT': 0,      // How many adjacent Nikkes share the same attribute as me
+                'SEE_DISTANCE_RANGE': 0,            // What attribute can I see at my weapons range
+                'ONLY_SQUAD_GRID': 0,               // Am I the only Nikke of my squad on the grid
+                'GLOBAL_MOST_ATTR': 0,              // What has the most of a specific attribute on the grid
+                'ROW_MAJORITY_ATTR': 0              // What attribute is the majority in my row or column
             },
             medium: {
-                'ROW_COL_COUNT': 10,
-                'ADJACENT_SAME_ATTR_COUNT': 9,
-                'DIRECTIONAL_BURST_COMP': 8,
-                'WEAPON_RANGE_COMP': 8,
-                'SHARED_DIRECTIONAL_ATTR': 9,
-                'SQUADMATE_ADJACENT': 9,
-                'ADJACENT_SPECIFIC_ATTR_COUNT': 9,
-                'ROW_MAJORITY_ATTR': 8,
-                'ELEMENT_STRONGER': 8,
-                'DIRECTIONAL_NEIGHBOR_ATTR': 8,
-                'SEE_DISTANCE_RANGE': 8,
-                'SAME_COLUMN_NIKKE': 7,
-                'NIKKE_ON_GRID': 6,
-                'ONLY_SQUAD_GRID': 5,
-                'GLOBAL_MOST_ATTR': 5,
-                'SELF_ATTRIBUTE': 5
+                'SELF_ATTRIBUTE': 3,                // What is one of my attributes
+                'NIKKE_ON_GRID': 1,                 // Is a specific Nikke on the grid
+                'DIRECTIONAL_NEIGHBOR_ATTR': 3,     // What is one of my directional neighbor's attributes
+                'SAME_COLUMN_NIKKE': 1,             // Is a specific Nikke in the same column or row
+                'ADJACENT_SPECIFIC_ATTR_COUNT': 1,  // How many of a specific attribute are adjacent to me
+                'SQUADMATE_ADJACENT': 1,            // Is a squadmate adjacent to me
+                'ELEMENT_STRONGER': 2,              // Is my element stronger than an adjacent Nikke's element
+                'SHARED_DIRECTIONAL_ATTR': 2,       // Do I share a attribute with an adjacent Nikke
+                'ROW_COL_COUNT': 1,                 // How many of a specific attribute are in my row or column
+                'WEAPON_RANGE_COMP': 1,             // Is my weapon range greater than an adjacent Nikke's weapon range
+                'DIRECTIONAL_BURST_COMP': 2,        // Is my burst level greater than an adjacent Nikke's burst level
+                'ADJACENT_SAME_ATTR_COUNT': 1,      // How many adjacent Nikkes share the same attribute as me
+                'SEE_DISTANCE_RANGE': 1,            // What attribute can I see at my weapons range
+                'ONLY_SQUAD_GRID': 1,               // Am I the only Nikke of my squad on the grid
+                'GLOBAL_MOST_ATTR': 1,              // What has the most of a specific attribute on the grid
+                'ROW_MAJORITY_ATTR': 1              // What attribute is the majority in my row or column
             },
             hard: {
-                'ROW_COL_COUNT': 20,
-                'ROW_MAJORITY_ATTR': 18,
-                'ADJACENT_SAME_ATTR_COUNT': 15,
-                'GLOBAL_MOST_ATTR': 15,
-                'SEE_DISTANCE_RANGE': 14,
-                'DIRECTIONAL_BURST_COMP': 12,
-                'WEAPON_RANGE_COMP': 12,
-                'SHARED_DIRECTIONAL_ATTR': 10,
-                'ADJACENT_SPECIFIC_ATTR_COUNT': 10,
-                'ELEMENT_STRONGER': 8,
-                'ONLY_SQUAD_GRID': 8,
-                'SQUADMATE_ADJACENT': 6,
-                'SAME_COLUMN_NIKKE': 5,
-                'DIRECTIONAL_NEIGHBOR_ATTR': 4,
-                'NIKKE_ON_GRID': 2,
-                'SELF_ATTRIBUTE': 1
+                'SELF_ATTRIBUTE': 2,                // What is one of my attributes
+                'NIKKE_ON_GRID': 2,                 // Is a specific Nikke on the grid
+                'DIRECTIONAL_NEIGHBOR_ATTR': 2,     // What is one of my directional neighbor's attributes
+                'SAME_COLUMN_NIKKE': 1,             // Is a specific Nikke in the same column or row
+                'ADJACENT_SPECIFIC_ATTR_COUNT': 3,  // How many of a specific attribute are adjacent to me
+                'SQUADMATE_ADJACENT': 1,            // Is a squadmate adjacent to me
+                'ELEMENT_STRONGER': 1,              // Is my element stronger than an adjacent Nikke's element
+                'SHARED_DIRECTIONAL_ATTR': 1,       // Do I share a attribute with an adjacent Nikke
+                'ROW_COL_COUNT': 3,                 // How many of a specific attribute are in my row or column
+                'WEAPON_RANGE_COMP': 2,             // Is my weapon range greater than an adjacent Nikke's weapon range
+                'DIRECTIONAL_BURST_COMP': 2,        // Is my burst level greater than an adjacent Nikke's burst level
+                'ADJACENT_SAME_ATTR_COUNT': 2,      // How many adjacent Nikkes share the same attribute as me
+                'SEE_DISTANCE_RANGE': 2,            // What attribute can I see at my weapons range
+                'ONLY_SQUAD_GRID': 1,               // Am I the only Nikke of my squad on the grid
+                'GLOBAL_MOST_ATTR': 1,              // What has the most of a specific attribute on the grid
+                'ROW_MAJORITY_ATTR': 1              // What attribute is the majority in my row or column
             }
         };
 
@@ -867,11 +867,11 @@
             showInfo(shuffledPalette[0]);
             startTimer();
 
-            // Start the randomized glitch burst loop
+            // Fire random visual glitches
             scheduleGlitchLoop();
 
             const corrNote = maxCorruption > 0 ? ` ⚠️ ${maxCorruption} Corrupted Cell(s) Detected!` : '';
-            document.getElementById('status').innerHTML = `<span class="text-emerald-400 font-semibold">🎲 New ${currentDifficulty.toUpperCase()} Puzzle generated!${corrNote}</span>`;
+            document.getElementById('status').innerHTML = `<span class="text-emerald-400 font-semibold">🎲 New ${currentDifficulty.toUpperCase()} Puzzle generated!</span>`;
             setTimeout(() => document.getElementById('status').textContent = '', 3500);
         }
 
@@ -1407,9 +1407,9 @@
                                 lieText = glitchifyText(lieText);
                             }
 
-                            cellCluesMap[cellKey] = `Cell R${r+1}C${c+1}: ${lieText}`;
+                            cellCluesMap[cellKey] = `${lieText}`;
                             cellClueRules[cellKey] = {
-                                checkFn: () => true,
+                                checkFn: () => true, // Verification passes, but clue presented to user is false
                                 expected: true,
                                 isCorrupted: true,
                                 text: cellCluesMap[cellKey]
@@ -1505,7 +1505,6 @@
                         displayName = fakeNikke ? fakeNikke.name : glitchifyText(n.name);
                     }
 
-                    /* Mark corrupted images with .img-glitch class for JS target acquisition */
                     const imgClass = (isCorrupted && traits.image) ? 'w-full h-full object-cover img-glitch' : 'w-full h-full object-cover';
 
                     cell.innerHTML = `
@@ -2114,8 +2113,8 @@
                 </div>
 
                 <div class="bg-zinc-800/80 p-3 rounded-xl border border-zinc-700">
-                    <h3 class="font-bold text-red-400 text-sm mb-1">3. Corruption</h3>
-                    <p>Be careful! Some cells will become <strong class="text-red-400">CORRUPTED</strong> on higher difficulties. Corrupted Nikkes will lie, scramble their clue text, glitch their names, or flash strange colors. You must still place the correct character in a corrupted cell to solve the puzzle!</p>
+                    <h3 class="font-bold text-purple-300 text-sm mb-1">3. Corruption System</h3>
+                    <p>Be careful! Some cells will become <strong class="text-red-400">CORRUPTED</strong> on higher difficulties. Corrupted Nikkes will lie, scramble their clue text, glitch their names, or flash strange colors. You must still place the correct character in a corrupted cell to solve the puzzle, but do NOT trust their clues!</p>
                 </div>
 
                 <div class="bg-zinc-800/80 p-3 rounded-xl border border-zinc-700">
