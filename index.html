@@ -34,7 +34,7 @@
             .grid-cell.size-11x11 { width: 60px; height: 60px; border-radius: 6px; border-width: 2px; }
         }
 
-        /* Hover Glow without size transform to prevent scrollbars */
+        /* Hover Glow without size transform */
         .grid-cell:hover { border-color: #c4b5fd; box-shadow: inset 0 0 12px rgba(196, 181, 253, 0.4); }
         .grid-cell.filled { background-color: #5b21b6; border-color: #ddd6fe; }
         .grid-cell.error { border-color: #ef4444 !important; background-color: #450a0a !important; animation: pulse 1.5s infinite; }
@@ -47,6 +47,39 @@
             background-color: #5b21b6 !important;
             border-color: #c4b5fd !important;
             box-shadow: 0 0 10px rgba(196, 181, 253, 0.5);
+        }
+
+        /* CORRUPTION STYLING & ANIMATIONS */
+        .grid-cell.corrupted-cell {
+            border-color: #ef4444 !important;
+            background-color: #3b0764 !important;
+            box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.6) !important;
+        }
+
+        .corrupted-text {
+            color: #f87171 !important;
+            font-family: monospace;
+            letter-spacing: -0.5px;
+            animation: textFlicker 0.2s infinite;
+        }
+
+        @keyframes textFlicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; text-shadow: 0 0 8px #ef4444; }
+            75% { opacity: 0.8; }
+        }
+
+        /* OPTION 2: Runs a single 0.2s burst whenever the class is applied via JS */
+        .img-glitch-active {
+            animation: imageGlitch 0.2s steps(1);
+        }
+
+        @keyframes imageGlitch {
+            0% { filter: hue-rotate(0deg) contrast(1); transform: translate(0, 0); }
+            20% { filter: hue-rotate(90deg) contrast(2); transform: translate(-2px, 1px); }
+            40% { filter: none; transform: translate(0, 0); }
+            60% { filter: invert(0.8); transform: translate(2px, -1px); }
+            80% { filter: none; transform: translate(0, 0); }
         }
 
         @keyframes pulse {
@@ -199,12 +232,6 @@
 
             <!-- CHARACTER INFO -->
             <div id="info-card" class="bg-zinc-800 rounded-2xl p-3 flex flex-col overflow-y-auto">
-                <!-- Image Container (Uncomment if needed) -->
-                <!-- <div id="info-avatar-container" class="w-full h-[180px] lg:h-[280px] mb-2 rounded-xl overflow-hidden border-2 border-purple-400 bg-zinc-900 flex items-center justify-center flex-shrink-0 p-1">
-                    <img id="info-image" src="" alt="" class="max-w-full max-h-full w-auto h-auto object-contain hidden">
-                    <div id="info-fallback" class="text-2xl lg:text-3xl font-bold text-purple-300"></div>
-                </div> -->
-
                 <div class="flex-shrink-0 w-full flex flex-col items-center">
                     <div id="info-name" class="text-base lg:text-lg font-bold text-center mb-0.5 leading-tight"></div>
                     
@@ -413,61 +440,117 @@
             console.warn("Firebase initialize warning:", e);
         }
 
+        // CORRUPTION STATE & HELPERS
+        let corruptedCells = new Set();
+        let corruptedTraits = {};
+        let glitchTimeoutId = null;
+
+        function glitchifyText(str) {
+            if (!str) return '';
+            const glitchChars = '!@#$%^&*()_+-=[]{}|;:,.<>?/X';
+            return str.split('').map(char => {
+                if (char === ' ' || Math.random() > 0.4) return char;
+                return glitchChars[Math.floor(Math.random() * glitchChars.length)];
+            }).join('');
+        }
+
+        const CORRUPTED_DIALOGUE_CLUES = [
+            "This puzzle cannot be solved",
+            "Data packet corrupted... [0x80004005]",
+            "This node contains a Rapture...",
+            "Don't trust what the adjacent cells are telling you...",
+            "All adjacent cells are lying..."
+        ];
+
+        /* OPTION 2 LOGIC: Triggers random glitches at unpredictable delays */
+        function scheduleGlitchLoop() {
+            if (glitchTimeoutId) clearTimeout(glitchTimeoutId);
+
+            // Random delay between 0.5s and 3.5s
+            const nextDelay = Math.random() * 3000 + 500;
+
+            glitchTimeoutId = setTimeout(() => {
+                triggerRandomGlitch();
+                scheduleGlitchLoop();
+            }, nextDelay);
+        }
+
+        function triggerRandomGlitch() {
+            const glitchImgs = document.querySelectorAll('.img-glitch');
+            if (glitchImgs.length === 0) return;
+
+            // Pick a random image element marked for glitches
+            const targetImg = glitchImgs[Math.floor(Math.random() * glitchImgs.length)];
+            
+            targetImg.classList.add('img-glitch-active');
+            setTimeout(() => {
+                targetImg.classList.remove('img-glitch-active');
+            }, 200); // Duration matching CSS keyframes (200ms)
+        }
+
+        function getMaxCorruptionCount() {
+            if (currentDifficulty.startsWith('easy')) return 0;
+            if (currentDifficulty.startsWith('medium')) return Math.floor(Math.random() * 2) + 1; // 1 to 2
+            if (currentDifficulty.startsWith('hard')) return Math.floor(Math.random() * 3) + 2;   // 2 to 4
+            if (currentDifficulty.startsWith('insane')) return Math.floor(Math.random() * 4) + 5; // 5 to 8
+            return 0;
+        }
+
         // DIFFICULTY-BASED CLUE WEIGHT PROFILES
         const DIFFICULTY_WEIGHT_PROFILES = {
             easy: {
-                'SELF_ATTRIBUTE': 10, // What is my attribute? (self)
-                'NIKKE_ON_GRID': 0, // Which Nikke is on the grid? (global)
-                'DIRECTIONAL_NEIGHBOR_ATTR': 10, // What is the attribute of my directional neighbor? (adjacent)
-                'SAME_COLUMN_NIKKE': 5, // Which Nikke is in the same column? (row / column)
-                'ADJACENT_SPECIFIC_ATTR_COUNT': 7, // How many of a specific attribute are adjacent to me? (adjacent)
-                'SQUADMATE_ADJACENT': 2, // How many of my squadmates are adjacent to me? (adjacent)
-                'ELEMENT_STRONGER': 7, // Which element is stronger than me? (adjacent)
-                'SHARED_DIRECTIONAL_ATTR': 7, // Which of my directional neighbors share the same attribute as me? (adjacent)
-                'ROW_COL_COUNT': 3, // How many of the same attribute are in my row or column? (row / column)
-                'WEAPON_RANGE_COMP': 3, // Which of my directional neighbors have a weapon range greater than me? (adjacent)
-                'DIRECTIONAL_BURST_COMP': 5, // Which of my directional neighbors have a burst level greater than me? (adjacent)
-                'ADJACENT_SAME_ATTR_COUNT': 3, // How many of the same attribute are adjacent to me? (adjacent)
-                'SEE_DISTANCE_RANGE': 0, // At my weapons range, what attribute does a nikke have? (range)
-                'ONLY_SQUAD_GRID': 0, // Am I the only one of my squad on the grid? (global)
-                'GLOBAL_MOST_ATTR': 0, // Which attribute is the most common on the grid? (global)
-                'ROW_MAJORITY_ATTR': 2 // Which attribute is the majority in my row? (row / column)
+                'SELF_ATTRIBUTE': 25,
+                'NIKKE_ON_GRID': 20,
+                'DIRECTIONAL_NEIGHBOR_ATTR': 15,
+                'SAME_COLUMN_NIKKE': 12,
+                'ADJACENT_SPECIFIC_ATTR_COUNT': 10,
+                'SQUADMATE_ADJACENT': 10,
+                'ELEMENT_STRONGER': 8,
+                'SHARED_DIRECTIONAL_ATTR': 6,
+                'ROW_COL_COUNT': 5,
+                'WEAPON_RANGE_COMP': 4,
+                'DIRECTIONAL_BURST_COMP': 4,
+                'ADJACENT_SAME_ATTR_COUNT': 3,
+                'SEE_DISTANCE_RANGE': 3,
+                'ONLY_SQUAD_GRID': 2,
+                'GLOBAL_MOST_ATTR': 2,
+                'ROW_MAJORITY_ATTR': 1
             },
             medium: {
-                'SELF_ATTRIBUTE': 10, // What is my attribute? (self)
-                'NIKKE_ON_GRID': 3, // Which Nikke is on the grid? (global)
-                'DIRECTIONAL_NEIGHBOR_ATTR': 8, // What is the attribute of my directional neighbor? (adjacent)
-                'SAME_COLUMN_NIKKE': 5, // Which Nikke is in the same column? (row / column)
-                'ADJACENT_SPECIFIC_ATTR_COUNT': 7, // How many of a specific attribute are adjacent to me? (adjacent)
-                'SQUADMATE_ADJACENT': 3, // How many of my squadmates are adjacent to me? (adjacent)
-                'ELEMENT_STRONGER': 10, // Which element is stronger than me? (adjacent)
-                'SHARED_DIRECTIONAL_ATTR': 5, // Which of my directional neighbors share the same attribute as me? (adjacent)
-                'ROW_COL_COUNT': 4, // How many of the same attribute are in my row or column? (row / column)
-                'WEAPON_RANGE_COMP': 5, // Which of my directional neighbors have a weapon range greater than me? (adjacent)
-                'DIRECTIONAL_BURST_COMP': 5, // Which of my directional neighbors have a burst level greater than me? (adjacent)
-                'ADJACENT_SAME_ATTR_COUNT': 5, // How many of the same attribute are adjacent to me? (adjacent)
-                'SEE_DISTANCE_RANGE': 2, // At my weapons range, what attribute does a nikke have? (range)
-                'ONLY_SQUAD_GRID': 2, // Am I the only one of my squad on the grid? (global)
-                'GLOBAL_MOST_ATTR': 1, // Which attribute is the most common on the grid? (global)
-                'ROW_MAJORITY_ATTR': 3 // Which attribute is the majority in my row? (row / column)
+                'ROW_COL_COUNT': 10,
+                'ADJACENT_SAME_ATTR_COUNT': 9,
+                'DIRECTIONAL_BURST_COMP': 8,
+                'WEAPON_RANGE_COMP': 8,
+                'SHARED_DIRECTIONAL_ATTR': 9,
+                'SQUADMATE_ADJACENT': 9,
+                'ADJACENT_SPECIFIC_ATTR_COUNT': 9,
+                'ROW_MAJORITY_ATTR': 8,
+                'ELEMENT_STRONGER': 8,
+                'DIRECTIONAL_NEIGHBOR_ATTR': 8,
+                'SEE_DISTANCE_RANGE': 8,
+                'SAME_COLUMN_NIKKE': 7,
+                'NIKKE_ON_GRID': 6,
+                'ONLY_SQUAD_GRID': 5,
+                'GLOBAL_MOST_ATTR': 5,
+                'SELF_ATTRIBUTE': 5
             },
             hard: {
-                'SELF_ATTRIBUTE': 7, // What is my attribute? (self)
-                'NIKKE_ON_GRID': 5, // Which Nikke is on the grid? (global)
-                'DIRECTIONAL_NEIGHBOR_ATTR': 5, // What is the attribute of my directional neighbor? (adjacent)
-                'SAME_COLUMN_NIKKE': 3, // Which Nikke is in the same column? (row / column)
-                'ADJACENT_SPECIFIC_ATTR_COUNT': 8, // How many of a specific attribute are adjacent to me? (adjacent)
-                'SQUADMATE_ADJACENT': 5, // How many of my squadmates are adjacent to me? (adjacent)
-                'ELEMENT_STRONGER': 7, // Which element is stronger than me? (adjacent)
-                'SHARED_DIRECTIONAL_ATTR': 7, // Which of my directional neighbors share the same attribute as me? (adjacent)
-                'ROW_COL_COUNT': 8, // How many of the same attribute are in my row or column? (row / column)
-                'WEAPON_RANGE_COMP': 10, // Which of my directional neighbors have a weapon range greater than me? (adjacent)
-                'DIRECTIONAL_BURST_COMP': 4, // Which of my directional neighbors have a burst level greater than me? (adjacent)
-                'ADJACENT_SAME_ATTR_COUNT': 7, // How many of the same attribute are adjacent to me? (adjacent)
-                'SEE_DISTANCE_RANGE': 6, // At my weapons range, what attribute does a nikke have? (range)
-                'ONLY_SQUAD_GRID': 3, // Am I the only one of my squad on the grid? (global)
-                'GLOBAL_MOST_ATTR': 2, // Which attribute is the most common on the grid? (global)
-                'ROW_MAJORITY_ATTR': 4 // Which attribute is the majority in my row? (row / column)
+                'ROW_COL_COUNT': 20,
+                'ROW_MAJORITY_ATTR': 18,
+                'ADJACENT_SAME_ATTR_COUNT': 15,
+                'GLOBAL_MOST_ATTR': 15,
+                'SEE_DISTANCE_RANGE': 14,
+                'DIRECTIONAL_BURST_COMP': 12,
+                'WEAPON_RANGE_COMP': 12,
+                'SHARED_DIRECTIONAL_ATTR': 10,
+                'ADJACENT_SPECIFIC_ATTR_COUNT': 10,
+                'ELEMENT_STRONGER': 8,
+                'ONLY_SQUAD_GRID': 8,
+                'SQUADMATE_ADJACENT': 6,
+                'SAME_COLUMN_NIKKE': 5,
+                'DIRECTIONAL_NEIGHBOR_ATTR': 4,
+                'NIKKE_ON_GRID': 2,
+                'SELF_ATTRIBUTE': 1
             }
         };
 
@@ -702,6 +785,8 @@
 
             selectedNikke = null;
             selectedTraitMark = null;
+            corruptedCells.clear();
+            corruptedTraits = {};
             updateTraitDockUI();
             updateSelectedNikkeBar();
             resetFilters();
@@ -743,16 +828,35 @@
 
             currentGrid = Array(gridRows).fill().map(() => Array(gridCols).fill(null));
 
-            const positions = [];
+            // Determine Corrupted Cells
+            const maxCorruption = getMaxCorruptionCount();
+            const allCoords = [];
             for (let r = 0; r < gridRows; r++) {
                 for (let c = 0; c < gridCols; c++) {
-                    positions.push({ row: r, col: c });
+                    allCoords.push(`${r},${c}`);
                 }
             }
-            const shuffledPositions = shuffle(positions);
-            for (let i = 0; i < Math.min(hints, positions.length); i++) {
-                const pos = shuffledPositions[i];
-                currentGrid[pos.row][pos.col] = solution[pos.row][pos.col];
+            const shuffledCoords = shuffle(allCoords);
+            for (let i = 0; i < maxCorruption; i++) {
+                const coord = shuffledCoords[i];
+                corruptedCells.add(coord);
+
+                corruptedTraits[coord] = {
+                    color: Math.random() > 0.4,
+                    text: Math.random() > 0.3,
+                    name: Math.random() > 0.4,
+                    image: Math.random() > 0.3
+                };
+                if (!Object.values(corruptedTraits[coord]).some(Boolean)) {
+                    corruptedTraits[coord].color = true;
+                }
+            }
+
+            // Place Hints
+            const hintPositions = shuffle(allCoords).filter(c => !corruptedCells.has(c));
+            for (let i = 0; i < Math.min(hints, hintPositions.length); i++) {
+                const [hr, hc] = hintPositions[i].split(',').map(Number);
+                currentGrid[hr][hc] = solution[hr][hc];
             }
 
             generateClues(solution);
@@ -763,11 +867,15 @@
             showInfo(shuffledPalette[0]);
             startTimer();
 
-            document.getElementById('status').innerHTML = `<span class="text-emerald-400 font-semibold">🎲 New ${currentDifficulty.toUpperCase()} Puzzle generated!</span>`;
-            setTimeout(() => document.getElementById('status').textContent = '', 3000);
+            // Start the randomized glitch burst loop
+            scheduleGlitchLoop();
+
+            const corrNote = maxCorruption > 0 ? ` ⚠️ ${maxCorruption} Corrupted Cell(s) Detected!` : '';
+            document.getElementById('status').innerHTML = `<span class="text-emerald-400 font-semibold">🎲 New ${currentDifficulty.toUpperCase()} Puzzle generated!${corrNote}</span>`;
+            setTimeout(() => document.getElementById('status').textContent = '', 3500);
         }
 
-        // 16-QUESTION DYNAMIC CLUE GENERATOR WITH DIFFICULTY PROFILES
+        // 16-QUESTION DYNAMIC CLUE GENERATOR WITH CORRUPTION & DIFFICULTY PROFILES
         function generateClues(sol) {
             cellCluesMap = {};
             cellClueRules = {};
@@ -818,7 +926,7 @@
                     const countAttrs = [
                         { key: 'manufacturer', label: 'manufacturer' },
                         { key: 'element', label: 'Element' },
-                        { key: 'weapon', label: 'Weapon' },
+                        { key: 'weapon', label: 'user' },
                         { key: 'class', label: 'Class' },
                         { key: 'burst', label: 'Burst' }
                     ];
@@ -1037,7 +1145,7 @@
                                 const traitChoices = [
                                     { attr: 'class', val: targetNikke.class, label: targetNikke.class },
                                     { attr: 'element', val: targetNikke.element, label: `${targetNikke.element} Element` },
-                                    { attr: 'weapon', val: targetNikke.weapon, label: `${targetNikke.weapon} Weapon` }
+                                    { attr: 'weapon', val: targetNikke.weapon, label: `${targetNikke.weapon} user` }
                                 ];
                                 const pickedTrait = traitChoices[Math.floor(Math.random() * traitChoices.length)];
 
@@ -1066,7 +1174,7 @@
                         { key: 'class', label: `${cellNikke.class} Class` },
                         { key: 'element', label: `${cellNikke.element} Element` },
                         { key: 'manufacturer', label: `member of ${cellNikke.manufacturer}` },
-                        { key: 'weapon', label: `${cellNikke.weapon} Weapon` },
+                        { key: 'weapon', label: `${cellNikke.weapon} user` },
                         { key: 'burst', label: `Burst ${cellNikke.burst} unit` }
                     ];
                     const pickedSelfAttr = selfAttrChoices[Math.floor(Math.random() * selfAttrChoices.length)];
@@ -1284,14 +1392,39 @@
                     // Select weighted random clue
                     const chosenClue = getWeightedRandomChoice(candidates);
                     if (chosenClue) {
-                        questionWeights[chosenClue.type] = Math.max(1, questionWeights[chosenClue.type] - 4);
+                        if (corruptedCells.has(cellKey)) {
+                            // CORRUPTED CELL HANDLER: Lying clues / dialogue
+                            const isDialogue = Math.random() > 0.5;
+                            let lieText = "";
 
-                        cellCluesMap[cellKey] = chosenClue.text;
-                        cellClueRules[cellKey] = {
-                            checkFn: chosenClue.checkFn,
-                            expected: chosenClue.expected,
-                            text: chosenClue.text
-                        };
+                            if (isDialogue) {
+                                lieText = CORRUPTED_DIALOGUE_CLUES[Math.floor(Math.random() * CORRUPTED_DIALOGUE_CLUES.length)];
+                            } else {
+                                lieText = chosenClue.text.replace(/contains \d+/g, "contains 0").replace(/I am a/g, "I am NOT a");
+                            }
+
+                            if (corruptedTraits[cellKey]?.text) {
+                                lieText = glitchifyText(lieText);
+                            }
+
+                            cellCluesMap[cellKey] = `Cell R${r+1}C${c+1}: ${lieText}`;
+                            cellClueRules[cellKey] = {
+                                checkFn: () => true,
+                                expected: true,
+                                isCorrupted: true,
+                                text: cellCluesMap[cellKey]
+                            };
+                        } else {
+                            // Normal valid clue
+                            questionWeights[chosenClue.type] = Math.max(1, questionWeights[chosenClue.type] - 4);
+                            cellCluesMap[cellKey] = chosenClue.text;
+                            cellClueRules[cellKey] = {
+                                checkFn: chosenClue.checkFn,
+                                expected: chosenClue.expected,
+                                isCorrupted: false,
+                                text: chosenClue.text
+                            };
+                        }
                     }
                 }
             }
@@ -1352,16 +1485,35 @@
         function renderGrid() {
             document.querySelectorAll('.grid-cell').forEach(cell => {
                 const r = +cell.dataset.row, c = +cell.dataset.col;
+                const cellKey = `${r},${c}`;
                 const cellData = currentGrid[r][c];
+                const isCorrupted = corruptedCells.has(cellKey);
+                const traits = corruptedTraits[cellKey] || {};
+
+                if (isCorrupted && traits.color) {
+                    cell.classList.add('corrupted-cell');
+                } else {
+                    cell.classList.remove('corrupted-cell');
+                }
                 
                 if (typeof cellData === 'string') {
-                    const n = allNikkesData.find(x => x.id === cellData);
+                    let n = allNikkesData.find(x => x.id === cellData);
+                    
+                    let displayName = n.name;
+                    if (isCorrupted && traits.name) {
+                        const fakeNikke = allNikkesData[Math.floor(Math.random() * allNikkesData.length)];
+                        displayName = fakeNikke ? fakeNikke.name : glitchifyText(n.name);
+                    }
+
+                    /* Mark corrupted images with .img-glitch class for JS target acquisition */
+                    const imgClass = (isCorrupted && traits.image) ? 'w-full h-full object-cover img-glitch' : 'w-full h-full object-cover';
+
                     cell.innerHTML = `
                         <div class="w-[50%] h-[50%] rounded-xl overflow-hidden border border-purple-300 bg-zinc-900 flex items-center justify-center">
-                            <img src="${n.icon}" alt="${n.name}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <img src="${n.icon}" alt="${n.name}" class="${imgClass}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                             <span class="text-xs font-bold text-purple-300 hidden">${n.name.substring(0,2).toUpperCase()}</span>
                         </div>
-                        <div class="nikke-name">${n.name}</div>
+                        <div class="nikke-name">${displayName}</div>
                     `;
                     cell.classList.add('filled');
                 } else if (cellData && typeof cellData === 'object' && Object.keys(cellData).length > 0) {
@@ -1471,7 +1623,7 @@
             });
         }
 
-        /* SAFE SHOWINFO FUNCTION WITH NULL-CHECKS FOR MISSING DOM ELEMENTS & IMAGE PROPERTIES */
+        /* SAFE SHOWINFO FUNCTION WITH NULL-CHECKS FOR DOM ELEMENTS */
         function showInfo(n) {
             if (!n) return;
             
@@ -1516,6 +1668,7 @@
             document.querySelectorAll('.grid-cell').forEach(cell => cell.classList.remove('error'));
         }
 
+        // VALIDATES GRID; EXCLUDES CORRUPTED CELLS FROM FAILURE CHECKS
         function validateGridWithClues() {
             const nikkeMap = Object.fromEntries(allNikkesData.map(n => [n.id, n]));
             const failedClues = [];
@@ -1526,10 +1679,15 @@
                     const id = currentGrid[r][c];
                     if (typeof id !== 'string') continue;
 
+                    const cellKey = `${r},${c}`;
+                    
+                    // Skip verification for corrupted cells (they lie)
+                    if (corruptedCells.has(cellKey)) continue;
+
                     const nikke = nikkeMap[id];
                     const neighbors = getNeighbors(r, c).map(nb => currentGrid[nb.row][nb.col]);
 
-                    const rule = cellClueRules[`${r},${c}`];
+                    const rule = cellClueRules[cellKey];
                     if (!rule) continue;
 
                     const result = rule.checkFn(nikke, neighbors, currentGrid);
@@ -1947,7 +2105,7 @@
             <div class="space-y-3 lg:space-y-4 text-xs text-zinc-300 leading-relaxed">
                 <div class="bg-zinc-800/80 p-3 rounded-xl border border-zinc-700">
                     <h3 class="font-bold text-purple-300 text-sm mb-1">1. Layout</h3>
-                    <p>In this game, you must place the nikke's in the correct positions on the grid based on the given clues. On the left panel, you will be able to find you current and best time, the current selected Nikke's information, The element cycle chart and weapon ranges. The right side lets you choose accessible Nikke's, as well as filtering and searching for specific information. At the bottom, you will be able to find the Trait markers, which can be placed on individual cells to take notes.</p>
+                    <p>In this game, you must place the Nikkes in the correct positions on the grid based on the given clues. On the left panel, you will be able to find your current and best time, the current selected Nikke's information, the element cycle chart, and weapon ranges. The right side lets you choose accessible Nikkes, as well as filtering and searching for specific information. At the bottom, you will be able to find the Trait markers, which can be placed on individual cells to take notes.</p>
                 </div>
 
                 <div class="bg-zinc-800/80 p-3 rounded-xl border border-zinc-700">
@@ -1956,13 +2114,18 @@
                 </div>
 
                 <div class="bg-zinc-800/80 p-3 rounded-xl border border-zinc-700">
-                    <h3 class="font-bold text-purple-300 text-sm mb-1">3. Placing Trait Markers</h3>
-                    <p>Click an icon from the bottom dock (Element, Weapon, Manufacturer, Class, Burst) and click empty cells to drop custom notes. You can place multiple category markers on the same tile to help figure out which nikke can you on that cell!</p>
+                    <h3 class="font-bold text-red-400 text-sm mb-1">3. Corruption</h3>
+                    <p>Be careful! Some cells will become <strong class="text-red-400">CORRUPTED</strong> on higher difficulties. Corrupted Nikkes will lie, scramble their clue text, glitch their names, or flash strange colors. You must still place the correct character in a corrupted cell to solve the puzzle!</p>
                 </div>
 
                 <div class="bg-zinc-800/80 p-3 rounded-xl border border-zinc-700">
-                    <h3 class="font-bold text-purple-300 text-sm mb-1">4. Submitting Your Solution</h3>
-                    <p>Select a Nikke from the right panel and place them on the grid. Once every tile is filled with a Nikke, click <strong class="text-purple-300">VERIFY</strong> to check your answer! When pressing the verify button at the top of the screen, you will either be told if you have fulfilled the clues, or told what errors have been made.</p>
+                    <h3 class="font-bold text-purple-300 text-sm mb-1">4. Placing Trait Markers</h3>
+                    <p>Click an icon from the bottom dock (Element, Weapon, Manufacturer, Class, Burst) and click empty cells to drop custom notes. You can place multiple category markers on the same tile to help figure out which Nikke fits that cell!</p>
+                </div>
+
+                <div class="bg-zinc-800/80 p-3 rounded-xl border border-zinc-700">
+                    <h3 class="font-bold text-purple-300 text-sm mb-1">5. Submitting Your Solution</h3>
+                    <p>Select a Nikke from the right panel and place them on the grid. Once every tile is filled with a Nikke, click <strong class="text-purple-300">VERIFY</strong> to check your answer!</p>
                 </div>
             </div>
 
