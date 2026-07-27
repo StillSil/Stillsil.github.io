@@ -818,7 +818,7 @@
                     const countAttrs = [
                         { key: 'manufacturer', label: 'manufacturer' },
                         { key: 'element', label: 'Element' },
-                        { key: 'weapon', label: 'user' },
+                        { key: 'weapon', label: 'Weapon' },
                         { key: 'class', label: 'Class' },
                         { key: 'burst', label: 'Burst' }
                     ];
@@ -1037,7 +1037,7 @@
                                 const traitChoices = [
                                     { attr: 'class', val: targetNikke.class, label: targetNikke.class },
                                     { attr: 'element', val: targetNikke.element, label: `${targetNikke.element} Element` },
-                                    { attr: 'weapon', val: targetNikke.weapon, label: `${targetNikke.weapon} user` }
+                                    { attr: 'weapon', val: targetNikke.weapon, label: `${targetNikke.weapon} Weapon` }
                                 ];
                                 const pickedTrait = traitChoices[Math.floor(Math.random() * traitChoices.length)];
 
@@ -1066,7 +1066,7 @@
                         { key: 'class', label: `${cellNikke.class} Class` },
                         { key: 'element', label: `${cellNikke.element} Element` },
                         { key: 'manufacturer', label: `member of ${cellNikke.manufacturer}` },
-                        { key: 'weapon', label: `${cellNikke.weapon} user` },
+                        { key: 'weapon', label: `${cellNikke.weapon} Weapon` },
                         { key: 'burst', label: `Burst ${cellNikke.burst} unit` }
                     ];
                     const pickedSelfAttr = selfAttrChoices[Math.floor(Math.random() * selfAttrChoices.length)];
