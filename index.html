@@ -1050,7 +1050,7 @@
                         }
                     }
 
-                    // 5. Most of the Nikkes are from my [attribute]
+// 5. Most of the Nikkes are from my [attribute]
                     const globalCat = [
                         { key: 'manufacturer', label: 'manufacturer' },
                         { key: 'class', label: 'class' },
@@ -1060,28 +1060,41 @@
                     const myGlobalVal = cellNikke[globalCat.key];
                     if (myGlobalVal) {
                         const counts = {};
-                        allGridNikkes.forEach(n => { if (n[globalCat.key]) counts[n[globalCat.key]] = (counts[n[globalCat.key]] || 0) + 1; });
-                        const maxVal = Math.max(...Object.values(counts));
+                        allGridNikkes.forEach(n => { 
+                            if (n[globalCat.key]) counts[n[globalCat.key]] = (counts[n[globalCat.key]] || 0) + 1; 
+                        });
                         
-                        if (counts[myGlobalVal] === maxVal && Object.values(counts).filter(v => v === maxVal).length === 1) {
-                            candidates.push({
-                                type: 'GLOBAL_MOST_ATTR',
-                                weight: questionWeights['GLOBAL_MOST_ATTR'] || 5,
-                                text: `Cell R${r+1}C${c+1}: Most of the Nikkes on the grid are from my ${globalCat.label} (${myGlobalVal}).`,
-                                checkFn: (currN, neighs, gridState) => {
-                                    if (!currN) return false;
-                                    const liveCounts = {};
-                                    gridState.forEach(row => row.forEach(val => {
-                                        if (typeof val === 'string' && nikkeMap[val]) {
-                                            const attr = nikkeMap[val][globalCat.key];
-                                            if (attr) liveCounts[attr] = (liveCounts[attr] || 0) + 1;
-                                        }
-                                    }));
-                                    const max = Math.max(...Object.values(liveCounts));
-                                    return liveCounts[currN[globalCat.key]] === max && Object.values(liveCounts).filter(v => v === max).length === 1;
-                                },
-                                expected: true
-                            });
+                        const values = Object.values(counts);
+                        if (values.length > 0) {
+                            const maxVal = Math.max(...values);
+                            
+                            // Ensure myGlobalVal is the single strict majority on the solution grid
+                            if (counts[myGlobalVal] === maxVal && values.filter(v => v === maxVal).length === 1) {
+                                candidates.push({
+                                    type: 'GLOBAL_MOST_ATTR',
+                                    weight: questionWeights['GLOBAL_MOST_ATTR'] || 5,
+                                    text: `Cell R${r+1}C${c+1}: Most of the Nikkes on the grid share my ${globalCat.label}.`,
+                                    checkFn: (currN, neighs, gridState) => {
+                                        if (!currN || !currN[globalCat.key]) return false;
+                                        
+                                        const liveCounts = {};
+                                        gridState.forEach(row => row.forEach(val => {
+                                            if (typeof val === 'string' && nikkeMap[val]) {
+                                                const attr = nikkeMap[val][globalCat.key];
+                                                if (attr) liveCounts[attr] = (liveCounts[attr] || 0) + 1;
+                                            }
+                                        }));
+
+                                        const liveValues = Object.values(liveCounts);
+                                        if (liveValues.length === 0) return false;
+
+                                        const max = Math.max(...liveValues);
+                                        // Validates that the placed Nikke's attribute is indeed the strict majority
+                                        return liveCounts[currN[globalCat.key]] === max && liveValues.filter(v => v === max).length === 1;
+                                    },
+                                    expected: true
+                                });
+                            }
                         }
                     }
 
