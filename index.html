@@ -860,13 +860,13 @@
                 corruptedCells.add(coord);
 
                 corruptedTraits[coord] = {
-                    color: Math.random() > 0.4,
-                    text: Math.random() > 0.3,
-                    name: Math.random() > 0.4,
-                    image: Math.random() > 0.3
+                    color: Math.random() > 0.2,
+                    text: Math.random() > 0.2,
+                    name: Math.random() > 0.2,
+                    image: Math.random() > 0.2
                 };
                 if (!Object.values(corruptedTraits[coord]).some(Boolean)) {
-                    corruptedTraits[coord].color = true;
+                    corruptedTraits[coord].name = true;
                 }
             }
 
