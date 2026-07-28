@@ -709,8 +709,8 @@
         function getMaxCorruptionCount() {
             if (currentDifficulty.startsWith('easy')) return 0;
             if (currentDifficulty.startsWith('medium')) return Math.floor(Math.random() * 2) + 1; // 1 to 2
-            if (currentDifficulty.startsWith('hard')) return Math.floor(Math.random() * 3) + 2;   // 2 to 4
-            if (currentDifficulty.startsWith('insane')) return Math.floor(Math.random() * 4) + 5; // 5 to 8
+            if (currentDifficulty.startsWith('hard')) return Math.floor(Math.random() * 2) + 2;   // 2 to 4
+            if (currentDifficulty.startsWith('insane')) return Math.floor(Math.random() * 2) + 3; // 5 to 8
             return 0;
         }
 
@@ -1044,9 +1044,9 @@
                 else if (currentDifficulty === 'hard4') { gridRows = 4; gridCols = 4; poolSize = 50; hints = 2; }
                 else if (currentDifficulty === 'hard5') { gridRows = 5; gridCols = 5; poolSize = allNikkesData.length; hints = 3; }
             } else if (currentDifficulty.startsWith('insane')) {
-                gridRows = 11; 
-                gridCols = 11; 
-                poolSize = 121; 
+                gridRows = 10; 
+                gridCols = 10; 
+                poolSize = allNikkesData.length; 
                 hints = 5;
             }
 
