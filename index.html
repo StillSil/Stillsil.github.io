@@ -551,6 +551,24 @@
                 'ONLY_SQUAD_GRID': 1,               // Am I the only Nikke of my squad on the grid
                 'GLOBAL_MOST_ATTR': 1,              // What has the most of a specific attribute on the grid
                 'ROW_MAJORITY_ATTR': 1              // What attribute is the majority in my row or column
+            },
+            insane: {
+                'SELF_ATTRIBUTE': 2,                // What is one of my attributes
+                'NIKKE_ON_GRID': 0,                 // Is a specific Nikke on the grid
+                'DIRECTIONAL_NEIGHBOR_ATTR': 2,     // What is one of my directional neighbor's attributes
+                'SAME_COLUMN_NIKKE': 1,             // Is a specific Nikke in the same column or row
+                'ADJACENT_SPECIFIC_ATTR_COUNT': 3,  // How many of a specific attribute are adjacent to me
+                'SQUADMATE_ADJACENT': 1,            // Is a squadmate adjacent to me
+                'ELEMENT_STRONGER': 1,              // Is my element stronger than an adjacent Nikke's element
+                'SHARED_DIRECTIONAL_ATTR': 1,       // Do I share a attribute with an adjacent Nikke
+                'ROW_COL_COUNT': 3,                 // How many of a specific attribute are in my row or column
+                'WEAPON_RANGE_COMP': 2,             // Is my weapon range greater than an adjacent Nikke's weapon range
+                'DIRECTIONAL_BURST_COMP': 2,        // Is my burst level greater than an adjacent Nikke's burst level
+                'ADJACENT_SAME_ATTR_COUNT': 2,      // How many adjacent Nikkes share the same attribute as me
+                'SEE_DISTANCE_RANGE': 2,            // What attribute can I see at my weapons range
+                'ONLY_SQUAD_GRID': 1,               // Am I the only Nikke of my squad on the grid
+                'GLOBAL_MOST_ATTR': 1,              // What has the most of a specific attribute on the grid
+                'ROW_MAJORITY_ATTR': 1              // What attribute is the majority in my row or column
             }
         };
 
@@ -891,24 +909,29 @@
 
             if (allGridNikkes.length === 0) return;
 
-            let diffCategory = 'medium';
+            let diffCategory = 'insane';
             if (currentDifficulty.startsWith('easy')) diffCategory = 'easy';
-            else if (currentDifficulty.startsWith('hard') || currentDifficulty.startsWith('insane')) diffCategory = 'hard';
+            else if (currentDifficulty.startsWith('medium')) diffCategory = 'medium';
+            else if (currentDifficulty.startsWith('hard')) diffCategory = 'hard';
 
             const questionWeights = { ...DIFFICULTY_WEIGHT_PROFILES[diffCategory] };
             const parseBurstVal = (bStr) => (bStr === 'p' || bStr === 'P') ? 4 : parseInt(bStr, 10) || 1;
 
             function getWeightedRandomChoice(candidates) {
                 if (!candidates || candidates.length === 0) return null;
-                const totalWeight = candidates.reduce((sum, item) => sum + item.weight, 0);
-                if (totalWeight <= 0) return candidates[Math.floor(Math.random() * candidates.length)];
+
+                // Strictly filter out candidates with a weight of 0 or less
+                const validCandidates = candidates.filter(item => item.weight > 0);
+                if (validCandidates.length === 0) return null;
+
+                const totalWeight = validCandidates.reduce((sum, item) => sum + item.weight, 0);
 
                 let randomVal = Math.random() * totalWeight;
-                for (const item of candidates) {
+                for (const item of validCandidates) {
                     if (randomVal < item.weight) return item;
                     randomVal -= item.weight;
                 }
-                return candidates[0];
+                return validCandidates[0];
             }
 
             for (let r = 0; r < gridRows; r++) {
@@ -937,7 +960,7 @@
                         if (presentNikke) {
                             candidates.push({
                                 type: 'NIKKE_ON_GRID',
-                                weight: questionWeights['NIKKE_ON_GRID'] || 5,
+                                weight: questionWeights['NIKKE_ON_GRID'] ?? 5,
                                 text: `Cell R${r+1}C${c+1}: ${presentNikke.name} is on the grid.`,
                                 checkFn: (currN, neighs, gridState) => {
                                     return gridState.some(row => row.some(val => typeof val === 'string' && nikkeMap[val]?.name === presentNikke.name));
@@ -963,7 +986,7 @@
                                 const actualCount = rowNikkes.filter(n => n[chosenAttr.key] === valToCount).length;
                                 candidates.push({
                                     type: 'ROW_COL_COUNT',
-                                    weight: questionWeights['ROW_COL_COUNT'] || 5,
+                                    weight: questionWeights['ROW_COL_COUNT'] ?? 5,
                                     text: `Cell R${r+1}C${c+1}: My row contains ${actualCount} ${valToCount} ${chosenAttr.label}${actualCount === 1 ? '' : 's'}.`,
                                     checkFn: (currN, neighs, gridState) => {
                                         let count = 0;
@@ -989,7 +1012,7 @@
                                 const actualCount = colNikkes.filter(n => n[chosenAttr.key] === valToCount).length;
                                 candidates.push({
                                     type: 'ROW_COL_COUNT',
-                                    weight: questionWeights['ROW_COL_COUNT'] || 5,
+                                    weight: questionWeights['ROW_COL_COUNT'] ?? 5,
                                     text: `Cell R${r+1}C${c+1}: My column contains ${actualCount} ${valToCount} ${chosenAttr.label}${actualCount === 1 ? '' : 's'}.`,
                                     checkFn: (currN, neighs, gridState) => {
                                         let count = 0;
@@ -1013,7 +1036,7 @@
                             const matchCount = neighborNikkes.filter(n => n[chosenSameAttr.key] === myVal).length;
                             candidates.push({
                                 type: 'ADJACENT_SAME_ATTR_COUNT',
-                                weight: questionWeights['ADJACENT_SAME_ATTR_COUNT'] || 5,
+                                weight: questionWeights['ADJACENT_SAME_ATTR_COUNT'] ?? 5,
                                 text: `Cell R${r+1}C${c+1}: I am next to ${matchCount} Nikke${matchCount === 1 ? '' : 's'} with the same ${chosenSameAttr.label} as me.`,
                                 checkFn: (currN, neighs, gridState) => {
                                     if (!currN) return false;
@@ -1035,7 +1058,7 @@
                         if (squadCount === 1) {
                             candidates.push({
                                 type: 'ONLY_SQUAD_GRID',
-                                weight: questionWeights['ONLY_SQUAD_GRID'] || 5,
+                                weight: questionWeights['ONLY_SQUAD_GRID'] ?? 5,
                                 text: `Cell R${r+1}C${c+1}: I am the only member of my squad on the field.`,
                                 checkFn: (currN, neighs, gridState) => {
                                     if (!currN) return false;
@@ -1060,41 +1083,28 @@
                     const myGlobalVal = cellNikke[globalCat.key];
                     if (myGlobalVal) {
                         const counts = {};
-                        allGridNikkes.forEach(n => { 
-                            if (n[globalCat.key]) counts[n[globalCat.key]] = (counts[n[globalCat.key]] || 0) + 1; 
-                        });
+                        allGridNikkes.forEach(n => { if (n[globalCat.key]) counts[n[globalCat.key]] = (counts[n[globalCat.key]] || 0) + 1; });
+                        const maxVal = Math.max(...Object.values(counts));
                         
-                        const values = Object.values(counts);
-                        if (values.length > 0) {
-                            const maxVal = Math.max(...values);
-                            
-                            // Ensure myGlobalVal is the single strict majority on the solution grid
-                            if (counts[myGlobalVal] === maxVal && values.filter(v => v === maxVal).length === 1) {
-                                candidates.push({
-                                    type: 'GLOBAL_MOST_ATTR',
-                                    weight: questionWeights['GLOBAL_MOST_ATTR'] || 5,
-                                    text: `Cell R${r+1}C${c+1}: Most of the Nikkes on the grid share my ${globalCat.label}.`,
-                                    checkFn: (currN, neighs, gridState) => {
-                                        if (!currN || !currN[globalCat.key]) return false;
-                                        
-                                        const liveCounts = {};
-                                        gridState.forEach(row => row.forEach(val => {
-                                            if (typeof val === 'string' && nikkeMap[val]) {
-                                                const attr = nikkeMap[val][globalCat.key];
-                                                if (attr) liveCounts[attr] = (liveCounts[attr] || 0) + 1;
-                                            }
-                                        }));
-
-                                        const liveValues = Object.values(liveCounts);
-                                        if (liveValues.length === 0) return false;
-
-                                        const max = Math.max(...liveValues);
-                                        // Validates that the placed Nikke's attribute is indeed the strict majority
-                                        return liveCounts[currN[globalCat.key]] === max && liveValues.filter(v => v === max).length === 1;
-                                    },
-                                    expected: true
-                                });
-                            }
+                        if (counts[myGlobalVal] === maxVal && Object.values(counts).filter(v => v === maxVal).length === 1) {
+                            candidates.push({
+                                type: 'GLOBAL_MOST_ATTR',
+                                weight: questionWeights['GLOBAL_MOST_ATTR'] ?? 5,
+                                text: `Cell R${r+1}C${c+1}: Most of the Nikkes on the grid are from my ${globalCat.label} (${myGlobalVal}).`,
+                                checkFn: (currN, neighs, gridState) => {
+                                    if (!currN) return false;
+                                    const liveCounts = {};
+                                    gridState.forEach(row => row.forEach(val => {
+                                        if (typeof val === 'string' && nikkeMap[val]) {
+                                            const attr = nikkeMap[val][globalCat.key];
+                                            if (attr) liveCounts[attr] = (liveCounts[attr] || 0) + 1;
+                                        }
+                                    }));
+                                    const max = Math.max(...Object.values(liveCounts));
+                                    return liveCounts[currN[globalCat.key]] === max && Object.values(liveCounts).filter(v => v === max).length === 1;
+                                },
+                                expected: true
+                            });
                         }
                     }
 
@@ -1106,8 +1116,8 @@
                             if (neighborNikke && cellNikke.element && ELEMENT_ADVANTAGE[cellNikke.element] === neighborNikke.element) {
                                 candidates.push({
                                     type: 'ELEMENT_STRONGER',
-                                    weight: questionWeights['ELEMENT_STRONGER'] || 5,
-                                    text: `Cell R${r+1}C${c+1}: My element is stronger than the Nikke ${d} me.`,
+                                    weight: questionWeights['ELEMENT_STRONGER'] ?? 5,
+                                    text: `Cell R${r+1}C${c+1}: My element is stronger than the Nikke directly ${d} me.`,
                                     checkFn: (currN, neighs, gridState) => {
                                         const val = gridState[pos.r][pos.c];
                                         if (typeof val !== 'string') return false;
@@ -1132,8 +1142,8 @@
                                 if (neighVal) {
                                     candidates.push({
                                         type: 'DIRECTIONAL_NEIGHBOR_ATTR',
-                                        weight: questionWeights['DIRECTIONAL_NEIGHBOR_ATTR'] || 5,
-                                        text: `Cell R${r+1}C${c+1}: The Nikke ${d} me is a ${neighVal} ${attrPick.label}.`,
+                                        weight: questionWeights['DIRECTIONAL_NEIGHBOR_ATTR'] ?? 5,
+                                        text: `Cell R${r+1}C${c+1}: The Nikke directly ${d} me is a ${neighVal} ${attrPick.label}.`,
                                         checkFn: (currN, neighs, gridState) => {
                                             const val = gridState[pos.r][pos.c];
                                             return typeof val === 'string' && nikkeMap[val] ? nikkeMap[val][attrPick.key] === neighVal : false;
@@ -1165,7 +1175,7 @@
                                 if (pickedTrait.val) {
                                     candidates.push({
                                         type: 'SEE_DISTANCE_RANGE',
-                                        weight: questionWeights['SEE_DISTANCE_RANGE'] || 5,
+                                        weight: questionWeights['SEE_DISTANCE_RANGE'] ?? 5,
                                         text: `Cell R${r+1}C${c+1}: I can see a ${pickedTrait.label} ${weaponDist} cell(s) away.`,
                                         checkFn: (currN, neighs, gridState) => {
                                             const cellsAtD = getCellsAtDistance(r, c, weaponDist);
@@ -1195,7 +1205,7 @@
                     if (cellNikke[pickedSelfAttr.key]) {
                         candidates.push({
                             type: 'SELF_ATTRIBUTE',
-                            weight: questionWeights['SELF_ATTRIBUTE'] || 5,
+                            weight: questionWeights['SELF_ATTRIBUTE'] ?? 5,
                             text: `Cell R${r+1}C${c+1}: I am a ${pickedSelfAttr.label}.`,
                             checkFn: (currN) => currN && currN[pickedSelfAttr.key] === cellNikke[pickedSelfAttr.key],
                             expected: true
@@ -1217,8 +1227,8 @@
 
                                     candidates.push({
                                         type: 'DIRECTIONAL_BURST_COMP',
-                                        weight: questionWeights['DIRECTIONAL_BURST_COMP'] || 5,
-                                        text: `Cell R${r+1}C${c+1}: The Nikke ${d} me has a ${compText} Burst stage than I do.`,
+                                        weight: questionWeights['DIRECTIONAL_BURST_COMP'] ?? 5,
+                                        text: `Cell R${r+1}C${c+1}: The Nikke directly ${d} me has a ${compText} Burst stage than I do.`,
                                         checkFn: (currN, neighs, gridState) => {
                                             if (!currN) return false;
                                             const targetId = gridState[pos.r][pos.c];
@@ -1250,8 +1260,8 @@
 
                                     candidates.push({
                                         type: 'WEAPON_RANGE_COMP',
-                                        weight: questionWeights['WEAPON_RANGE_COMP'] || 5,
-                                        text: `Cell R${r+1}C${c+1}: The Nikke ${d} me uses a weapon with a ${compText} range than mine.`,
+                                        weight: questionWeights['WEAPON_RANGE_COMP'] ?? 5,
+                                        text: `Cell R${r+1}C${c+1}: The Nikke directly ${d} me uses a weapon with a ${compText} range than mine.`,
                                         checkFn: (currN, neighs, gridState) => {
                                             if (!currN) return false;
                                             const targetId = gridState[pos.r][pos.c];
@@ -1280,8 +1290,8 @@
                                     const chosenMatch = matchingPicked[Math.floor(Math.random() * matchingPicked.length)];
                                     candidates.push({
                                         type: 'SHARED_DIRECTIONAL_ATTR',
-                                        weight: questionWeights['SHARED_DIRECTIONAL_ATTR'] || 5,
-                                        text: `Cell R${r+1}C${c+1}: I share the same ${chosenMatch.label} as the Nikke ${d} me.`,
+                                        weight: questionWeights['SHARED_DIRECTIONAL_ATTR'] ?? 5,
+                                        text: `Cell R${r+1}C${c+1}: I share the same ${chosenMatch.label} as the Nikke directly ${d} me.`,
                                         checkFn: (currN, neighs, gridState) => {
                                             if (!currN) return false;
                                             const targetId = gridState[pos.r][pos.c];
@@ -1301,8 +1311,8 @@
                     if (hasSquadmateAdj) {
                         candidates.push({
                             type: 'SQUADMATE_ADJACENT',
-                            weight: questionWeights['SQUADMATE_ADJACENT'] || 5,
-                            text: `Cell R${r+1}C${c+1}: I am adjacent to my squadmate.`,
+                            weight: questionWeights['SQUADMATE_ADJACENT'] ?? 5,
+                            text: `Cell R${r+1}C${c+1}: I am directly adjacent to my squadmate.`,
                             checkFn: (currN, neighs, gridState) => {
                                 if (!currN) return false;
                                 return neighborPositions.some(pos => {
@@ -1323,7 +1333,7 @@
                             const actualCount = neighborNikkes.filter(n => n[specAttr.key] === targetVal).length;
                             candidates.push({
                                 type: 'ADJACENT_SPECIFIC_ATTR_COUNT',
-                                weight: questionWeights['ADJACENT_SPECIFIC_ATTR_COUNT'] || 5,
+                                weight: questionWeights['ADJACENT_SPECIFIC_ATTR_COUNT'] ?? 5,
                                 text: `Cell R${r+1}C${c+1}: I am next to ${actualCount} ${targetVal}${specAttr.key === 'burst' ? ' Burst' : ''} Nikke${actualCount === 1 ? '' : 's'}.`,
                                 checkFn: (currN, neighs, gridState) => {
                                     let count = 0;
@@ -1351,7 +1361,7 @@
                         const pickedColName = colNikkeNames[Math.floor(Math.random() * colNikkeNames.length)];
                         candidates.push({
                             type: 'SAME_COLUMN_NIKKE',
-                            weight: questionWeights['SAME_COLUMN_NIKKE'] || 5,
+                            weight: questionWeights['SAME_COLUMN_NIKKE'] ?? 5,
                             text: `Cell R${r+1}C${c+1}: I am in the same column as ${pickedColName}.`,
                             checkFn: (currN, neighs, gridState) => {
                                 for (let row = 0; row < gridRows; row++) {
@@ -1382,7 +1392,7 @@
                         if (rowCounts[myRowVal] === rowMax && Object.values(rowCounts).filter(v => v === rowMax).length === 1) {
                             candidates.push({
                                 type: 'ROW_MAJORITY_ATTR',
-                                weight: questionWeights['ROW_MAJORITY_ATTR'] || 5,
+                                weight: questionWeights['ROW_MAJORITY_ATTR'] ?? 5,
                                 text: `Cell R${r+1}C${c+1}: My ${rowCat.label} (${myRowVal}) holds the majority in my row.`,
                                 checkFn: (currN, neighs, gridState) => {
                                     if (!currN) return false;
@@ -1407,7 +1417,7 @@
                     if (chosenClue) {
                         if (corruptedCells.has(cellKey)) {
                             // CORRUPTED CELL HANDLER: Lying clues / dialogue
-                            const isDialogue = Math.random() > 0.5;
+                            const isDialogue = Math.random() > 0.2; // Corrupted Dialogue has 20% chance of appearing, otherwise lying clue
                             let lieText = "";
 
                             if (isDialogue) {
