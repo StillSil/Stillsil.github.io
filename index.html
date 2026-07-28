@@ -11,6 +11,8 @@
     <!-- FIREBASE SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <!-- ADD THIS LINE BELOW -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
     <style>
         /* Mobile-First Grid Cell Sizes */
@@ -293,6 +295,18 @@
     <!-- PANEL 4: BOTTOM STICKY DOCK (TRAIT DOCK & BUTTONS) -->
     <div class="w-full bg-zinc-900 border-t border-zinc-800 px-2 lg:px-4 py-2 shadow-2xl flex flex-wrap lg:flex-nowrap items-center justify-between lg:justify-center gap-2 lg:gap-5 text-[10px] flex-shrink-0 z-50 sticky lg:relative bottom-0">
         
+        <!-- 1. AUTH / PROFILE CONTAINER (POSITIONED ON FAR LEFT) -->
+        <div id="auth-container" class="lg:absolute lg:left-4 z-10">
+            <button id="login-btn" onclick="loginWithGoogle()" 
+                    class="px-2.5 py-1 bg-purple-600 hover:bg-purple-500 text-purple-100 font-bold text-[10px] rounded-lg border border-purple-400 flex items-center gap-1 transition-all shadow-md">
+                🔑 Log In
+            </button>
+            <div id="user-profile-badge" class="hidden flex items-center gap-1.5 bg-zinc-800 border border-purple-500/50 px-2 py-0.5 rounded-lg text-[10px]">
+                <span id="user-display-name" class="font-bold text-purple-300"></span>
+                <button onclick="logoutUser()" class="text-red-400 hover:text-red-300 font-bold ml-1" title="Log Out">✕</button>
+            </div>
+        </div>
+
         <!-- Elements Group -->
         <div class="flex flex-col items-center">
             <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Elements</span>
@@ -440,6 +454,151 @@
             console.warn("Firebase initialize warning:", e);
         }
 
+        let auth = null;
+        let currentUser = null;
+        let currentUserProfile = null;
+
+        // Ensure auth SDK is loaded
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            auth = firebase.auth();
+        } catch (e) {
+            console.warn("Firebase initialize warning:", e);
+        }
+
+        // Watch Auth State Changes
+        if (auth) {
+            auth.onAuthStateChanged(async (user) => {
+                currentUser = user;
+                const loginBtn = document.getElementById('login-btn');
+                const profileBadge = document.getElementById('user-profile-badge');
+                const displayNameEl = document.getElementById('user-display-name');
+
+                if (user) {
+                    // Check if profile exists in Firestore
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+
+                    if (userDoc.exists) {
+                        currentUserProfile = userDoc.data();
+                        
+                        // Hide Login Button & Show User Badge
+                        if (loginBtn) loginBtn.classList.add('hidden');
+                        if (profileBadge) profileBadge.classList.remove('hidden');
+                        if (displayNameEl) displayNameEl.textContent = currentUserProfile.commanderName;
+
+                        // Auto-fill leaderboard name input
+                        localStorage.setItem('last_commander_name', currentUserProfile.commanderName);
+                    } else {
+                        // First-time login: Prompt Username Pop-up
+                        toggleUsernameModal(true);
+                    }
+                } else {
+                    // User logged out: Reset UI
+                    currentUserProfile = null;
+                    if (loginBtn) loginBtn.classList.remove('hidden');
+                    if (profileBadge) profileBadge.classList.add('hidden');
+                }
+            });
+        }
+
+        // Check if Commander Name is taken by another UID
+        async function isCommanderNameTaken(name, currentUid) {
+            if (!db) return false;
+            const snapshot = await db.collection('users')
+                .where('commanderNameLower', '==', name.toLowerCase())
+                .get();
+            
+            if (snapshot.empty) return false;
+            // Check if the taken name belongs to someone else
+            return snapshot.docs.some(doc => doc.id !== currentUid);
+        }
+
+        // Google Login
+        async function loginWithGoogle() {
+            if (!auth) return alert("Firebase Auth is not available.");
+            const provider = new firebase.auth.GoogleAuthProvider();
+            try {
+                await auth.signInWithPopup(provider);
+            } catch (err) {
+                console.error("Login failed:", err);
+            }
+        }
+
+        // Logout
+        async function logoutUser() {
+            if (auth) {
+                await auth.signOut();
+                alert("Logged out successfully.");
+            }
+        }
+
+        // Username Modal Toggle
+        function toggleUsernameModal(show) {
+            const modal = document.getElementById('username-modal');
+            if (modal) {
+                if (show) modal.classList.remove('hidden');
+                else modal.classList.add('hidden');
+            }
+        }
+
+        // Save Username Function for First-Time Users
+        async function saveNewUsername() {
+            const input = document.getElementById('new-username-input');
+            const errorEl = document.getElementById('username-error-msg');
+            const saveBtn = document.getElementById('save-username-btn');
+            const chosenName = input.value.trim();
+
+            if (!chosenName || chosenName.length < 2) {
+                errorEl.textContent = "Username must be at least 2 characters long.";
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = "⌛ Checking...";
+
+            try {
+                // Check if username is already taken
+                const snapshot = await db.collection('users')
+                    .where('commanderNameLower', '==', chosenName.toLowerCase())
+                    .get();
+
+                if (!snapshot.empty) {
+                    errorEl.textContent = `"${chosenName}" is already taken! Choose another.`;
+                    errorEl.classList.remove('hidden');
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = "Save & Continue";
+                    return;
+                }
+
+                // Save new user profile to Firestore
+                await db.collection('users').doc(currentUser.uid).set({
+                    commanderName: chosenName,
+                    commanderNameLower: chosenName.toLowerCase(),
+                    email: currentUser.email,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                currentUserProfile = { commanderName: chosenName };
+
+                // Update UI
+                document.getElementById('login-btn')?.classList.add('hidden');
+                document.getElementById('user-profile-badge')?.classList.remove('hidden');
+                document.getElementById('user-display-name').textContent = chosenName;
+                localStorage.setItem('last_commander_name', chosenName);
+
+                toggleUsernameModal(false);
+            } catch (err) {
+                console.error("Error saving username:", err);
+                errorEl.textContent = "Error saving profile. Please try again.";
+                errorEl.classList.remove('hidden');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = "Save & Continue";
+            }
+        }
+
         // CORRUPTION STATE & HELPERS
         let corruptedCells = new Set();
         let corruptedTraits = {};
@@ -500,7 +659,7 @@
         const DIFFICULTY_WEIGHT_PROFILES = {
             easy: {
                 'SELF_ATTRIBUTE': 3,                // What is one of my attributes
-                'NIKKE_ON_GRID': 1,                 // Is a specific Nikke on the grid
+                'NIKKE_ON_GRID': 0,                 // Is a specific Nikke on the grid
                 'DIRECTIONAL_NEIGHBOR_ATTR': 3,     // What is one of my directional neighbor's attributes
                 'SAME_COLUMN_NIKKE': 0,             // Is a specific Nikke in the same column or row
                 'ADJACENT_SPECIFIC_ATTR_COUNT': 0,  // How many of a specific attribute are adjacent to me
@@ -826,9 +985,9 @@
                 else if (currentDifficulty === 'hard4') { gridRows = 4; gridCols = 4; poolSize = 50; hints = 2; }
                 else if (currentDifficulty === 'hard5') { gridRows = 5; gridCols = 5; poolSize = allNikkesData.length; hints = 3; }
             } else if (currentDifficulty.startsWith('insane')) {
-                gridRows = 10; 
-                gridCols = 10; 
-                poolSize = allNikkesData.length; 
+                gridRows = 11; 
+                gridCols = 11; 
+                poolSize = 121; 
                 hints = 5;
             }
 
@@ -860,10 +1019,10 @@
                 corruptedCells.add(coord);
 
                 corruptedTraits[coord] = {
-                    color: Math.random() > 0.9,
-                    text: Math.random() > 0.8,
-                    name: Math.random() > 0.8,
-                    image: Math.random() > 0.8
+                    color: Math.random() > 1.0,
+                    text: Math.random() > 0.2,
+                    name: Math.random() > 0.2,
+                    image: Math.random() > 0.2
                 };
                 if (!Object.values(corruptedTraits[coord]).some(Boolean)) {
                     corruptedTraits[coord].name = true;
@@ -893,7 +1052,7 @@
             setTimeout(() => document.getElementById('status').textContent = '', 3500);
         }
 
-        // Question and corruption generation
+        // 16-QUESTION DYNAMIC CLUE GENERATOR WITH CORRUPTION & DIFFICULTY PROFILES
         function generateClues(sol) {
             cellCluesMap = {};
             cellClueRules = {};
@@ -1788,17 +1947,35 @@
         // --------------------------------------------------
         let selectedLeaderboardTab = 'easy3';
 
-        function toggleWinModal(show) {
+        // OPEN WIN MODAL AND HANDLE LOGGED-IN VS LOGGED-OUT FLOWS
+        async function toggleWinModal(show) {
             const modal = document.getElementById('win-modal');
-            if (modal) {
-                if (show) {
-                    document.getElementById('win-diff-label').textContent = currentDifficulty.toUpperCase();
-                    document.getElementById('win-time-label').textContent = formatTime(elapsedSeconds);
-                    document.getElementById('leaderboard-player-name').value = localStorage.getItem('last_commander_name') || '';
-                    modal.classList.remove('hidden');
+            if (!modal) return;
+
+            if (show) {
+                document.getElementById('win-diff-label').textContent = currentDifficulty.toUpperCase();
+                document.getElementById('win-time-label').textContent = formatTime(elapsedSeconds);
+
+                const loggedInView = document.getElementById('win-logged-in-view');
+                const loggedOutView = document.getElementById('win-logged-out-view');
+
+                if (currentUser && currentUserProfile) {
+                    // USER IS LOGGED IN: Show auto-submit status and record score immediately
+                    loggedInView.classList.remove('hidden');
+                    loggedOutView.classList.add('hidden');
+                    document.getElementById('win-commander-name').textContent = currentUserProfile.commanderName;
+                    
+                    // Automatically submit score
+                    await submitLeaderboardEntryAutomatically();
                 } else {
-                    modal.classList.add('hidden');
+                    // USER IS GUEST: Show log in prompt
+                    loggedInView.classList.add('hidden');
+                    loggedOutView.classList.remove('hidden');
                 }
+
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
             }
         }
 
@@ -1814,47 +1991,44 @@
             }
         }
 
-        async function submitLeaderboardEntry() {
-            const nameInput = document.getElementById('leaderboard-player-name');
-            const commanderName = nameInput.value.trim() || 'Commander';
-            localStorage.setItem('last_commander_name', commanderName);
+        // AUTOMATIC SUBMISSION FOR LOGGED-IN COMMANDERS
+        async function submitLeaderboardEntryAutomatically() {
+            const autoStatus = document.getElementById('win-auto-status');
+            if (autoStatus) autoStatus.innerHTML = `<span>⌛</span> Auto-submitting score...`;
 
-            const submitBtn = document.getElementById('lb-submit-btn');
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '⌛ Submitting...';
-            }
-
-            if (db) {
+            if (db && currentUser && currentUserProfile) {
                 try {
                     await db.collection('leaderboards').add({
+                        userId: currentUser.uid,
                         mode: currentDifficulty,
-                        name: commanderName,
+                        name: currentUserProfile.commanderName,
                         time: elapsedSeconds,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
+
+                    if (autoStatus) autoStatus.innerHTML = `<span>✅</span> Score submitted automatically!`;
                 } catch (e) {
-                    console.error("Firestore submission failed:", e);
+                    console.error("Auto submission error:", e);
+                    if (autoStatus) autoStatus.innerHTML = `<span class="text-red-400">⚠️ Auto-submission failed.</span>`;
                 }
-            } else {
-                const storageKey = `leaderboard_${currentDifficulty}`;
-                const existingScores = JSON.parse(localStorage.getItem(storageKey) || '[]');
-
-                existingScores.push({
-                    name: commanderName,
-                    time: elapsedSeconds,
-                    date: new Date().toLocaleDateString()
-                });
-
-                existingScores.sort((a, b) => a.time - b.time);
-                localStorage.setItem(storageKey, JSON.stringify(existingScores.slice(0, 10)));
             }
+        }
 
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '🏆 Submit Score';
+        // LOG IN FROM WIN MODAL (FOR GUESTS)
+        async function loginWithGoogleFromWinModal() {
+            if (!auth) return alert("Firebase Auth is not available.");
+            const provider = new firebase.auth.GoogleAuthProvider();
+            try {
+                await auth.signInWithPopup(provider);
+                // On success, re-trigger the win modal view so it auto-submits
+                toggleWinModal(true);
+            } catch (err) {
+                console.error("Win modal login failed:", err);
             }
+        }
 
+        // HELPER TO VIEW LEADERBOARDS DIRECTLY FROM WIN MODAL
+        function viewLeaderboardsFromWinModal() {
             toggleWinModal(false);
             toggleLeaderboardModal(true);
         }
@@ -1996,20 +2170,30 @@
         <div class="bg-zinc-900 border-2 border-emerald-500/60 rounded-3xl max-w-md w-full p-5 lg:p-6 shadow-2xl relative flex flex-col text-center">
             <div class="text-3xl mb-1">🎉</div>
             <h2 class="text-xl lg:text-2xl font-black text-emerald-400 mb-1">PUZZLE SOLVED!</h2>
-            <p class="text-xs text-zinc-400 mb-3 lg:mb-4">You solved the <span id="win-diff-label" class="font-bold text-purple-300"></span> puzzle in <span id="win-time-label" class="font-bold text-amber-400 font-mono"></span>!</p>
+            <p class="text-xs text-zinc-400 mb-4">You solved the <span id="win-diff-label" class="font-bold text-purple-300"></span> puzzle in <span id="win-time-label" class="font-bold text-amber-400 font-mono"></span>!</p>
 
-            <div class="bg-zinc-800 p-3 lg:p-4 rounded-2xl border border-zinc-700 mb-3 lg:mb-4 text-left space-y-2">
-                <label for="leaderboard-player-name" class="text-xs font-bold text-zinc-300 block">Enter your Commander Name for the Leaderboard:</label>
-                <input type="text" id="leaderboard-player-name" placeholder="Commander" maxlength="16" 
-                       class="w-full bg-zinc-900 border border-zinc-600 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-400">
+            <!-- VIEW A: LOGGED-IN USERS (Auto-Submitted Message) -->
+            <div id="win-logged-in-view" class="bg-zinc-800 p-4 rounded-2xl border border-zinc-700 mb-4 text-center hidden space-y-1">
+                <div class="text-xs text-zinc-300">Logged in as: <span id="win-commander-name" class="font-bold text-purple-300"></span></div>
+                <div id="win-auto-status" class="text-xs font-bold text-emerald-400 flex items-center justify-center gap-1">
+                    <span>🏆</span> Score submitted automatically!
+                </div>
+            </div>
+
+            <!-- VIEW B: GUEST USERS (Login Prompt) -->
+            <div id="win-logged-out-view" class="bg-zinc-800 p-4 rounded-2xl border border-zinc-700 mb-4 text-center space-y-2 hidden">
+                <p class="text-xs text-zinc-300">Log in to record your high score on the global leaderboard!</p>
+                <button onclick="loginWithGoogleFromWinModal()" class="w-full py-2 bg-purple-600 hover:bg-purple-500 text-purple-100 font-bold text-xs rounded-xl border border-purple-400 transition-all shadow-md flex items-center justify-center gap-1">
+                    🔑 Log In to Submit Score
+                </button>
             </div>
 
             <div class="flex gap-2">
-                <button id="lb-submit-btn" onclick="submitLeaderboardEntry()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold text-xs text-white transition-all shadow-md">
-                    🏆 Submit Score
+                <button onclick="viewLeaderboardsFromWinModal()" class="flex-1 py-2.5 bg-amber-600 hover:bg-amber-500 rounded-xl font-bold text-xs text-white transition-all shadow-md">
+                    🏆 View Leaderboards
                 </button>
                 <button onclick="toggleWinModal(false)" class="py-2.5 px-4 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold text-xs text-zinc-400 transition-all">
-                    Skip
+                    Close
                 </button>
             </div>
         </div>
@@ -2153,6 +2337,25 @@
 
             <button onclick="toggleTutorialModal(false)" class="mt-4 lg:mt-5 w-full py-2.5 bg-purple-600 hover:bg-purple-500 rounded-xl font-bold text-xs text-white transition-all">
                 Got it! Let's Play
+            </button>
+        </div>
+    </div>
+    <!-- FIRST-TIME USERNAME SETUP MODAL -->
+    <div id="username-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-[130] flex items-center justify-center hidden p-4">
+        <div class="bg-zinc-900 border-2 border-purple-500/70 rounded-3xl max-w-md w-full p-5 lg:p-6 shadow-2xl relative flex flex-col text-center">
+            <div class="text-3xl mb-1">🪪</div>
+            <h2 class="text-xl font-black text-purple-300 mb-1">WELCOME COMMANDER!</h2>
+            <p class="text-xs text-zinc-400 mb-4">Choose a unique Commander Username for your profile and the global leaderboards.</p>
+
+            <div class="bg-zinc-800 p-3 rounded-2xl border border-zinc-700 mb-4 text-left">
+                <label for="new-username-input" class="text-xs font-bold text-zinc-300 block mb-1">Commander Username:</label>
+                <input type="text" id="new-username-input" placeholder="Enter username..." maxlength="16" 
+                    class="w-full bg-zinc-900 border border-zinc-600 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-400">
+                <span id="username-error-msg" class="text-[10px] text-red-400 font-semibold mt-1 block hidden"></span>
+            </div>
+
+            <button id="save-username-btn" onclick="saveNewUsername()" class="py-2.5 bg-purple-600 hover:bg-purple-500 rounded-xl font-bold text-xs text-white transition-all shadow-md">
+                Save & Continue
             </button>
         </div>
     </div>
