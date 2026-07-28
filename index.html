@@ -952,13 +952,13 @@
             const sizeSelect = document.getElementById('select-size');
 
             if (diffSelect.value === 'insane') {
-                sizeSelect.value = '11';
+                sizeSelect.value = '10';
                 sizeSelect.disabled = true;
                 sizeSelect.classList.add('opacity-50', 'cursor-not-allowed');
             } else {
                 sizeSelect.disabled = false;
                 sizeSelect.classList.remove('opacity-50', 'cursor-not-allowed');
-                if (sizeSelect.value === '11') {
+                if (sizeSelect.value === '10') {
                     sizeSelect.value = '3';
                 }
             }
