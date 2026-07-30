@@ -1052,7 +1052,7 @@
 
             const actualPoolSize = Math.min(poolSize, allNikkesData.length);
             activePool = shuffle(allNikkesData).slice(0, actualPoolSize);
-            shuffledPalette = shuffle(activePool);
+            shuffledPalette = [...activePool].sort((a, b) => a.name.localeCompare(b.name));
 
             solution = Array(gridRows).fill().map(() => Array(gridCols).fill(null));
             let poolIndex = 0;
