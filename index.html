@@ -452,15 +452,6 @@
         let currentUser = null;
         let currentUserProfile = null;
 
-        rules_version = '2';
-        try {
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-            auth = firebase.auth();
-        } catch (e) {
-            console.warn("Firebase initialize warning:", e);
-        }
-
         // Watch Auth State Changes
         if (auth) {
             auth.onAuthStateChanged(async (user) => {
@@ -2039,15 +2030,61 @@
             }
         }
 
+        // Toggle Leaderboard Modal
         function toggleLeaderboardModal(show) {
             const modal = document.getElementById('leaderboard-modal');
-            if (modal) {
-                if (show) {
-                    filterLeaderboardDisplay(currentDifficulty);
-                    modal.classList.remove('hidden');
-                } else {
-                    modal.classList.add('hidden');
+            if (!modal) return;
+            if (show) {
+                modal.classList.remove('hidden');
+                loadLeaderboardData();
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // Fetch Leaderboard Entries from Firestore
+        async function loadLeaderboardData() {
+            const listEl = document.getElementById('leaderboard-list');
+            const diff = document.getElementById('leaderboard-diff-filter').value;
+            if (!listEl) return;
+
+            listEl.innerHTML = '<div class="text-center text-zinc-500 py-4">Loading entries...</div>';
+
+            if (!db) {
+                listEl.innerHTML = '<div class="text-center text-red-400 py-4">Database connection unavailable.</div>';
+                return;
+            }
+
+            try {
+                const snapshot = await db.collection('leaderboards')
+                    .where('difficulty', '==', diff)
+                    .orderBy('timeSeconds', 'asc')
+                    .limit(10)
+                    .get();
+
+                if (snapshot.empty) {
+                    listEl.innerHTML = '<div class="text-center text-zinc-500 py-4">No records yet for this difficulty!</div>';
+                    return;
                 }
+
+                let html = '';
+                let rank = 1;
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    html += `
+                        <div class="flex items-center justify-between bg-zinc-800/80 p-2 rounded-xl border border-zinc-700/50">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-amber-400 w-5">#${rank++}</span>
+                                <span class="font-semibold text-zinc-200">${data.commanderName || 'Anonymous'}</span>
+                            </div>
+                            <span class="font-mono font-bold text-emerald-400">${formatTime(data.timeSeconds)}</span>
+                        </div>
+                    `;
+                });
+                listEl.innerHTML = html;
+            } catch (err) {
+                console.error("Leaderboard error:", err);
+                listEl.innerHTML = '<div class="text-center text-red-400 py-4">Failed to load leaderboard data. Ensure Firestore indexes are configured.</div>';
             }
         }
 
