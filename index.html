@@ -446,12 +446,14 @@
             messagingSenderId: "216414524695",
             appId: "1:216414524695:web:54a8512a758839fc8e1352"
         };
-
-        firebase.initializeApp(firebaseConfig);
-
+        
+        // INITIALIZE FIREBASE APP & SERVICES CORRECTLY
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const db = firebase.firestore();
         const auth = firebase.auth();
-
+        
         let currentUser = null;
         let currentUserProfile = null;
 
