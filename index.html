@@ -446,14 +446,14 @@
             messagingSenderId: "216414524695",
             appId: "1:216414524695:web:54a8512a758839fc8e1352"
         };
-        
+
         // INITIALIZE FIREBASE APP & SERVICES CORRECTLY
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
         const db = firebase.firestore();
         const auth = firebase.auth();
-        
+
         let currentUser = null;
         let currentUserProfile = null;
 
@@ -2248,14 +2248,148 @@
             el.innerHTML = cls ? `<span class="${cls}">${text}</span>` : text;
         }
 
+        // TUTORIAL STATE MANAGEMENT
+        let currentTutorialStep = 0;
+
+        // PRE-MADE 3x3 TUTORIAL STATE
+        // Pre-populated with 3 Nikke IDs, leaving other slots empty for the tutorial
+        const tutorialSolution = [
+            ['N101', 'N102', 'N103'],
+            ['N104', 'N105', 'N106'],
+            ['N107', 'N108', 'N109']
+        ];
+
+        const tutorialGridState = [
+            ['N101', null, 'N103'], // R1C1 and R1C3 pre-placed
+            [null, 'N105', null],   // Center R2C2 pre-placed
+            [null, null, null]
+        ];
+
+        // TUTORIAL STEPS CONFIGURATION
+        const tutorialSteps = [
+            {
+                instruction: "Welcome! Click on Cell R1C2 (Row 1, Col 2) to select it.",
+                target: { r: 0, c: 1 },
+                actionType: "click_cell"
+            },
+            {
+                instruction: "Great! Now select a Nikke from the 'Available Nikkes' palette or click R2C1 to assign unit 'N104'.",
+                target: { r: 1, c: 0 },
+                actionType: "place_nikke",
+                fillValue: "N104"
+            },
+            {
+                instruction: "You can click on any cell to read its logic hint. Click R2C2 to view its clue.",
+                target: { r: 1, c: 1 },
+                actionType: "view_clue"
+            },
+            {
+                instruction: "Complete the puzzle! Click 'Verify Solution' to finish the tutorial.",
+                actionType: "verify",
+                target: null
+            }
+        ];
+
         function toggleTutorialModal(show) {
             const modal = document.getElementById('tutorial-modal');
-            if (modal) {
-                if (show) {
-                    modal.classList.remove('hidden');
-                } else {
-                    modal.classList.add('hidden');
+            if (!modal) return;
+
+            if (show) {
+                currentTutorialStep = 0;
+                initTutorialGrid();
+                renderTutorialStep();
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function initTutorialGrid() {
+            const gridEl = document.getElementById('tutorial-grid');
+            if (!gridEl) return;
+            gridEl.innerHTML = '';
+
+            for (let r = 0; r < 3; r++) {
+                for (let c = 0; c < 3; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell size-3x3';
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    cell.addEventListener('click', () => handleTutorialCellClick(r, c));
+                    gridEl.appendChild(cell);
                 }
+            }
+            renderTutorialGrid();
+        }
+
+        function renderTutorialGrid() {
+            document.querySelectorAll('#tutorial-grid .grid-cell').forEach(cell => {
+                const r = +cell.dataset.row;
+                const c = +cell.dataset.col;
+                const cellData = tutorialGridState[r][c];
+
+                if (cellData) {
+                    const nikke = allNikkesData.find(n => n.id === cellData) || { name: cellData, icon: '' };
+                    cell.innerHTML = `
+                        <div class="w-[50%] h-[50%] rounded-xl overflow-hidden border border-purple-300 bg-zinc-900 flex items-center justify-center">
+                            <img src="${nikke.icon}" alt="${nikke.name}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <span class="text-xs font-bold text-purple-300 hidden">${nikke.name.substring(0,2).toUpperCase()}</span>
+                        </div>
+                        <div class="nikke-name">${nikke.name}</div>
+                    `;
+                    cell.classList.add('filled');
+                } else {
+                    cell.innerHTML = '';
+                    cell.classList.remove('filled');
+                }
+            });
+        }
+
+        function renderTutorialStep() {
+            const step = tutorialSteps[currentTutorialStep];
+            const badge = document.getElementById('tutorial-step-badge');
+            const text = document.getElementById('tutorial-step-text');
+            const nextBtn = document.getElementById('tutorial-next-btn');
+
+            if (badge) badge.textContent = `Step ${currentTutorialStep + 1} of ${tutorialSteps.length}`;
+            if (text) text.textContent = step.instruction;
+
+            if (step.actionType === 'verify') {
+                if (nextBtn) {
+                    nextBtn.textContent = "Finish Tutorial";
+                    nextBtn.classList.remove('hidden');
+                }
+            } else if (nextBtn) {
+                nextBtn.classList.add('hidden');
+            }
+        }
+
+        function handleTutorialCellClick(r, c) {
+            const step = tutorialSteps[currentTutorialStep];
+            if (!step || step.actionType === 'verify') return;
+
+            if (step.target && step.target.r === r && step.target.c === c) {
+                if (step.actionType === 'place_nikke' && step.fillValue) {
+                    tutorialGridState[r][c] = step.fillValue;
+                    renderTutorialGrid();
+                }
+                
+                advanceTutorialStep();
+            }
+        }
+
+        function advanceTutorialStep() {
+            if (currentTutorialStep < tutorialSteps.length - 1) {
+                currentTutorialStep++;
+                renderTutorialStep();
+            }
+        }
+
+        function nextTutorialStep() {
+            if (currentTutorialStep >= tutorialSteps.length - 1) {
+                toggleTutorialModal(false);
+            } else {
+                advanceTutorialStep();
             }
         }
 
@@ -2398,45 +2532,41 @@
         </div>
     </div>
 
-    <!-- TUTORIAL POP-UP MODAL -->
-    <div id="tutorial-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center hidden p-4">
-        <div class="bg-zinc-900 border-2 border-purple-500/50 rounded-3xl max-w-xl w-full p-5 lg:p-6 shadow-2xl relative flex flex-col max-h-[85vh] overflow-y-auto">
-            <button onclick="toggleTutorialModal(false)" class="absolute top-4 right-4 text-zinc-400 hover:text-white font-bold text-lg px-2">✕</button>
-            
-            <h2 class="text-xl lg:text-2xl font-bold text-purple-400 mb-2 flex items-center gap-2">
-                <span>🎮</span> How to Play Goddess of Logic
-            </h2>
-            
-            <div class="space-y-3 lg:space-y-4 text-xs text-zinc-300 leading-relaxed">
-                <div class="bg-zinc-800/80 p-3 rounded-xl border border-zinc-700">
-                    <h3 class="font-bold text-purple-300 text-sm mb-1">1. Clues</h3>
-                    <p>Each cell on the grid, when selected, will display a clue to the solution. To reach the solution, each clue on the board must be fulfilled. As an example, if a cell has the clue "A Nikke adjacent to me is a fire element", Then to solve the puzzle, one of the Nikke's adjacent to it must be a fire element. Some clues will be more straightforward, and others could be broader, requiring you to look at other clues.</p>
-                </div>
-
-                <div class="bg-zinc-800/80 p-3 rounded-xl border border-zinc-700">
-                    <h3 class="font-bold text-purple-300 text-sm mb-1">2. Characters</h3>
-                    <p>When selecting a difficulty and grid size, you will be presented with a list of available Nikkes that can be placed on the board. When selecting one, you will see its details to help deduce where it can be placed. If you want to find a specific Nikke, you can use the search or filter options to narrow them down. When you have selected a Nikke, you can place them anywhere on the grid, but just know that the same character can't be placed twice.</p>
-                </div>
-
-                <div class="bg-zinc-800/80 p-3 rounded-xl border border-zinc-700">
-                    <h3 class="font-bold text-purple-300 text-sm mb-1">3. Corruption</h3>
-                    <p>In harder difficulties, some cells will become <strong class="text-red-400">CORRUPTED</strong>. Corrupted Nikkes will lie, scramble their clue text, glitch their names, or flash strange colors. You must still place the correct character in a corrupted cell to solve the puzzle, but shouldn't follow their clues.</p>
-                </div>
-
-                <div class="bg-zinc-800/80 p-3 rounded-xl border border-zinc-700">
-                    <h3 class="font-bold text-purple-300 text-sm mb-1">4. Trait Markers</h3>
-                    <p>Click an icon from the bottom dock (Element, Weapon, Manufacturer, Class, Burst) and click empty cells to drop custom notes. You can place multiple category markers on the same tile to help figure out which Nikke fits that cell. You can use these markers to keep track of what clues have told you.</p>
-                </div>
-
-                <div class="bg-zinc-800/80 p-3 rounded-xl border border-zinc-700">
-                    <h3 class="font-bold text-purple-300 text-sm mb-1">5. Solution</h3>
-                    <p>Once every tile is filled with a Nikke, click <strong class="text-purple-300">VERIFY</strong> to check your answer. If you have reached the correct solution, the puzzle will be solved and you can submit your score onto the leaderboard. If you are incorrect, you will recieve a 1 minute penalty and be told which clues haven't been fulfilled.</p>
-                </div>
+    <!-- TUTORIAL MODAL -->
+    <div id="tutorial-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-purple-500/50 rounded-2xl max-w-xl w-full p-4 lg:p-6 shadow-2xl flex flex-col items-center">
+            <!-- HEADER -->
+            <div class="w-full flex justify-between items-center border-b border-zinc-800 pb-3 mb-4">
+                <h2 class="text-lg font-bold text-purple-300 flex items-center gap-2">
+                    <span>🎓</span> Interactive Tutorial
+                </h2>
+                <button onclick="toggleTutorialModal(false)" class="text-zinc-400 hover:text-white font-bold text-sm">✕ Close</button>
             </div>
 
-            <button onclick="toggleTutorialModal(false)" class="mt-4 lg:mt-5 w-full py-2.5 bg-purple-600 hover:bg-purple-500 rounded-xl font-bold text-xs text-white transition-all">
-                Let's Play
-            </button>
+            <!-- STEP INSTRUCTION POP-UP CARD -->
+            <div id="tutorial-step-card" class="w-full bg-purple-950/60 border border-purple-500/80 rounded-xl p-3 mb-4 text-center">
+                <span id="tutorial-step-badge" class="text-[10px] font-bold uppercase tracking-wider bg-purple-700 text-purple-100 px-2 py-0.5 rounded-full inline-block mb-1">
+                    Step 1 of 4
+                </span>
+                <p id="tutorial-step-text" class="text-xs lg:text-sm text-purple-100 font-medium">
+                    Click on Cell (Row 1, Column 2) to select it.
+                </p>
+            </div>
+
+            <!-- PRE-MADE 3x3 TUTORIAL GRID -->
+            <div class="flex items-center justify-center my-2">
+                <div id="tutorial-grid" class="grid grid-cols-3 gap-2"></div>
+            </div>
+
+            <!-- FOOTER / SKIP -->
+            <div class="w-full flex justify-between items-center border-t border-zinc-800 pt-3 mt-4">
+                <button onclick="toggleTutorialModal(false)" class="text-xs text-zinc-400 hover:text-zinc-200">
+                    Skip Tutorial
+                </button>
+                <button id="tutorial-next-btn" onclick="nextTutorialStep()" class="px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl hidden">
+                    Next Step →
+                </button>
+            </div>
         </div>
     </div>
 
