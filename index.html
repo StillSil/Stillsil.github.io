@@ -104,7 +104,7 @@
                     <label for="select-diff" class="text-zinc-400 font-bold text-[10px] lg:text-[11px]">Difficulty:</label>
                     <select id="select-diff" onchange="handleDropdownChange()" class="bg-zinc-800 text-purple-300 font-bold px-2 py-1 rounded-xl border border-zinc-700 focus:outline-none focus:border-purple-400 text-xs">
                         <option value="easy">Easy</option>
-                        <option value="medium">Medium</option>
+                    <!--   <option value="medium">Medium</option> -->
                         <option value="hard">Hard</option>
                         <option value="insane">Insane</option>
                     </select>
@@ -132,6 +132,11 @@
                         VERIFY
                     </button>
                 </div>
+            </div>
+
+            <div id="tutorial-overlay" class="hidden w-full max-w-md mx-auto mb-2 bg-blue-900/90 border-2 border-blue-400 p-3 rounded-xl shadow-2xl z-50 text-center flex-shrink-0 animate-pulse">
+                <h3 class="text-blue-200 font-bold text-xs mb-1">TUTORIAL - STEP <span id="tut-step-num">1</span></h3>
+                <p id="tut-text" class="text-sm font-semibold text-white">Instruction text goes here.</p>
             </div>
 
             <!-- PUZZLE GRID AREA WITH TOUCH SCROLL -->
@@ -309,7 +314,7 @@
         </div>
 
         <!-- Elements Group -->
-        <div class="flex flex-col items-center">
+        <div class="flex flex-col items-center -translate-x-12">
             <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Elements</span>
             <div class="flex gap-1">
                 <button id="btn-element-Fire" onclick="selectTraitIcon('element', 'Fire', 'Fire', 'images/Fire.jpg')" title="Fire" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
@@ -330,10 +335,10 @@
             </div>
         </div>
 
-        <div class="hidden lg:block h-6 w-px bg-zinc-800"></div>
+        <div class="hidden lg:block h-6 w-px bg-zinc-800 -translate-x-12"></div>
 
         <!-- Weapons Group -->
-        <div class="flex flex-col items-center">
+        <div class="flex flex-col items-center -translate-x-12">
             <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Weapons</span>
             <div class="flex gap-1">
                 <button id="btn-weapon-Assault Rifle" onclick="selectTraitIcon('weapon', 'Assault Rifle', 'AR', 'images/AR.jpg')" title="AR" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
@@ -357,10 +362,10 @@
             </div>
         </div>
 
-        <div class="hidden lg:block h-6 w-px bg-zinc-800"></div>
+        <div class="hidden lg:block h-6 w-px bg-zinc-800 -translate-x-12"></div>
 
         <!-- Manufacturers Group -->
-        <div class="flex flex-col items-center">
+        <div class="flex flex-col items-center -translate-x-12">
             <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Manu.</span>
             <div class="flex gap-1">
                 <button id="btn-manufacturer-Elysion" onclick="selectTraitIcon('manufacturer', 'Elysion', 'Elysion', 'images/Elysion.jpg')" title="Elysion" class="trait-btn bg-zinc-800 border border-zinc-700/60 px-1 py-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 min-w-[34px] lg:h-8 lg:min-w-[42px]">
@@ -378,10 +383,10 @@
             </div>
         </div>
 
-        <div class="hidden lg:block h-6 w-px bg-zinc-800"></div>
+        <div class="hidden lg:block h-6 w-px bg-zinc-800 -translate-x-12"></div>
 
         <!-- Class Group -->
-        <div class="flex flex-col items-center">
+        <div class="flex flex-col items-center -translate-x-12">
             <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Class</span>
             <div class="flex gap-1">
                 <button id="btn-class-Attacker" onclick="selectTraitIcon('class', 'Attacker', 'Attacker', 'images/Attacker.jpg')" title="Attacker" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
@@ -396,10 +401,10 @@
             </div>
         </div>
 
-        <div class="hidden lg:block h-6 w-px bg-zinc-800"></div>
+        <div class="hidden lg:block h-6 w-px bg-zinc-800 -translate-x-12"></div>
 
         <!-- Burst Level Group -->
-        <div class="flex flex-col items-center">
+        <div class="flex flex-col items-center -translate-x-12">
             <span class="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">Burst</span>
             <div class="flex gap-1">
                 <button id="btn-burst-1" onclick="selectTraitIcon('burst', '1', 'B1', 'images/1.jpg')" title="Burst 1" class="trait-btn bg-zinc-800 border border-zinc-700/60 p-0.5 rounded-md hover:bg-purple-900/60 flex items-center justify-center h-7 w-7 lg:h-8 lg:w-8">
@@ -419,7 +424,10 @@
 
         <!-- ACTION BUTTONS -->
         <div class="flex items-center gap-1.5 w-full lg:w-auto justify-end lg:absolute lg:right-4 pt-1 lg:pt-0 border-t lg:border-t-0 border-zinc-800">
-            <button onclick="toggleTutorialModal(true)" class="px-2.5 py-1 bg-purple-700 hover:bg-purple-600 text-purple-100 font-bold text-[10px] rounded-lg border border-purple-400 flex items-center gap-1 transition-all shadow-md">
+            <!--<button onclick="openRulesIndex()" class="px-2.5 py-1 bg-indigo-700 hover:bg-indigo-600 text-indigo-100 font-bold text-[10px] rounded-lg border border-indigo-400 flex items-center gap-1 transition-all shadow-md">
+                📖 Rules Index
+            </button> -->
+            <button onclick="startTutorial()" class="px-2.5 py-1 bg-purple-700 hover:bg-purple-600 text-purple-100 font-bold text-[10px] rounded-lg border border-purple-400 flex items-center gap-1 transition-all shadow-md">
                 ❓ How to Play
             </button>
             <button onclick="toggleLeaderboardModal(true)" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-amber-100 font-bold text-[10px] rounded-lg border border-amber-400 flex items-center gap-1 transition-all shadow-md">
@@ -655,6 +663,223 @@
             }
         }
 
+        let currentRuleIndex = 0;
+
+        const clueRulesData = [
+            {
+                title: "Self Attribute",
+                desc: "I am a [ATTRIBUTE].",
+                grid: [
+                    { label: "🔥 Fire", highlight: true },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false }
+                ]
+            },
+            {
+                title: "NIKKE_ON_GRID",
+                desc: "Indicates that a specific Nikke or trait must be in an adjacent cell directly touching this one (up, down, left, right).",
+                grid: [
+                    { label: "Nikke A", highlight: true },
+                    { label: "Near A", highlight: true, border: "border-amber-400" },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false }
+                ]
+            },
+            {
+                title: "DIRECTIONAL_NEIGHBOR_ATTR",
+                desc: "Means the target unit shares the same row or column as the cell, regardless of distance.",
+                grid: [
+                    { label: "Nikke B", highlight: true },
+                    { label: "Same Row", highlight: true, border: "border-emerald-400" },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false }
+                ]
+            },
+            {
+                title: "SAME_COLUMN_NIKKE",
+                desc: "tells you the target is strictly in a relative direction (e.g., 'Above', 'To the right of') from another cell.",
+                grid: [
+                    { label: "Above X", highlight: true, border: "border-cyan-400" },
+                    { label: "❓", highlight: false },
+                    { label: "Nikke X", highlight: true },
+                    { label: "❓", highlight: false }
+                ]
+            },
+            {
+                title: "ADJACENT_SPECIFIC_ATTR_COUNT",
+                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
+                grid: [
+                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false }
+                ]
+            },
+            {
+                title: "SQUADMATE_ADJACENT",
+                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
+                grid: [
+                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false }
+                ]
+            },
+            {
+                title: "ELEMENT_STRONGER",
+                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
+                grid: [
+                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false }
+                ]
+            },
+            {
+                title: "SHARED_DIRECTIONAL_ATTR",
+                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
+                grid: [
+                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false }
+                ]
+            },
+            {
+                title: "ROW_COL_COUNT",
+                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
+                grid: [
+                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false }
+                ]
+            },
+            {
+                title: "WEAPON_RANGE_COMP",
+                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
+                grid: [
+                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false }
+                ]
+            },
+            {
+                title: "DIRECTIONAL_BURST_COMP",
+                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
+                grid: [
+                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false }
+                ]
+            },
+            {
+                title: "ADJACENT_SAME_ATTR_COUNT",
+                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
+                grid: [
+                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false }
+                ]
+            },
+            {
+                title: "SEE_DISTANCE_RANGE",
+                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
+                grid: [
+                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false }
+                ]
+            },
+            {
+                title: "ONLY_SQUAD_GRID",
+                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
+                grid: [
+                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false }
+                ]
+            },
+            {
+                title: "GLOBAL_MOST_ATTR",
+                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
+                grid: [
+                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false }
+                ]
+            },
+            {
+                title: "ROW_MAJORITY_ATTR",
+                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
+                grid: [
+                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false },
+                    { label: "❓", highlight: false }
+                ]
+            },
+        ];
+
+        function openRulesIndex() {
+            currentRuleIndex = 0;
+            document.getElementById('rules-modal').classList.remove('hidden');
+            renderRule();
+        }
+
+        function closeRulesIndex() {
+            document.getElementById('rules-modal').classList.add('hidden');
+        }
+
+        function renderRule() {
+            const rule = clueRulesData[currentRuleIndex];
+            document.getElementById('rule-title').textContent = rule.title;
+            document.getElementById('rule-description').textContent = rule.desc;
+            document.getElementById('rule-step-indicator').textContent = `Rule ${currentRuleIndex + 1} of ${clueRulesData.length}`;
+
+            // Render 2x2 Mini-Grid Example
+            const gridContainer = document.getElementById('rule-mini-grid');
+            gridContainer.innerHTML = rule.grid.map(cell => `
+                <div class="flex items-center justify-center p-1 rounded-lg text-center text-[11px] font-bold border ${
+                    cell.highlight 
+                        ? (cell.border || 'border-indigo-400 bg-indigo-950/80 text-indigo-100') 
+                        : 'border-slate-800 bg-slate-900/40 text-slate-600'
+                }">
+                    ${cell.label}
+                </div>
+            `).join('');
+
+            // Button States
+            document.getElementById('rule-prev-btn').disabled = currentRuleIndex === 0;
+            document.getElementById('rule-next-btn').disabled = currentRuleIndex === clueRulesData.length - 1;
+
+            // Render Dots
+            document.getElementById('rule-dots').innerHTML = clueRulesData.map((_, i) => `
+                <span class="w-2 h-2 rounded-full transition-all ${i === currentRuleIndex ? 'bg-indigo-400 scale-125' : 'bg-slate-700'}"></span>
+            `).join('');
+        }
+
+        function nextRule() {
+            if (currentRuleIndex < clueRulesData.length - 1) {
+                currentRuleIndex++;
+                renderRule();
+            }
+        }
+
+        function prevRule() {
+            if (currentRuleIndex > 0) {
+                currentRuleIndex--;
+                renderRule();
+            }
+        }
+
         // CORRUPTION STATE & HELPERS
         let corruptedCells = new Set();
         let corruptedTraits = {};
@@ -731,24 +956,24 @@
                 'GLOBAL_MOST_ATTR': 0,              // What has the most of a specific attribute on the grid
                 'ROW_MAJORITY_ATTR': 0              // What attribute is the majority in my row or column
             },
-            medium: {
-                'SELF_ATTRIBUTE': 3,                // What is one of my attributes
-                'NIKKE_ON_GRID': 1,                 // Is a specific Nikke on the grid
-                'DIRECTIONAL_NEIGHBOR_ATTR': 3,     // What is one of my directional neighbor's attributes
-                'SAME_COLUMN_NIKKE': 1,             // Is a specific Nikke in the same column or row
-                'ADJACENT_SPECIFIC_ATTR_COUNT': 1,  // How many of a specific attribute are adjacent to me
-                'SQUADMATE_ADJACENT': 1,            // Is a squadmate adjacent to me
-                'ELEMENT_STRONGER': 2,              // Is my element stronger than an adjacent Nikke's element
-                'SHARED_DIRECTIONAL_ATTR': 2,       // Do I share a attribute with an adjacent Nikke
-                'ROW_COL_COUNT': 1,                 // How many of a specific attribute are in my row or column
-                'WEAPON_RANGE_COMP': 1,             // Is my weapon range greater than an adjacent Nikke's weapon range
-                'DIRECTIONAL_BURST_COMP': 2,        // Is my burst level greater than an adjacent Nikke's burst level
-                'ADJACENT_SAME_ATTR_COUNT': 1,      // How many adjacent Nikkes share the same attribute as me
-                'SEE_DISTANCE_RANGE': 1,            // What attribute can I see at my weapons range
-                'ONLY_SQUAD_GRID': 1,               // Am I the only Nikke of my squad on the grid
-                'GLOBAL_MOST_ATTR': 1,              // What has the most of a specific attribute on the grid
-                'ROW_MAJORITY_ATTR': 1              // What attribute is the majority in my row or column
-            },
+            // medium: {
+            //    'SELF_ATTRIBUTE': 3,                // What is one of my attributes
+            //    'NIKKE_ON_GRID': 1,                 // Is a specific Nikke on the grid
+            //    'DIRECTIONAL_NEIGHBOR_ATTR': 3,     // What is one of my directional neighbor's attributes
+            //    'SAME_COLUMN_NIKKE': 1,             // Is a specific Nikke in the same column or row
+            //    'ADJACENT_SPECIFIC_ATTR_COUNT': 1,  // How many of a specific attribute are adjacent to me
+            //    'SQUADMATE_ADJACENT': 1,            // Is a squadmate adjacent to me
+            //    'ELEMENT_STRONGER': 2,              // Is my element stronger than an adjacent Nikke's element
+            //    'SHARED_DIRECTIONAL_ATTR': 2,       // Do I share a attribute with an adjacent Nikke
+            //    'ROW_COL_COUNT': 1,                 // How many of a specific attribute are in my row or column
+            //    'WEAPON_RANGE_COMP': 1,             // Is my weapon range greater than an adjacent Nikke's weapon range
+            //    'DIRECTIONAL_BURST_COMP': 2,        // Is my burst level greater than an adjacent Nikke's burst level
+            //    'ADJACENT_SAME_ATTR_COUNT': 1,      // How many adjacent Nikkes share the same attribute as me
+            //    'SEE_DISTANCE_RANGE': 1,            // What attribute can I see at my weapons range
+            //    'ONLY_SQUAD_GRID': 1,               // Am I the only Nikke of my squad on the grid
+            //    'GLOBAL_MOST_ATTR': 1,              // What has the most of a specific attribute on the grid
+            //    'ROW_MAJORITY_ATTR': 1              // What attribute is the majority in my row or column
+            //},
             hard: {
                 'SELF_ATTRIBUTE': 2,                // What is one of my attributes
                 'NIKKE_ON_GRID': 0,                 // Is a specific Nikke on the grid
@@ -975,6 +1200,16 @@
         function selectTraitIcon(type, value, label, src) {
             selectedNikke = null;
 
+            if (isTutorialMode) {
+                const req = tutorialSteps[tutorialStep];
+                if (req.action === 'select_marker') {
+                    if (type === req.type && value === req.value) advanceTutorial();
+                    else return; // Block wrong marker selection
+                } else if (req.action !== 'place_marker') {
+                    return;
+                }
+            }
+
             if (selectedTraitMark && selectedTraitMark.type === type && selectedTraitMark.value === value) {
                 selectedTraitMark = null;
             } else {
@@ -1014,6 +1249,8 @@
         }
 
         function generateNewPuzzle() {
+            isTutorialMode = false;
+            document.getElementById('tutorial-overlay')?.classList.add('hidden');
             if (allNikkesData.length === 0) return;
 
             selectedNikke = null;
@@ -1630,27 +1867,26 @@
                     // Select weighted random clue
                     const chosenClue = getWeightedRandomChoice(candidates);
                     if (chosenClue) {
-                        if (corruptedCells.has(cellKey)) {
-                            // CORRUPTED CELL HANDLER: Lying clues / dialogue
-                            const isDialogue = Math.random() > 0.2; // Corrupted Dialogue has 20% chance of appearing, otherwise lying clue
-                            let lieText = "";
-
-                            if (isDialogue) {
-                                lieText = CORRUPTED_DIALOGUE_CLUES[Math.floor(Math.random() * CORRUPTED_DIALOGUE_CLUES.length)];
-                            } else {
-                                lieText = chosenClue.text.replace(/contains \d+/g, "contains 0").replace(/I am a/g, "I am NOT a");
+                        const isSelfCorrupted = corruptedCells.has(cellKey);
+                        
+                        // Check if any referenced neighboring cell is corrupted
+                        let referencesCorruptedCell = false;
+                        neighborPositions.forEach(pos => {
+                            if (corruptedCells.has(`${pos.row},${pos.col}`)) {
+                                referencesCorruptedCell = true;
                             }
+                        });
 
-                            if (corruptedTraits[cellKey]?.text) {
-                                lieText = glitchifyText(lieText);
-                            }
+                        // If the speaking cell or the target cell it's describing is corrupted, lie!
+                        if (isSelfCorrupted || referencesCorruptedCell) {
+                            const falseClueText = invertClueText(chosenClue.text);
 
-                            cellCluesMap[cellKey] = `${lieText}`;
+                            cellCluesMap[cellKey] = falseClueText;
                             cellClueRules[cellKey] = {
-                                checkFn: () => true, // Verification passes, but clue presented to user is false
-                                expected: true,
+                                checkFn: chosenClue.checkFn, // Keep true rule check internally for puzzle solver validation
+                                expected: chosenClue.expected,
                                 isCorrupted: true,
-                                text: cellCluesMap[cellKey]
+                                text: falseClueText
                             };
                         } else {
                             // Normal valid clue
@@ -1668,6 +1904,41 @@
             }
         }
 
+        // Helper to invert comparison and relational operators in clues
+        function invertClueText(clueText) {
+            let inverted = clueText;
+
+            // Direct Comparisons & Relationships
+            if (inverted.includes("stronger than")) {
+                inverted = inverted.replace("stronger than", "weaker than");
+            } else if (inverted.includes("weaker than")) {
+                inverted = inverted.replace("weaker than", "stronger than");
+            } else if (inverted.includes("HIGHER")) {
+                inverted = inverted.replace("HIGHER", "LOWER");
+            } else if (inverted.includes("LOWER")) {
+                inverted = inverted.replace("LOWER", "HIGHER");
+            } else if (inverted.includes("LONGER")) {
+                inverted = inverted.replace("LONGER", "SHORTER");
+            } else if (inverted.includes("SHORTER")) {
+                inverted = inverted.replace("SHORTER", "LONGER");
+            } else if (inverted.includes("shares the same")) {
+                inverted = inverted.replace("shares the same", "has a different");
+            } else if (inverted.includes("I am a")) {
+                inverted = inverted.replace("I am a", "I am NOT a");
+            } else if (inverted.includes("is in the same column as")) {
+                inverted = inverted.replace("is in the same column as", "is NOT in the same column as");
+            } else if (inverted.includes("is on the grid")) {
+                inverted = inverted.replace("is on the grid", "is NOT on the grid");
+            } else if (inverted.includes("directly adjacent to my squadmate")) {
+                inverted = inverted.replace("directly adjacent to my squadmate", "NOT adjacent to any squadmate");
+            } else {
+                // Fallback negation for unhandled text structures
+                inverted = "NOT " + inverted;
+            }
+
+            return inverted;
+        }
+
         function createGrid() {
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
@@ -1683,6 +1954,26 @@
                     cell.dataset.row = r; cell.dataset.col = c;
                     cell.addEventListener('click', () => {
                         clearErrorHighlights();
+
+                        if (isTutorialMode) {
+                            const req = tutorialSteps[tutorialStep];
+                            let allowClick = false;
+
+                            if (req.action === 'click_cell' && req.row === r && req.col === c) {
+                                advanceTutorial();
+                                allowClick = true; 
+                            } 
+                            else if (req.action === 'place_nikke' && selectedNikke?.id === req.nikkeId && req.row === r && req.col === c) {
+                                allowClick = true;
+                                setTimeout(advanceTutorial, 50);
+                            }
+                            else if (req.action === 'place_marker' && selectedTraitMark?.type === req.type && selectedTraitMark?.value === req.value && req.row === r && req.col === c) {
+                                allowClick = true;
+                                setTimeout(advanceTutorial, 50);
+                            }
+
+                            if (!allowClick && req.action !== 'verify') return; // Block incorrect grid clicks
+                        }
 
                         if (selectedNikke) {
                             currentGrid[r][c] = (currentGrid[r][c] === selectedNikke.id) ? null : selectedNikke.id;
@@ -1844,6 +2135,15 @@
                 btn.onclick = () => {
                     selectedTraitMark = null;
                     updateTraitDockUI();
+                    if (isTutorialMode) {
+                        const req = tutorialSteps[tutorialStep];
+                        if (req.action === 'select_nikke') {
+                            if (n.id === req.nikkeId) advanceTutorial();
+                            else return; // Block selecting the wrong character
+                        } else if (req.action !== 'place_nikke') {
+                            return; 
+                        }
+                    }
                     if (selectedNikke?.id === n.id) {
                         selectedNikke = null;
                     } else {
@@ -1942,6 +2242,18 @@
 
         function checkSolution() {
             clearErrorHighlights();
+
+            if (isTutorialMode) {
+                const req = tutorialSteps[tutorialStep];
+                if (req.action === 'verify') {
+                    document.getElementById('tutorial-overlay').classList.add('hidden');
+                    isTutorialMode = false;
+                    setStatus("🎉 Tutorial Complete! You're ready for a real puzzle.", "text-emerald-400 font-bold text-xl");
+                    return;
+                } else {
+                    return; // Block early verify
+                }
+            }
 
             const filledWithNikkes = currentGrid.every(r => r.every(c => typeof c === 'string'));
             if (!filledWithNikkes) return setStatus('⚠️ Fill every cell with a Nikke first (Markers don\'t count as solutions)!', 'text-amber-400 font-semibold');
@@ -2047,7 +2359,7 @@
             }
         }
 
-        // AUTOMATIC SUBMISSION FOR LOGGED-IN COMMANDERS (REPLACES SLOWER SCORES IN FIRESTORE)
+        // Submits scores to Firescore to be saved and displayed on the leaderboard
         async function submitLeaderboardEntryAutomatically() {
             const autoStatus = document.getElementById('win-auto-status');
             if (autoStatus) autoStatus.innerHTML = `<span>⌛</span> Checking score against leaderboard...`;
@@ -2107,7 +2419,7 @@
             }
         }
 
-        // LOG IN FROM WIN MODAL (FOR GUESTS)
+        // Displays a log in button after solving a puzzle
         async function loginWithGoogleFromWinModal() {
             if (!auth) return alert("Firebase Auth is not available.");
             const provider = new firebase.auth.GoogleAuthProvider();
@@ -2248,149 +2560,83 @@
             el.innerHTML = cls ? `<span class="${cls}">${text}</span>` : text;
         }
 
-        // TUTORIAL STATE MANAGEMENT
-        let currentTutorialStep = 0;
+        let isTutorialMode = false;
+        let tutorialStep = 0;
+        let tutorialNikkes = [];
+        let tutorialSteps = [];
 
-        // PRE-MADE 3x3 TUTORIAL STATE
-        // Pre-populated with 3 Nikke IDs, leaving other slots empty for the tutorial
-        const tutorialSolution = [
-            ['N101', 'N102', 'N103'],
-            ['N104', 'N105', 'N106'],
-            ['N107', 'N108', 'N109']
-        ];
+        function startTutorial() {
+            if (allNikkesData.length < 3) return; // Ensure data is loaded
+            
+            isTutorialMode = true;
+            tutorialStep = 0;
+            
+            // Force a 3x3 grid setup
+            currentDifficulty = 'easy3';
+            gridRows = 3; 
+            gridCols = 3;
+            
+            // Grab 9 characters safely from the loaded pool
+            tutorialNikkes = allNikkesData.slice(0, 9); 
+            activePool = tutorialNikkes;
+            shuffledPalette = [...activePool];
+            
+            // Pre-place 3 characters on the grid diagonally
+            currentGrid = Array(3).fill().map(() => Array(3).fill(null));
+            currentGrid[1][1] = tutorialNikkes[1].id;
+            
+            // Clear out standard logic interference
+            cellCluesMap = {
+                '0,0': `I am Anchor.`,
+                '1,0': `I am ${tutorialNikkes[6].name}.`,
+                '2,0': `I am adjacent to a Burst ${tutorialNikkes[7].burst} unit.`,
+                '0,1': `My element is stronger that the Nikke below me.`,
+                '1,1': `I am Admi.`,
+                '2,1': `I am Ark Black Ranger.`,
+                '0,2': `I am a ${tutorialNikkes[4].element} Element.`,
+                '1,2': `I am Avistar.`,
+                '2,2': `I am Arcana.`
+            };
+            corruptedCells.clear();
+            corruptedTraits = {};
+            
+            // Define interactive steps
+            tutorialSteps = [
+                { text: `Welcome to Nikke Logic! This tutorial will teach mechanics and clues. First, click on the empty cell R2C1 (Row 2, Column 1) to read its clue.`, action: 'click_cell', row: 1, col: 0 },
+                { text: `This cell seems to be looking for a Specific Nikke. Look for them in your available pool and place them here.`, action: 'place_nikke', row: 1, col: 0, nikkeId: tutorialNikkes[6].id },
+                { text: `You have now filled one of the cells! Let's now look at cell R1C3 (Row 1, Column 3) `, action: 'click_cell', row: 0, col: 2, },
+                { text: `This cell has a Nikke who is a ${tutorialNikkes[4].element} Element. If you want to find information about Nikkes, click them and it should appear in the info panel. Otherwise, you can filter information by attribute in the available pool.`, action: 'place_nikke', row: 0, col: 2, nikkeId: tutorialNikkes[4].id },
+                { text: `Because Anis was the only Iron element, she was the only one who could go there. Cells don't always give clues about themselves, and sometimes will give a clue about a neighbour. Click cell R1C2 (Row 1, Column 2)`, action: 'click_cell', row: 0, col: 1, },
+                { text: `This clue is comparing to an adjacent cell, in this case, the cell below it. You can use the Element Cycle to find which elements are stronger and weaker than others. Find which Nikke belongs here.`, action: 'place_nikke', row: 0, col: 1, nikkeId: tutorialNikkes[2].id },
+                { text: `Nicely Done! Let's look at R3C1 (Row 3, Column 1)`, action: 'click_cell', row: 2, col: 0 },
+                { text: 'Clues might not tell you which cell it is referencing. In this case, One of the adjacent cells is Burst 3. Since we know Aria is already on the grid, and she isnt a burst 3, it must be the other cell.', action: 'place_nikke', row:2, col: 1, nikkeId: tutorialNikkes[7].id },
+                { text: 'Sometimes you may find youself forgetting what a previous rule has told you. If you want to remember specific information regarding to a cell, you can place a "Trait Marker". Trying placing a Fire marker on Cell R3C3 (Row 3, Column 3)', action: 'place_marker', row: 2, col: 2, type: 'element', value: 'Fire', },
+                { text: 'With that, you know know the basic rules and how to use the dashboard. The most important rule is that if a cell is given no clues to follow, anyone can be placed on it. With that said, you can click "Verify" to finish the tutorial.', action: 'verify' }
+            ];
 
-        const tutorialGridState = [
-            ['N101', null, 'N103'], // R1C1 and R1C3 pre-placed
-            [null, 'N105', null],   // Center R2C2 pre-placed
-            [null, null, null]
-        ];
-
-        // TUTORIAL STEPS CONFIGURATION
-        const tutorialSteps = [
-            {
-                instruction: "Welcome! Click on Cell R1C2 (Row 1, Col 2) to select it.",
-                target: { r: 0, c: 1 },
-                actionType: "click_cell"
-            },
-            {
-                instruction: "Great! Now select a Nikke from the 'Available Nikkes' palette or click R2C1 to assign unit 'N104'.",
-                target: { r: 1, c: 0 },
-                actionType: "place_nikke",
-                fillValue: "N104"
-            },
-            {
-                instruction: "You can click on any cell to read its logic hint. Click R2C2 to view its clue.",
-                target: { r: 1, c: 1 },
-                actionType: "view_clue"
-            },
-            {
-                instruction: "Complete the puzzle! Click 'Verify Solution' to finish the tutorial.",
-                actionType: "verify",
-                target: null
-            }
-        ];
-
-        function toggleTutorialModal(show) {
-            const modal = document.getElementById('tutorial-modal');
-            if (!modal) return;
-
-            if (show) {
-                currentTutorialStep = 0;
-                initTutorialGrid();
-                renderTutorialStep();
-                modal.classList.remove('hidden');
-            } else {
-                modal.classList.add('hidden');
-            }
+            document.getElementById('tutorial-overlay').classList.remove('hidden');
+            
+            createGrid();
+            createPalette();
+            renderGrid();
+            updateTutorialUI();
         }
 
-        function initTutorialGrid() {
-            const gridEl = document.getElementById('tutorial-grid');
-            if (!gridEl) return;
-            gridEl.innerHTML = '';
-
-            for (let r = 0; r < 3; r++) {
-                for (let c = 0; c < 3; c++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'grid-cell size-3x3';
-                    cell.dataset.row = r;
-                    cell.dataset.col = c;
-                    cell.addEventListener('click', () => handleTutorialCellClick(r, c));
-                    gridEl.appendChild(cell);
-                }
-            }
-            renderTutorialGrid();
+        function updateTutorialUI() {
+            if (!isTutorialMode) return;
+            const stepData = tutorialSteps[tutorialStep];
+            document.getElementById('tut-step-num').textContent = tutorialStep + 1;
+            document.getElementById('tut-text').textContent = stepData.text;
         }
 
-        function renderTutorialGrid() {
-            document.querySelectorAll('#tutorial-grid .grid-cell').forEach(cell => {
-                const r = +cell.dataset.row;
-                const c = +cell.dataset.col;
-                const cellData = tutorialGridState[r][c];
-
-                if (cellData) {
-                    const nikke = allNikkesData.find(n => n.id === cellData) || { name: cellData, icon: '' };
-                    cell.innerHTML = `
-                        <div class="w-[50%] h-[50%] rounded-xl overflow-hidden border border-purple-300 bg-zinc-900 flex items-center justify-center">
-                            <img src="${nikke.icon}" alt="${nikke.name}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                            <span class="text-xs font-bold text-purple-300 hidden">${nikke.name.substring(0,2).toUpperCase()}</span>
-                        </div>
-                        <div class="nikke-name">${nikke.name}</div>
-                    `;
-                    cell.classList.add('filled');
-                } else {
-                    cell.innerHTML = '';
-                    cell.classList.remove('filled');
-                }
-            });
-        }
-
-        function renderTutorialStep() {
-            const step = tutorialSteps[currentTutorialStep];
-            const badge = document.getElementById('tutorial-step-badge');
-            const text = document.getElementById('tutorial-step-text');
-            const nextBtn = document.getElementById('tutorial-next-btn');
-
-            if (badge) badge.textContent = `Step ${currentTutorialStep + 1} of ${tutorialSteps.length}`;
-            if (text) text.textContent = step.instruction;
-
-            if (step.actionType === 'verify') {
-                if (nextBtn) {
-                    nextBtn.textContent = "Finish Tutorial";
-                    nextBtn.classList.remove('hidden');
-                }
-            } else if (nextBtn) {
-                nextBtn.classList.add('hidden');
-            }
-        }
-
-        function handleTutorialCellClick(r, c) {
-            const step = tutorialSteps[currentTutorialStep];
-            if (!step || step.actionType === 'verify') return;
-
-            if (step.target && step.target.r === r && step.target.c === c) {
-                if (step.actionType === 'place_nikke' && step.fillValue) {
-                    tutorialGridState[r][c] = step.fillValue;
-                    renderTutorialGrid();
-                }
-                
-                advanceTutorialStep();
-            }
-        }
-
-        function advanceTutorialStep() {
-            if (currentTutorialStep < tutorialSteps.length - 1) {
-                currentTutorialStep++;
-                renderTutorialStep();
-            }
-        }
-
-        function nextTutorialStep() {
-            if (currentTutorialStep >= tutorialSteps.length - 1) {
-                toggleTutorialModal(false);
-            } else {
-                advanceTutorialStep();
-            }
+        function advanceTutorial() {
+            tutorialStep++;
+            updateTutorialUI();
+            selectedNikke = null;
+            selectedTraitMark = null;
+            updateTraitDockUI();
+            updateSelectedNikkeBar();
+            createPalette();
         }
 
         window.onload = () => {
@@ -2532,44 +2778,6 @@
         </div>
     </div>
 
-    <!-- TUTORIAL MODAL -->
-    <div id="tutorial-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-zinc-900 border border-purple-500/50 rounded-2xl max-w-xl w-full p-4 lg:p-6 shadow-2xl flex flex-col items-center">
-            <!-- HEADER -->
-            <div class="w-full flex justify-between items-center border-b border-zinc-800 pb-3 mb-4">
-                <h2 class="text-lg font-bold text-purple-300 flex items-center gap-2">
-                    <span>🎓</span> Interactive Tutorial
-                </h2>
-                <button onclick="toggleTutorialModal(false)" class="text-zinc-400 hover:text-white font-bold text-sm">✕ Close</button>
-            </div>
-
-            <!-- STEP INSTRUCTION POP-UP CARD -->
-            <div id="tutorial-step-card" class="w-full bg-purple-950/60 border border-purple-500/80 rounded-xl p-3 mb-4 text-center">
-                <span id="tutorial-step-badge" class="text-[10px] font-bold uppercase tracking-wider bg-purple-700 text-purple-100 px-2 py-0.5 rounded-full inline-block mb-1">
-                    Step 1 of 4
-                </span>
-                <p id="tutorial-step-text" class="text-xs lg:text-sm text-purple-100 font-medium">
-                    Click on Cell (Row 1, Column 2) to select it.
-                </p>
-            </div>
-
-            <!-- PRE-MADE 3x3 TUTORIAL GRID -->
-            <div class="flex items-center justify-center my-2">
-                <div id="tutorial-grid" class="grid grid-cols-3 gap-2"></div>
-            </div>
-
-            <!-- FOOTER / SKIP -->
-            <div class="w-full flex justify-between items-center border-t border-zinc-800 pt-3 mt-4">
-                <button onclick="toggleTutorialModal(false)" class="text-xs text-zinc-400 hover:text-zinc-200">
-                    Skip Tutorial
-                </button>
-                <button id="tutorial-next-btn" onclick="nextTutorialStep()" class="px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl hidden">
-                    Next Step →
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- AUTH & USERNAME SETUP MODAL -->
     <div id="username-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-[130] flex items-center justify-center hidden p-4">
         <div class="bg-zinc-900 border-2 border-purple-500/70 rounded-3xl max-w-md w-full p-5 lg:p-6 shadow-2xl relative flex flex-col text-center">
@@ -2632,6 +2840,42 @@
                 </button>
             </div>
 
+        </div>
+    </div>
+    <div id="rules-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-slate-900 border-2 border-indigo-500 rounded-2xl max-w-md w-full p-5 shadow-2xl flex flex-col gap-3 text-slate-100 relative">
+            <!-- Close Button -->
+            <button onclick="closeRulesIndex()" class="absolute top-3 right-3 text-slate-400 hover:text-white font-bold text-lg px-2">✕</button>
+            
+            <!-- Header -->
+            <div class="text-center border-b border-slate-700 pb-2">
+                <h2 class="text-lg font-black tracking-wide text-indigo-400 uppercase">Clue Rules Index</h2>
+                <span id="rule-step-indicator" class="text-xs font-semibold text-slate-400">Rule 1 of 5</span>
+            </div>
+
+            <!-- Visual 2x2 Grid Preview -->
+            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-center items-center">
+                <div id="rule-mini-grid" class="grid grid-cols-2 gap-1.5 w-40 h-40">
+                    <!-- 2x2 cells will be injected dynamically -->
+                </div>
+            </div>
+
+            <!-- Rule Body -->
+            <div class="min-h-[90px] flex flex-col justify-center items-center text-center px-1">
+                <h3 id="rule-title" class="text-md font-bold text-indigo-200 mb-1"></h3>
+                <p id="rule-description" class="text-xs text-slate-300 leading-relaxed"></p>
+            </div>
+
+            <!-- Navigation Footer -->
+            <div class="flex items-center justify-between border-t border-slate-700 pt-3">
+                <button onclick="prevRule()" id="rule-prev-btn" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                    ◀ Previous
+                </button>
+                <div id="rule-dots" class="flex gap-1.5"></div>
+                <button onclick="nextRule()" id="rule-next-btn" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 border border-indigo-400 rounded-lg text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                    Next ▶
+                </button>
+            </div>
         </div>
     </div>
 </body>
