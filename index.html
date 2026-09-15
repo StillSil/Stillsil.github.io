@@ -146,16 +146,12 @@
         /* Modal Overlay */
         .modal-overlay {
         position: fixed;
-        top: 0; 
-        left: 0; 
-        width: 100vw;
-        height: 100dvh; /* Replaces bottom: 0 to handle mobile browser address bar layout shifts */
-        background: rgba(0, 0, 0, 0.85);
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
         display: flex;
         justify-content: center;
         align-items: center;
-        z-index: 99999 !important; /* Force top z-index over sticky dock elements */
-        touch-action: none; /* Prevents touch drag from passing through to background layout */
+        z-index: 9999; /* Ensures it sits above sticky navbars and docks on mobile */
         }
 
         .modal-overlay.hidden { display: none; }
@@ -165,8 +161,6 @@
         color: var(--text-color);
         width: 90%;
         max-width: 450px;
-        max-height: 85vh; /* Prevent it from going off-screen vertically on mobile */
-        overflow-y: auto;  /* Allow scrolling inside the modal on small screens */
         border-radius: 12px;
         padding: 24px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.5);
@@ -1029,223 +1023,6 @@
             } finally {
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = "Save & Continue";
-            }
-        }
-
-        let currentRuleIndex = 0;
-
-        const clueRulesData = [
-            {
-                title: "Self Attribute",
-                desc: "I am a [ATTRIBUTE].",
-                grid: [
-                    { label: "🔥 Fire", highlight: true },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false }
-                ]
-            },
-            {
-                title: "NIKKE_ON_GRID",
-                desc: "Indicates that a specific Nikke or trait must be in an adjacent cell directly touching this one (up, down, left, right).",
-                grid: [
-                    { label: "Nikke A", highlight: true },
-                    { label: "Near A", highlight: true, border: "border-amber-400" },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false }
-                ]
-            },
-            {
-                title: "DIRECTIONAL_NEIGHBOR_ATTR",
-                desc: "Means the target unit shares the same row or column as the cell, regardless of distance.",
-                grid: [
-                    { label: "Nikke B", highlight: true },
-                    { label: "Same Row", highlight: true, border: "border-emerald-400" },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false }
-                ]
-            },
-            {
-                title: "SAME_COLUMN_NIKKE",
-                desc: "tells you the target is strictly in a relative direction (e.g., 'Above', 'To the right of') from another cell.",
-                grid: [
-                    { label: "Above X", highlight: true, border: "border-cyan-400" },
-                    { label: "❓", highlight: false },
-                    { label: "Nikke X", highlight: true },
-                    { label: "❓", highlight: false }
-                ]
-            },
-            {
-                title: "ADJACENT_SPECIFIC_ATTR_COUNT",
-                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
-                grid: [
-                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false }
-                ]
-            },
-            {
-                title: "SQUADMATE_ADJACENT",
-                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
-                grid: [
-                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false }
-                ]
-            },
-            {
-                title: "ELEMENT_STRONGER",
-                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
-                grid: [
-                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false }
-                ]
-            },
-            {
-                title: "SHARED_DIRECTIONAL_ATTR",
-                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
-                grid: [
-                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false }
-                ]
-            },
-            {
-                title: "ROW_COL_COUNT",
-                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
-                grid: [
-                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false }
-                ]
-            },
-            {
-                title: "WEAPON_RANGE_COMP",
-                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
-                grid: [
-                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false }
-                ]
-            },
-            {
-                title: "DIRECTIONAL_BURST_COMP",
-                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
-                grid: [
-                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false }
-                ]
-            },
-            {
-                title: "ADJACENT_SAME_ATTR_COUNT",
-                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
-                grid: [
-                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false }
-                ]
-            },
-            {
-                title: "SEE_DISTANCE_RANGE",
-                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
-                grid: [
-                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false }
-                ]
-            },
-            {
-                title: "ONLY_SQUAD_GRID",
-                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
-                grid: [
-                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false }
-                ]
-            },
-            {
-                title: "GLOBAL_MOST_ATTR",
-                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
-                grid: [
-                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false }
-                ]
-            },
-            {
-                title: "ROW_MAJORITY_ATTR",
-                desc: "Explicitly states a trait or Nikke that CANNOT be placed in this cell or row.",
-                grid: [
-                    { label: "🚫 NO Wind", highlight: true, border: "border-rose-500 text-rose-300" },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false },
-                    { label: "❓", highlight: false }
-                ]
-            },
-        ];
-
-        function openRulesIndex() {
-            currentRuleIndex = 0;
-            document.getElementById('rules-modal').classList.remove('hidden');
-            renderRule();
-        }
-
-        function closeRulesIndex() {
-            document.getElementById('rules-modal').classList.add('hidden');
-        }
-
-        function renderRule() {
-            const rule = clueRulesData[currentRuleIndex];
-            document.getElementById('rule-title').textContent = rule.title;
-            document.getElementById('rule-description').textContent = rule.desc;
-            document.getElementById('rule-step-indicator').textContent = `Rule ${currentRuleIndex + 1} of ${clueRulesData.length}`;
-
-            // Render 2x2 Mini-Grid Example
-            const gridContainer = document.getElementById('rule-mini-grid');
-            gridContainer.innerHTML = rule.grid.map(cell => `
-                <div class="flex items-center justify-center p-1 rounded-lg text-center text-[11px] font-bold border ${
-                    cell.highlight 
-                        ? (cell.border || 'border-indigo-400 bg-indigo-950/80 text-indigo-100') 
-                        : 'border-slate-800 bg-slate-900/40 text-slate-600'
-                }">
-                    ${cell.label}
-                </div>
-            `).join('');
-
-            // Button States
-            document.getElementById('rule-prev-btn').disabled = currentRuleIndex === 0;
-            document.getElementById('rule-next-btn').disabled = currentRuleIndex === clueRulesData.length - 1;
-
-            // Render Dots
-            document.getElementById('rule-dots').innerHTML = clueRulesData.map((_, i) => `
-                <span class="w-2 h-2 rounded-full transition-all ${i === currentRuleIndex ? 'bg-indigo-400 scale-125' : 'bg-slate-700'}"></span>
-            `).join('');
-        }
-
-        function nextRule() {
-            if (currentRuleIndex < clueRulesData.length - 1) {
-                currentRuleIndex++;
-                renderRule();
-            }
-        }
-
-        function prevRule() {
-            if (currentRuleIndex > 0) {
-                currentRuleIndex--;
-                renderRule();
             }
         }
 
@@ -2246,66 +2023,18 @@
                             }
                         });
 
-                        // If the speaking cell or the target cell it's describing is corrupted, lie!
-                        if (isSelfCorrupted || referencesCorruptedCell) {
-                            const falseClueText = invertClueText(chosenClue.text);
-
-                            cellCluesMap[cellKey] = falseClueText;
-                            cellClueRules[cellKey] = {
-                                checkFn: chosenClue.checkFn, // Keep true rule check internally for puzzle solver validation
-                                expected: chosenClue.expected,
-                                isCorrupted: true,
-                                text: falseClueText
-                            };
-                        } else {
-                            // Normal valid clue
-                            questionWeights[chosenClue.type] = Math.max(1, questionWeights[chosenClue.type] - 4);
-                            cellCluesMap[cellKey] = chosenClue.text;
-                            cellClueRules[cellKey] = {
-                                checkFn: chosenClue.checkFn,
-                                expected: chosenClue.expected,
-                                isCorrupted: false,
-                                text: chosenClue.text
-                            };
-                        }
+                        // Normal valid clue
+                        questionWeights[chosenClue.type] = Math.max(1, questionWeights[chosenClue.type] - 4);
+                        cellCluesMap[cellKey] = chosenClue.text;
+                        cellClueRules[cellKey] = {
+                            checkFn: chosenClue.checkFn,
+                            expected: chosenClue.expected,
+                            isCorrupted: false,
+                            text: chosenClue.text
+                        };                      
                     }
                 }
             }
-        }
-
-        // Helper to invert comparison and relational operators in clues
-        function invertClueText(clueText) {
-            let inverted = clueText;
-
-            // Direct Comparisons & Relationships
-            if (inverted.includes("stronger than")) {
-                inverted = inverted.replace("stronger than", "weaker than");
-            } else if (inverted.includes("weaker than")) {
-                inverted = inverted.replace("weaker than", "stronger than");
-            } else if (inverted.includes("HIGHER")) {
-                inverted = inverted.replace("HIGHER", "LOWER");
-            } else if (inverted.includes("LOWER")) {
-                inverted = inverted.replace("LOWER", "HIGHER");
-            } else if (inverted.includes("LONGER")) {
-                inverted = inverted.replace("LONGER", "SHORTER");
-            } else if (inverted.includes("SHORTER")) {
-                inverted = inverted.replace("SHORTER", "LONGER");
-            } else if (inverted.includes("shares the same")) {
-                inverted = inverted.replace("shares the same", "has a different");
-            } else if (inverted.includes("I am a")) {
-                inverted = inverted.replace("I am a", "I am NOT a");
-            } else if (inverted.includes("is in the same column as")) {
-                inverted = inverted.replace("is in the same column as", "is NOT in the same column as");
-            } else if (inverted.includes("is on the grid")) {
-                inverted = inverted.replace("is on the grid", "is NOT on the grid");
-            } else if (inverted.includes("directly adjacent to my squadmate")) {
-                inverted = inverted.replace("directly adjacent to my squadmate", "NOT adjacent to any squadmate");
-            } else {
-                // Fallback negation for unhandled text structures
-                inverted = "NOT " + inverted;
-            }
-
-            return inverted;
         }
 
         function createGrid() {
@@ -2689,6 +2418,9 @@
             const modal = document.getElementById('win-modal');
             if (!modal) return;
 
+            const isHidden = modal.classList.toggle('hidden');
+            document.body.style.overflow = isHidden ? '' : 'hidden';
+
             if (show) {
                 document.getElementById('win-diff-label').textContent = currentDifficulty.toUpperCase();
                 document.getElementById('win-time-label').textContent = formatTime(elapsedSeconds);
@@ -2713,6 +2445,7 @@
                 modal.classList.remove('hidden');
             } else {
                 modal.classList.add('hidden');
+                document.body.style.overflow = '';
             }
         }
 
@@ -2724,6 +2457,7 @@
                     modal.classList.remove('hidden');
                 } else {
                     modal.classList.add('hidden');
+                    document.body.style.overflow = '';
                 }
             }
         }
