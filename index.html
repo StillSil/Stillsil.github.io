@@ -161,6 +161,8 @@
         color: var(--text-color);
         width: 90%;
         max-width: 450px;
+        max-height: 85vh; /* Prevent it from going off-screen vertically on mobile */
+        overflow-y: auto;  /* Allow scrolling inside the modal on small screens */
         border-radius: 12px;
         padding: 24px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.5);
