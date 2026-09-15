@@ -2416,7 +2416,6 @@
         // OPEN WIN MODAL AND HANDLE LOGGED-IN VS LOGGED-OUT FLOWS
         async function toggleWinModal(show) {
             const modal = document.getElementById('win-modal');
-            if (!modal) return;
 
             const isHidden = modal.classList.toggle('hidden');
             document.body.style.overflow = isHidden ? '' : 'hidden';
