@@ -146,12 +146,16 @@
         /* Modal Overlay */
         .modal-overlay {
         position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.8);
+        top: 0; 
+        left: 0; 
+        width: 100vw;
+        height: 100dvh; /* Replaces bottom: 0 to handle mobile browser address bar layout shifts */
+        background: rgba(0, 0, 0, 0.85);
         display: flex;
         justify-content: center;
         align-items: center;
-        z-index: 9999; /* Ensures it sits above sticky navbars and docks on mobile */
+        z-index: 99999 !important; /* Force top z-index over sticky dock elements */
+        touch-action: none; /* Prevents touch drag from passing through to background layout */
         }
 
         .modal-overlay.hidden { display: none; }
@@ -2983,40 +2987,6 @@
         };
     </script>
 
-    <!-- PUZZLE WIN / LEADERBOARD SUBMISSION MODAL -->
-    <div id="win-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[110] flex items-center justify-center hidden p-4">
-        <div class="bg-zinc-900 border-2 border-emerald-500/60 rounded-3xl max-w-md w-full p-5 lg:p-6 shadow-2xl relative flex flex-col text-center">
-            <div class="text-3xl mb-1">🎉</div>
-            <h2 class="text-xl lg:text-2xl font-black text-emerald-400 mb-1">PUZZLE SOLVED!</h2>
-            <p class="text-xs text-zinc-400 mb-4">You solved the <span id="win-diff-label" class="font-bold text-purple-300"></span> puzzle in <span id="win-time-label" class="font-bold text-amber-400 font-mono"></span>!</p>
-
-            <!-- VIEW A: LOGGED-IN USERS (Auto-Submitted Message) -->
-            <div id="win-logged-in-view" class="bg-zinc-800 p-4 rounded-2xl border border-zinc-700 mb-4 text-center hidden space-y-1">
-                <div class="text-xs text-zinc-300">Logged in as: <span id="win-commander-name" class="font-bold text-purple-300"></span></div>
-                <div id="win-auto-status" class="text-xs font-bold text-emerald-400 flex items-center justify-center gap-1">
-                    <span>🏆</span> Score submitted automatically!
-                </div>
-            </div>
-
-            <!-- VIEW B: GUEST USERS (Login Prompt) -->
-            <div id="win-logged-out-view" class="bg-zinc-800 p-4 rounded-2xl border border-zinc-700 mb-4 text-center space-y-2 hidden">
-                <p class="text-xs text-zinc-300">Log in to record your high score on the global leaderboard!</p>
-                <button onclick="loginWithGoogleFromWinModal()" class="w-full py-2 bg-purple-600 hover:bg-purple-500 text-purple-100 font-bold text-xs rounded-xl border border-purple-400 transition-all shadow-md flex items-center justify-center gap-1">
-                    🔑 Log In to Submit Score
-                </button>
-            </div>
-
-            <div class="flex gap-2">
-                <button onclick="viewLeaderboardsFromWinModal()" class="flex-1 py-2.5 bg-amber-600 hover:bg-amber-500 rounded-xl font-bold text-xs text-white transition-all shadow-md">
-                    🏆 View Leaderboards
-                </button>
-                <button onclick="toggleWinModal(false)" class="py-2.5 px-4 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold text-xs text-zinc-400 transition-all">
-                    Close
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Profile & Settings Modal -->
     <div id="profile-modal" class="modal-overlay hidden">
     <div class="modal-card">
@@ -3234,6 +3204,40 @@
                 <div id="rule-dots" class="flex gap-1.5"></div>
                 <button onclick="nextRule()" id="rule-next-btn" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 border border-indigo-400 rounded-lg text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed">
                     Next ▶
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PUZZLE WIN / LEADERBOARD SUBMISSION MODAL -->
+    <div id="win-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[110] flex items-center justify-center hidden p-4">
+        <div class="bg-zinc-900 border-2 border-emerald-500/60 rounded-3xl max-w-md w-full p-5 lg:p-6 shadow-2xl relative flex flex-col text-center">
+            <div class="text-3xl mb-1">🎉</div>
+            <h2 class="text-xl lg:text-2xl font-black text-emerald-400 mb-1">PUZZLE SOLVED!</h2>
+            <p class="text-xs text-zinc-400 mb-4">You solved the <span id="win-diff-label" class="font-bold text-purple-300"></span> puzzle in <span id="win-time-label" class="font-bold text-amber-400 font-mono"></span>!</p>
+
+            <!-- VIEW A: LOGGED-IN USERS (Auto-Submitted Message) -->
+            <div id="win-logged-in-view" class="bg-zinc-800 p-4 rounded-2xl border border-zinc-700 mb-4 text-center hidden space-y-1">
+                <div class="text-xs text-zinc-300">Logged in as: <span id="win-commander-name" class="font-bold text-purple-300"></span></div>
+                <div id="win-auto-status" class="text-xs font-bold text-emerald-400 flex items-center justify-center gap-1">
+                    <span>🏆</span> Score submitted automatically!
+                </div>
+            </div>
+
+            <!-- VIEW B: GUEST USERS (Login Prompt) -->
+            <div id="win-logged-out-view" class="bg-zinc-800 p-4 rounded-2xl border border-zinc-700 mb-4 text-center space-y-2 hidden">
+                <p class="text-xs text-zinc-300">Log in to record your high score on the global leaderboard!</p>
+                <button onclick="loginWithGoogleFromWinModal()" class="w-full py-2 bg-purple-600 hover:bg-purple-500 text-purple-100 font-bold text-xs rounded-xl border border-purple-400 transition-all shadow-md flex items-center justify-center gap-1">
+                    🔑 Log In to Submit Score
+                </button>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="viewLeaderboardsFromWinModal()" class="flex-1 py-2.5 bg-amber-600 hover:bg-amber-500 rounded-xl font-bold text-xs text-white transition-all shadow-md">
+                    🏆 View Leaderboards
+                </button>
+                <button onclick="toggleWinModal(false)" class="py-2.5 px-4 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold text-xs text-zinc-400 transition-all">
+                    Close
                 </button>
             </div>
         </div>
