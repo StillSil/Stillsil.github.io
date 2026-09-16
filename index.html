@@ -25,7 +25,7 @@
         .grid-cell.size-3x3 { width: min(28vw, 180px); height: min(28vw, 180px); }
         .grid-cell.size-4x4 { width: min(21vw, 140px); height: min(21vw, 140px); }
         .grid-cell.size-5x5 { width: min(16vw, 100px); height: min(16vw, 100px); border-radius: 8px; border-width: 2px; }
-        .grid-cell.size-11x11 { width: 50px; height: 50px; border-radius: 6px; border-width: 2px; }
+        .grid-cell.size-10x10 { width: 50px; height: 50px; border-radius: 6px; border-width: 2px; }
 
         /* Desktop Grid Cell Sizes */
         @media (min-width: 1024px) {
@@ -33,7 +33,7 @@
             .grid-cell.size-3x3 { width: 200px; height: 200px; }
             .grid-cell.size-4x4 { width: 160px; height: 160px; }
             .grid-cell.size-5x5 { width: 120px; height: 120px; border-radius: 12px; border-width: 3px; }
-            .grid-cell.size-11x11 { width: 60px; height: 60px; border-radius: 6px; border-width: 2px; }
+            .grid-cell.size-10x10 { width: 60px; height: 60px; border-radius: 6px; border-width: 2px; }
         }
 
         /* Hover Glow without size transform */
@@ -43,7 +43,7 @@
         
         .nikke-name { font-size: 0.65rem; margin-top: 2px; font-weight: 700; color: #e0e7ff; text-align: center; line-height: 1; }
         @media (min-width: 1024px) { .nikke-name { font-size: 0.75rem; } }
-        .grid-cell.size-11x11 .nikke-name { font-size: 0.45rem; }
+        .grid-cell.size-10x10 .nikke-name { font-size: 0.45rem; }
 
         .trait-btn.active {
             background-color: #5b21b6 !important;
@@ -2043,7 +2043,7 @@
             grid.className = `grid gap-1.5`;
             grid.style.gridTemplateColumns = `repeat(${gridCols}, minmax(0, 1fr))`;
 
-            const sizeClass = gridCols === 11 ? 'size-11x11' : gridCols === 5 ? 'size-5x5' : gridCols === 4 ? 'size-4x4' : 'size-3x3';
+            const sizeClass = gridCols === 11 ? 'size-10x10' : gridCols === 5 ? 'size-5x5' : gridCols === 4 ? 'size-4x4' : 'size-3x3';
 
             for (let r = 0; r < gridRows; r++) {
                 for (let c = 0; c < gridCols; c++) {
