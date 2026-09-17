@@ -1475,7 +1475,7 @@
                 currentGrid[hr][hc] = solution[hr][hc];
             }
 
-            generateClues(solution);
+            generateClues(solution, activePool);
 
             createGrid();
             createPalette();
@@ -1491,13 +1491,18 @@
             setTimeout(() => document.getElementById('status').textContent = '', 3500);
         }
 
+        let bannedCorruptedNikkeIds = new Set();
+
         // 16-QUESTION DYNAMIC CLUE GENERATOR WITH CORRUPTION & DIFFICULTY PROFILES
-        function generateClues(sol) {
+        function generateClues(sol, pool) {
             cellCluesMap = {};
             cellClueRules = {};
+            bannedCorruptedNikkeIds.clear();
             const nikkeMap = Object.fromEntries(allNikkesData.map(n => [n.id, n]));
+            const nikkeIdsInPool = new Set(pool.map(n => n.id));
 
             const allGridNikkes = [];
+            const offGridNikkes = [];
             for (let r = 0; r < gridRows; r++) {
                 for (let c = 0; c < gridCols; c++) {
                     const n = nikkeMap[sol[r][c]];
@@ -1505,7 +1510,20 @@
                 }
             }
 
+            for (const n of pool) {
+                if (!allGridNikkes.some(gn => gn.id === n.id)) {
+                    offGridNikkes.push(n);
+                }
+            }
+
             if (allGridNikkes.length === 0) return;
+
+            console.log('nikkeMap:', Object.keys(nikkeMap).length, 'entries');
+            console.log('allGridNikkes:', allGridNikkes.map(n => n.name).join(', '));
+            console.log('offGridNikkes:', offGridNikkes.map(n => n.name).join(', '));
+
+            // Shuffle pool to pick unique fake identities without duplicates
+            const shuffledOffGrid = [...offGridNikkes].sort(() => Math.random() - 0.5);
 
             let diffCategory = 'insane';
             if (currentDifficulty.startsWith('easy')) diffCategory = 'easy';
@@ -1535,9 +1553,30 @@
             for (let r = 0; r < gridRows; r++) {
                 for (let c = 0; c < gridCols; c++) {
                     const cellNikke = nikkeMap[sol[r][c]];
+                    const cellKey = `${r},${c}`;
+
+                    if (corruptedCells.has(cellKey)) {
+                        // Assign a unique Nikke from the off-grid pool
+                        const fakeNikke = shuffledOffGrid.pop() || allNikkesData[Math.floor(Math.random() * allNikkesData.length)];
+                        
+                        // Track this Nikke ID as forbidden in the final solution
+                        bannedCorruptedNikkeIds.add(fakeNikke.id);
+
+                        const corruptedClueText = `I am ${fakeNikke.name}`;
+
+                        cellCluesMap[cellKey] = corruptedClueText;
+                        cellClueRules[cellKey] = {
+                            checkFn: () => false,
+                            expected: false,
+                            isCorrupted: true,
+                            fakeNikkeId: fakeNikke.id,
+                            fakeNikkeName: fakeNikke.name,
+                            text: corruptedClueText
+                        };
+                        continue;
+                    }
                     if (!cellNikke) continue;
 
-                    const cellKey = `${r},${c}`;
                     const candidates = [];
 
                     const directionsList = shuffle(['ABOVE', 'BELOW', 'LEFT', 'RIGHT']);
@@ -2390,20 +2429,29 @@
         function validateGridWithClues() {
             const nikkeMap = Object.fromEntries(allNikkesData.map(n => [n.id, n]));
             const failedClues = [];
+            const currentPlacedNikkeIds = new Set();
             clearErrorHighlights();
+            
 
             for (let r = 0; r < gridRows; r++) {
                 for (let c = 0; c < gridCols; c++) {
                     const id = currentGrid[r][c];
+                    const cellVal = currentGrid[r][c]; // Assuming player grid state array
+                    if (cellVal) currentPlacedNikkeIds.add(cellVal);
                     if (typeof id !== 'string') continue;
 
                     const cellKey = `${r},${c}`;
-                    
-                    // Skip verification for corrupted cells (they lie)
-                    if (corruptedCells.has(cellKey)) continue;
-
                     const nikke = nikkeMap[id];
                     const neighbors = getNeighbors(r, c).map(nb => currentGrid[nb.row][nb.col]);
+
+                    console.log(nikke.id)
+
+                    // Corruption Constraint Violation                           
+                    if (bannedCorruptedNikkeIds.has(nikke.id)) {
+                        const cellElem = document.querySelector(`.grid-cell[data-row="${r}"][data-col="${c}"]`);
+                        if (cellElem) cellElem.classList.add('error');
+                        failedClues.push({ row: r, col: c, text: `Corrupted Nikke placed: ${nikke.id}` });
+                    }
 
                     const rule = cellClueRules[cellKey];
                     if (!rule) continue;
