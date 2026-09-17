@@ -2195,8 +2195,12 @@
                 }
 
                 const cellData = currentGrid[r][c];
-                const isCorrupted = corruptedCells.has(cellKey);
+                const isCorrupted = corruptedCells.has(cellKey); // Example: Corrupt cell at (1,1) during tutorial
                 const traits = corruptedTraits[cellKey] || {};
+
+                if (isTutorialMode && cellKey === '0,0') {
+                    cell.classList.add('corrupted-cell');
+                }
 
                 if (isCorrupted && traits.color) {
                     cell.classList.add('corrupted-cell');
@@ -2784,7 +2788,7 @@
             gridCols = 3;
             
             // Grab 9 characters safely from the loaded pool
-            tutorialNikkes = allNikkesData.slice(0, 9); 
+            tutorialNikkes = allNikkesData.slice(0, 10); 
             activePool = tutorialNikkes;
             shuffledPalette = [...activePool];
             
@@ -2801,11 +2805,19 @@
                 '1,1': `I am Admi.`,
                 '2,1': `I am Ark Black Ranger.`,
                 '0,2': `I am a ${tutorialNikkes[4].element} Element.`,
-                '1,2': `I am Avistar.`,
-                '2,2': `I am Arcana.`
+                '1,2': `Hi :D.`,
+                '2,2': `I am a Fire Element.`
             };
             corruptedCells.clear();
             corruptedTraits = {};
+
+            corruptedCells.add('0,0'); // Corrupt the top-left cell
+            corruptedTraits['0,0'] = {
+                color: true,
+                text: true,
+                name: true,
+                image: true
+            };
             
             // Define interactive steps
             tutorialSteps = [
@@ -2818,6 +2830,7 @@
                 { text: `Nicely Done! Let's look at R3C1 (Row 3, Column 1)`, action: 'click_cell', row: 2, col: 0 },
                 { text: 'Clues might not tell you which cell it is referencing. In this case, One of the adjacent cells is Burst 3. Since we know Aria is already on the grid, and she isnt a burst 3, it must be the other cell.', action: 'place_nikke', row:2, col: 1, nikkeId: tutorialNikkes[7].id },
                 { text: 'Sometimes you may find youself forgetting what a previous rule has told you. If you want to remember specific information regarding to a cell, you can place a "Trait Marker". Trying placing a Fire marker on Cell R3C3 (Row 3, Column 3)', action: 'place_marker', row: 2, col: 2, type: 'element', value: 'Fire', },
+                { text: `The top left cell is highlighted red. If you see this, it is corrupted and it's clue will tell you a nikke that isn't on the grid. Try clicking that cell`, action: 'click_cell', row: 0, col: 0, },
                 { text: 'With that, you know know the basic rules and how to use the dashboard. The most important rule is that if a cell is given no clues to follow, anyone can be placed on it. With that said, you can click "Verify" to finish the tutorial.', action: 'verify' }
             ];
 
