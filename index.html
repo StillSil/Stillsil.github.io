@@ -2037,6 +2037,10 @@
             }
         }
 
+        // Grid highlighting
+        let selectedCellIndex = null;
+        let highlightedCells = new Set();
+
         function createGrid() {
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
@@ -2051,7 +2055,32 @@
                     cell.className = `grid-cell ${sizeClass}`;
                     cell.dataset.row = r; cell.dataset.col = c;
                     cell.addEventListener('click', () => {
-                        clearErrorHighlights();
+                        // Clear existing cell highlights
+                        document.querySelectorAll('.grid-cell').forEach(c => {
+                            c.style.backgroundColor = '';
+                            c.style.borderColor = '';
+                        });
+
+                        if (isTutorialMode === false) {
+                            // 1. Highlight the clicked cell in light blue
+                            cell.style.backgroundColor = '#2563eb';
+                            cell.style.borderColor = '#60a5fa';
+
+                            // 2. Highlight associated target cells in green
+                            const cellKey = `${r},${c}`;
+                            const targetCells = getClueTargetCells(r, c, cellKey);
+
+                            targetCells.forEach(({ row, col }) => {
+                                const targetEl = document.querySelector(`.grid-cell[data-row="${row}"][data-col="${col}"]`);
+                                if (targetEl && !(row === r && col === c)) {
+                                    targetEl.style.backgroundColor = '#15803d';
+                                    targetEl.style.borderColor = '#4ade80';
+                                }
+                            });
+                        } else {
+                            highlightedCells.clear();
+                        }
+
 
                         if (isTutorialMode) {
                             const req = tutorialSteps[tutorialStep];
@@ -2113,6 +2142,19 @@
             document.querySelectorAll('.grid-cell').forEach(cell => {
                 const r = +cell.dataset.row, c = +cell.dataset.col;
                 const cellKey = `${r},${c}`;
+
+                // Reset highlight styles
+                cell.style.borderColor = '';
+                cell.style.backgroundColor = '';
+
+                if (selectedCellIndex === cellKey) {
+                    cell.style.backgroundColor = '#1e3a8a'; // Light shade of blue
+                    cell.style.borderColor = '#60a5fa';
+                } else if (highlightedCells.has(cellKey)) {
+                    cell.style.backgroundColor = '#065f46'; // Green highlight
+                    cell.style.borderColor = '#34d399';
+                }
+
                 const cellData = currentGrid[r][c];
                 const isCorrupted = corruptedCells.has(cellKey);
                 const traits = corruptedTraits[cellKey] || {};
@@ -2172,6 +2214,47 @@
                     cell.classList.remove('filled');
                 }
             });
+        }
+
+        // Helper function to resolve target coordinates based on clue type
+        function getClueTargetCells(r, c, cellKey) {
+            const clueRule = cellClueRules[cellKey];
+            if (!clueRule) return [];
+
+            const text = clueRule.text || '';
+            const targets = [];
+
+            // Directional Clues (e.g., ABOVE, BELOW, LEFT, RIGHT)
+            ['ABOVE', 'BELOW', 'LEFT', 'RIGHT'].forEach(dir => {
+                if (text.includes(`directly ${dir}`)) {
+                    const neighbor = getDirectionalNeighbor(r, c, dir);
+                    if (neighbor) targets.push({ row: neighbor.r, col: neighbor.c });
+                }
+            });
+
+            // Weapon/Distance Clues (e.g., "I can see a ... X cell(s) away")
+            const distanceMatch = text.match(/(\d+)\s+cell\(s\)\s+away/);
+            if (distanceMatch) {
+                const dist = parseInt(distanceMatch[1], 10);
+                getCellsAtDistance(r, c, dist).forEach(pos => targets.push(pos));
+            }
+
+            // Row Clues
+            if (text.includes('My row') || text.includes('majority in my row')) {
+                for (let col = 0; col < gridCols; col++) targets.push({ row: r, col });
+            }
+
+            // Column Clues
+            if (text.includes('My column') || text.includes('same column as')) {
+                for (let row = 0; row < gridRows; row++) targets.push({ row, col: c });
+            }
+
+            // Adjacent / Neighbor Clues (e.g., "next to", "adjacent to")
+            if (text.includes('next to') || text.includes('adjacent to')) {
+                getNeighbors(r, c).forEach(pos => targets.push(pos));
+            }
+
+            return targets;
         }
 
         function resetFilters() {
